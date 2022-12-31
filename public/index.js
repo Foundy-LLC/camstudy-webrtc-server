@@ -1,6 +1,4 @@
-import * as protocol from "../protocol.js";
-
-//index.js
+const protocol = require("../protocol.cjs");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 
@@ -8,7 +6,7 @@ const roomName = window.location.pathname.split("/")[2];
 
 const socket = io(protocol.NAME_SPACE);
 
-socket.on("connection-success", ({ socketId }) => {
+socket.on(protocol.CONNECTION_SUCCESS, ({ socketId }) => {
   console.log(socketId);
   getLocalStream();
 });
@@ -63,7 +61,7 @@ const streamSuccess = (stream) => {
 };
 
 const joinRoom = () => {
-  socket.emit("joinRoom", { roomName }, (data) => {
+  socket.emit(protocol.JOIN_ROOM, { roomName }, (data) => {
     console.log(`Router RTP Capabilities... ${data.rtpCapabilities}`);
     // we assign to local variable and will be used when
     // loading the client Device (see createDevice above)
@@ -122,73 +120,77 @@ const createDevice = async () => {
 const createSendTransport = () => {
   // see server's socket.on('createWebRtcTransport', sender?, ...)
   // this is a call from Producer, so sender = true
-  socket.emit("createWebRtcTransport", { isConsumer: false }, ({ params }) => {
-    // The server sends back params needed
-    // to create Send Transport on the client side
-    if (params.error) {
-      console.log(params.error);
-      return;
-    }
+  socket.emit(
+    protocol.CREATE_WEB_RTC_TRANSPORT,
+    { isConsumer: false },
+    ({ params }) => {
+      // The server sends back params needed
+      // to create Send Transport on the client side
+      if (params.error) {
+        console.log(params.error);
+        return;
+      }
 
-    console.log(params);
+      console.log(params);
 
-    // creates a new WebRTC Transport to send media
-    // based on the server's producer transport params
-    // https://mediasoup.org/documentation/v3/mediasoup-client/api/#TransportOptions
-    producerTransport = device.createSendTransport(params);
+      // creates a new WebRTC Transport to send media
+      // based on the server's producer transport params
+      // https://mediasoup.org/documentation/v3/mediasoup-client/api/#TransportOptions
+      producerTransport = device.createSendTransport(params);
 
-    // https://mediasoup.org/documentation/v3/communication-between-client-and-server/#producing-media
-    // this event is raised when a first call to transport.produce() is made
-    // see connectSendTransport() below
-    producerTransport.on(
-      "connect",
-      async ({ dtlsParameters }, callback, errback) => {
+      // https://mediasoup.org/documentation/v3/communication-between-client-and-server/#producing-media
+      // this event is raised when a first call to transport.produce() is made
+      // see connectSendTransport() below
+      producerTransport.on(
+        "connect",
+        async ({ dtlsParameters }, callback, errback) => {
+          try {
+            // Signal local DTLS parameters to the server side transport
+            // see server's socket.on('transport-producer-connect', ...)
+            await socket.emit(protocol.TRANSPORT_PRODUCER_CONNECT, {
+              dtlsParameters,
+            });
+
+            // Tell the transport that parameters were transmitted.
+            callback();
+          } catch (error) {
+            errback(error);
+          }
+        }
+      );
+
+      producerTransport.on("produce", async (parameters, callback, errback) => {
+        console.log(parameters);
+
         try {
-          // Signal local DTLS parameters to the server side transport
-          // see server's socket.on('transport-connect', ...)
-          await socket.emit("transport-connect", {
-            dtlsParameters,
-          });
+          // tell the server to create a Producer
+          // with the following parameters and produce
+          // and expect back a server side producer id
+          // see server's socket.on('transport-produce', ...)
+          await socket.emit(
+            protocol.TRANSPORT_PRODUCER,
+            {
+              kind: parameters.kind,
+              rtpParameters: parameters.rtpParameters,
+              appData: parameters.appData,
+            },
+            ({ id, producersExist }) => {
+              // Tell the transport that parameters were transmitted and provide it with the
+              // server side producer's id.
+              callback({ id });
 
-          // Tell the transport that parameters were transmitted.
-          callback();
+              // if producers exist, then join room
+              if (producersExist) getProducers();
+            }
+          );
         } catch (error) {
           errback(error);
         }
-      }
-    );
+      });
 
-    producerTransport.on("produce", async (parameters, callback, errback) => {
-      console.log(parameters);
-
-      try {
-        // tell the server to create a Producer
-        // with the following parameters and produce
-        // and expect back a server side producer id
-        // see server's socket.on('transport-produce', ...)
-        await socket.emit(
-          "transport-produce",
-          {
-            kind: parameters.kind,
-            rtpParameters: parameters.rtpParameters,
-            appData: parameters.appData,
-          },
-          ({ id, producersExist }) => {
-            // Tell the transport that parameters were transmitted and provide it with the
-            // server side producer's id.
-            callback({ id });
-
-            // if producers exist, then join room
-            if (producersExist) getProducers();
-          }
-        );
-      } catch (error) {
-        errback(error);
-      }
-    });
-
-    connectSendTransport();
-  });
+      connectSendTransport();
+    }
+  );
 };
 
 const connectSendTransport = async () => {
@@ -231,7 +233,7 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
   consumingTransports.push(remoteProducerId);
 
   await socket.emit(
-    "createWebRtcTransport",
+    protocol.CREATE_WEB_RTC_TRANSPORT,
     { isConsumer: true },
     ({ params }) => {
       // The server sends back params needed
@@ -259,7 +261,7 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
           try {
             // Signal local DTLS parameters to the server side transport
             // see server's socket.on('transport-recv-connect', ...)
-            await socket.emit("transport-recv-connect", {
+            await socket.emit(protocol.TRANSPORT_RECEIVER_CONNECT, {
               dtlsParameters,
               serverConsumerTransportId: params.id,
             });
@@ -279,12 +281,12 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
 };
 
 // server informs the client of a new producer just joined
-socket.on("new-producer", ({ producerId }) =>
+socket.on(protocol.NEW_PRODUCER, ({ producerId }) =>
   signalNewConsumerTransport(producerId)
 );
 
 const getProducers = () => {
-  socket.emit("getProducers", (producerIds) => {
+  socket.emit(protocol.GET_PRODUCERS, (producerIds) => {
     console.log(producerIds);
     // for each of the producer create a consumer
     // producerIds.forEach(id => signalNewConsumerTransport(id))
@@ -301,7 +303,7 @@ const connectRecvTransport = async (
   // to create a consumer based on the rtpCapabilities and consume
   // if the router can consume, it will send back a set of params as below
   await socket.emit(
-    "consume",
+    protocol.CONSUME,
     {
       rtpCapabilities: device.rtpCapabilities,
       remoteProducerId,
@@ -361,14 +363,14 @@ const connectRecvTransport = async (
 
       // the server consumer started with media paused
       // so we need to inform the server to resume
-      socket.emit("consumer-resume", {
+      socket.emit(protocol.CONSUME_RESUME, {
         serverConsumerId: params.serverConsumerId,
       });
     }
   );
 };
 
-socket.on("producer-closed", ({ remoteProducerId }) => {
+socket.on(protocol.PRODUCER_CLOSED, ({ remoteProducerId }) => {
   // server notification is received when a producer is closed
   // we need to close the client-side consumer and associated transport
   const producerToClose = consumerTransports.find(

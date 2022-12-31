@@ -754,7 +754,7 @@ formatters.j = function (v) {
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"./common":7,"_process":80}],7:[function(require,module,exports){
+},{"./common":7,"_process":81}],7:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -791,7 +791,7 @@ function setup(env) {
 
 	/**
 	* Selects a color for a debug namespace
-	* @param {String} namespace The namespace string for the for the debug instance to be colored
+	* @param {String} namespace The namespace string for the debug instance to be colored
 	* @return {Number|String} An ANSI color code for the given namespace
 	* @api private
 	*/
@@ -936,7 +936,7 @@ function setup(env) {
 			namespaces = split[i].replace(/\*/g, '.*?');
 
 			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+				createDebug.skips.push(new RegExp('^' + namespaces.slice(1) + '$'));
 			} else {
 				createDebug.names.push(new RegExp('^' + namespaces + '$'));
 			}
@@ -2933,7 +2933,7 @@ class WS extends Transport {
 module.exports = WS;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../transport":11,"../util":18,"./websocket-constructor":16,"buffer":77,"debug":6,"engine.io-parser":23,"parseqs":59,"yeast":74}],18:[function(require,module,exports){
+},{"../transport":11,"../util":18,"./websocket-constructor":16,"buffer":78,"debug":6,"engine.io-parser":23,"parseqs":59,"yeast":74}],18:[function(require,module,exports){
 const globalThis = require("./globalThis");
 
 module.exports.pick = (obj, ...attr) => {
@@ -4624,7 +4624,7 @@ class EnhancedEventEmitter extends events_1.EventEmitter {
 }
 exports.EnhancedEventEmitter = EnhancedEventEmitter;
 
-},{"./Logger":31,"events":78}],31:[function(require,module,exports){
+},{"./Logger":31,"events":79}],31:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -14953,15 +14953,127 @@ yeast.decode = decode;
 module.exports = yeast;
 
 },{}],75:[function(require,module,exports){
-//index.js
+/**
+ * 서버에서 연결을 수신할 IP 주소이다.
+ */
+const IP_ADDRESS = "192.168.35.2";
+
+/**
+ * 소켓의 네임 스페이스이다.
+ *
+ * https://socket.io/docs/v4/namespaces/
+ */
+const NAME_SPACE = "/mediasoup";
+
+/**
+ * 초기 소켓 연결을 위한 프로토콜이다.
+ *
+ * 클라이언트에서 서버로 전송된다.
+ */
+const CONNECTION = "connection";
+
+/**
+ * 초기 소켓 연결 성공 응답 프로토콜이다.
+ *
+ * 서버에서 클라이언트로 전송된다.
+ */
+const CONNECTION_SUCCESS = "connection-success";
+
+/**
+ * 소켓 연결이 끊어짐을 알리는 프로토콜이다.
+ *
+ * 클라이언트에서 서버로 전송된다.
+ */
+const DISCONNECT = "disconnect";
+
+/**
+ * 방 참여를 요청하는 프로토콜이다.
+ *
+ * 클라이언트에서 서버로 전송된다.
+ */
+const JOIN_ROOM = "joinRoom";
+
+/**
+ * WebRTC transport 생성을 요청하는 프로토콜이다.
+ *
+ * 클라이언트에서 서버로 전송되며 `isConsumer`가 `true`이면 소비자, 아니면 생성자 포트를 생성한다.
+ */
+const CREATE_WEB_RTC_TRANSPORT = "createWebRtcTransport";
+
+/**
+ * 생성자 포트를 생성하라는 요청이다.
+ *
+ * 클라이언트가 서버에 전송한다.
+ */
+const TRANSPORT_PRODUCER = "transport-produce";
+
+/**
+ * 생성자 트랜스포트가 성공적으로 연결되었다고 클라이언트가 서버에 보내는 프로토콜이다.
+ */
+const TRANSPORT_PRODUCER_CONNECT = "transport-producer-connected";
+
+/**
+ * 소비자 트랜스포트가 성공적으로 연결되었다고 클라이언트가 서버에 보내는 프로토콜이다.
+ */
+const TRANSPORT_RECEIVER_CONNECT = "transport-receiver-connected";
+
+/**
+ * 클라이언트가 소비할 준비가 되어 서버에 소비 요청을 보낸다.
+ */
+const CONSUME = "consume";
+
+/**
+ * 클라이언트가 소비를 다시 재개할 요청을 서버에 보낸다.
+ */
+const CONSUME_RESUME = "consumer-resume";
+
+/**
+ * 요청을 보낸 클라이언트의 생성자는 제외한 모든 생성자를 요청한다.
+ *
+ * 클라이언트에서 서버로 전송된다.
+ */
+const GET_PRODUCERS = "getProducers";
+
+/**
+ * 새로운 생성자가 등장했다고 서버가 클라이언트에게 전송한다.
+ */
+const NEW_PRODUCER = "new-producer";
+
+/**
+ * 기존에 존재하던 생산자가 사라졌음을 알리는 프로토콜이다.
+ *
+ * 서버에서 클라이언트로 전달된다.
+ */
+const PRODUCER_CLOSED = "producer-closed";
+
+module.exports = {
+  IP_ADDRESS,
+  NAME_SPACE,
+  CONNECTION,
+  CONNECTION_SUCCESS,
+  DISCONNECT,
+  JOIN_ROOM,
+  CREATE_WEB_RTC_TRANSPORT,
+  TRANSPORT_PRODUCER,
+  TRANSPORT_PRODUCER_CONNECT,
+  TRANSPORT_RECEIVER_CONNECT,
+  CONSUME,
+  CONSUME_RESUME,
+  GET_PRODUCERS,
+  NEW_PRODUCER,
+  PRODUCER_CLOSED,
+};
+
+},{}],76:[function(require,module,exports){
+const protocol = require("../protocol.cjs");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 
 const roomName = window.location.pathname.split("/")[2];
 
-const socket = io("/mediasoup");
+const socket = io(protocol.NAME_SPACE);
 
-socket.on("connection-success", ({ socketId }) => {
+socket.on(protocol.CONNECTION_SUCCESS, ({ socketId }) => {
   console.log(socketId);
   getLocalStream();
 });
@@ -15016,7 +15128,7 @@ const streamSuccess = (stream) => {
 };
 
 const joinRoom = () => {
-  socket.emit("joinRoom", { roomName }, (data) => {
+  socket.emit(protocol.JOIN_ROOM, { roomName }, (data) => {
     console.log(`Router RTP Capabilities... ${data.rtpCapabilities}`);
     // we assign to local variable and will be used when
     // loading the client Device (see createDevice above)
@@ -15075,73 +15187,77 @@ const createDevice = async () => {
 const createSendTransport = () => {
   // see server's socket.on('createWebRtcTransport', sender?, ...)
   // this is a call from Producer, so sender = true
-  socket.emit("createWebRtcTransport", { isConsumer: false }, ({ params }) => {
-    // The server sends back params needed
-    // to create Send Transport on the client side
-    if (params.error) {
-      console.log(params.error);
-      return;
-    }
+  socket.emit(
+    protocol.CREATE_WEB_RTC_TRANSPORT,
+    { isConsumer: false },
+    ({ params }) => {
+      // The server sends back params needed
+      // to create Send Transport on the client side
+      if (params.error) {
+        console.log(params.error);
+        return;
+      }
 
-    console.log(params);
+      console.log(params);
 
-    // creates a new WebRTC Transport to send media
-    // based on the server's producer transport params
-    // https://mediasoup.org/documentation/v3/mediasoup-client/api/#TransportOptions
-    producerTransport = device.createSendTransport(params);
+      // creates a new WebRTC Transport to send media
+      // based on the server's producer transport params
+      // https://mediasoup.org/documentation/v3/mediasoup-client/api/#TransportOptions
+      producerTransport = device.createSendTransport(params);
 
-    // https://mediasoup.org/documentation/v3/communication-between-client-and-server/#producing-media
-    // this event is raised when a first call to transport.produce() is made
-    // see connectSendTransport() below
-    producerTransport.on(
-      "connect",
-      async ({ dtlsParameters }, callback, errback) => {
+      // https://mediasoup.org/documentation/v3/communication-between-client-and-server/#producing-media
+      // this event is raised when a first call to transport.produce() is made
+      // see connectSendTransport() below
+      producerTransport.on(
+        "connect",
+        async ({ dtlsParameters }, callback, errback) => {
+          try {
+            // Signal local DTLS parameters to the server side transport
+            // see server's socket.on('transport-producer-connect', ...)
+            await socket.emit(protocol.TRANSPORT_PRODUCER_CONNECT, {
+              dtlsParameters,
+            });
+
+            // Tell the transport that parameters were transmitted.
+            callback();
+          } catch (error) {
+            errback(error);
+          }
+        }
+      );
+
+      producerTransport.on("produce", async (parameters, callback, errback) => {
+        console.log(parameters);
+
         try {
-          // Signal local DTLS parameters to the server side transport
-          // see server's socket.on('transport-connect', ...)
-          await socket.emit("transport-connect", {
-            dtlsParameters,
-          });
+          // tell the server to create a Producer
+          // with the following parameters and produce
+          // and expect back a server side producer id
+          // see server's socket.on('transport-produce', ...)
+          await socket.emit(
+            protocol.TRANSPORT_PRODUCER,
+            {
+              kind: parameters.kind,
+              rtpParameters: parameters.rtpParameters,
+              appData: parameters.appData,
+            },
+            ({ id, producersExist }) => {
+              // Tell the transport that parameters were transmitted and provide it with the
+              // server side producer's id.
+              callback({ id });
 
-          // Tell the transport that parameters were transmitted.
-          callback();
+              // if producers exist, then join room
+              if (producersExist) getProducers();
+            }
+          );
         } catch (error) {
           errback(error);
         }
-      }
-    );
+      });
 
-    producerTransport.on("produce", async (parameters, callback, errback) => {
-      console.log(parameters);
-
-      try {
-        // tell the server to create a Producer
-        // with the following parameters and produce
-        // and expect back a server side producer id
-        // see server's socket.on('transport-produce', ...)
-        await socket.emit(
-          "transport-produce",
-          {
-            kind: parameters.kind,
-            rtpParameters: parameters.rtpParameters,
-            appData: parameters.appData,
-          },
-          ({ id, producersExist }) => {
-            // Tell the transport that parameters were transmitted and provide it with the
-            // server side producer's id.
-            callback({ id });
-
-            // if producers exist, then join room
-            if (producersExist) getProducers();
-          }
-        );
-      } catch (error) {
-        errback(error);
-      }
-    });
-
-    connectSendTransport();
-  });
+      connectSendTransport();
+    }
+  );
 };
 
 const connectSendTransport = async () => {
@@ -15184,7 +15300,7 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
   consumingTransports.push(remoteProducerId);
 
   await socket.emit(
-    "createWebRtcTransport",
+    protocol.CREATE_WEB_RTC_TRANSPORT,
     { isConsumer: true },
     ({ params }) => {
       // The server sends back params needed
@@ -15212,7 +15328,7 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
           try {
             // Signal local DTLS parameters to the server side transport
             // see server's socket.on('transport-recv-connect', ...)
-            await socket.emit("transport-recv-connect", {
+            await socket.emit(protocol.TRANSPORT_RECEIVER_CONNECT, {
               dtlsParameters,
               serverConsumerTransportId: params.id,
             });
@@ -15232,12 +15348,12 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
 };
 
 // server informs the client of a new producer just joined
-socket.on("new-producer", ({ producerId }) =>
+socket.on(protocol.NEW_PRODUCER, ({ producerId }) =>
   signalNewConsumerTransport(producerId)
 );
 
 const getProducers = () => {
-  socket.emit("getProducers", (producerIds) => {
+  socket.emit(protocol.GET_PRODUCERS, (producerIds) => {
     console.log(producerIds);
     // for each of the producer create a consumer
     // producerIds.forEach(id => signalNewConsumerTransport(id))
@@ -15254,7 +15370,7 @@ const connectRecvTransport = async (
   // to create a consumer based on the rtpCapabilities and consume
   // if the router can consume, it will send back a set of params as below
   await socket.emit(
-    "consume",
+    protocol.CONSUME,
     {
       rtpCapabilities: device.rtpCapabilities,
       remoteProducerId,
@@ -15314,14 +15430,14 @@ const connectRecvTransport = async (
 
       // the server consumer started with media paused
       // so we need to inform the server to resume
-      socket.emit("consumer-resume", {
+      socket.emit(protocol.CONSUME_RESUME, {
         serverConsumerId: params.serverConsumerId,
       });
     }
   );
 };
 
-socket.on("producer-closed", ({ remoteProducerId }) => {
+socket.on(protocol.PRODUCER_CLOSED, ({ remoteProducerId }) => {
   // server notification is received when a producer is closed
   // we need to close the client-side consumer and associated transport
   const producerToClose = consumerTransports.find(
@@ -15339,7 +15455,7 @@ socket.on("producer-closed", ({ remoteProducerId }) => {
   videoContainer.removeChild(document.getElementById(`td-${remoteProducerId}`));
 });
 
-},{"mediasoup-client":53,"socket.io-client":65}],76:[function(require,module,exports){
+},{"../protocol.cjs":75,"mediasoup-client":53,"socket.io-client":65}],77:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -15491,7 +15607,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],77:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -17272,7 +17388,7 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":76,"buffer":77,"ieee754":79}],78:[function(require,module,exports){
+},{"base64-js":77,"buffer":78,"ieee754":80}],79:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -17771,7 +17887,7 @@ function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
   }
 }
 
-},{}],79:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -17858,7 +17974,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],80:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -18044,4 +18160,4 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}]},{},[75]);
+},{}]},{},[76]);

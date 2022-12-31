@@ -4,14 +4,16 @@ export const addProducer = (socket, producer, roomName) => {
   producers = [...producers, { socketId: socket.id, producer, roomName }];
 };
 
-export const getProducers = (filter) => {
+export const getProducersWithFilter = (filter) => {
   return producers.filter((producerData) => {
     return filter(producerData);
   });
 };
 
-export const getProducerIds = (filter) => {
-  return getProducers(filter).map((producerData) => producerData.producer.id);
+export const getProducerIdsWithFilter = (filter) => {
+  return getProducersWithFilter(filter).map(
+    (producerData) => producerData.producer.id
+  );
 };
 
 export const isProducerExists = () => producers.length > 1;

@@ -4,7 +4,7 @@ import path from "path";
 import { Server } from "socket.io";
 import { handleConnect } from "./src/worker.js";
 import { tlsconfig } from "./config.js";
-import * as protocol from "./protocol.js";
+import * as protocol from "./protocol.cjs";
 
 const __dirname = path.resolve();
 const app = express();

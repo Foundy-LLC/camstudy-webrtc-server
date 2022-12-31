@@ -15,8 +15,8 @@ import {
 } from "./peer.js";
 import {
   addProducer,
-  getProducerIds,
-  getProducers,
+  getProducerIdsWithFilter,
+  getProducersWithFilter,
   isProducerExists,
   removeProducerBySocketId,
 } from "./producer.js";
@@ -28,7 +28,7 @@ import {
   removeTransportBySocketId,
   removeTransportByTransportId,
 } from "./transport.js";
-import * as protocol from "../protocol.js";
+import * as protocol from "../protocol.cjs";
 
 /**
  * Worker
@@ -65,7 +65,7 @@ export const handleConnect = async (socket) => {
     socketId: socket.id,
   });
 
-  socket.on("disconnect", () => {
+  socket.on(protocol.DISCONNECT, () => {
     // do some cleanup
     console.log("peer disconnected");
 
@@ -81,7 +81,7 @@ export const handleConnect = async (socket) => {
     }
   });
 
-  socket.on("joinRoom", async ({ roomName }, callback) => {
+  socket.on(protocol.JOIN_ROOM, async ({ roomName }, callback) => {
     // create Router if it does not exist
     // const router1 = rooms[roomName] && rooms[roomName].get('data').router || await createRoom(roomName, socket.id)
     const router1 = await createRoom(roomName, socket.id);
@@ -123,31 +123,34 @@ export const handleConnect = async (socket) => {
 
   // Client emits a request to create server side Transport
   // We need to differentiate between the producer and consumer transports
-  socket.on("createWebRtcTransport", async ({ isConsumer }, callback) => {
-    // get Room Name from Peer's properties
-    const roomName = getPeer(socket.id).roomName;
+  socket.on(
+    protocol.CREATE_WEB_RTC_TRANSPORT,
+    async ({ isConsumer }, callback) => {
+      // get Room Name from Peer's properties
+      const roomName = getPeer(socket.id).roomName;
 
-    // get Router (Room) object this peer is in based on RoomName
-    const router = getRoomByName(roomName).router;
+      // get Router (Room) object this peer is in based on RoomName
+      const router = getRoomByName(roomName).router;
 
-    try {
-      const transport = await createWebRtcTransport(router);
+      try {
+        const transport = await createWebRtcTransport(router);
 
-      callback({
-        params: {
-          id: transport.id,
-          iceParameters: transport.iceParameters,
-          iceCandidates: transport.iceCandidates,
-          dtlsParameters: transport.dtlsParameters,
-        },
-      });
+        callback({
+          params: {
+            id: transport.id,
+            iceParameters: transport.iceParameters,
+            iceCandidates: transport.iceCandidates,
+            dtlsParameters: transport.dtlsParameters,
+          },
+        });
 
-      // add transport to Peer's properties
-      onTransportCreated(transport, roomName, isConsumer);
-    } catch (e) {
-      console.log(e);
+        // add transport to Peer's properties
+        onTransportCreated(transport, roomName, isConsumer);
+      } catch (e) {
+        console.log(e);
+      }
     }
-  });
+  );
 
   const onTransportCreated = (transport, roomName, isConsumer) => {
     addTransport(socket.id, transport, roomName, isConsumer);
@@ -164,10 +167,10 @@ export const handleConnect = async (socket) => {
     addPeerConsumer(socket, consumer);
   };
 
-  socket.on("getProducers", (callback) => {
+  socket.on(protocol.GET_PRODUCERS, (callback) => {
     //return all producer transports
     const { roomName } = getPeer(socket.id);
-    const producerList = getProducerIds((producerData) => {
+    const producerList = getProducerIdsWithFilter((producerData) => {
       return (
         producerData.socketId !== socket.id &&
         producerData.roomName === roomName
@@ -182,7 +185,7 @@ export const handleConnect = async (socket) => {
     console.log(`just joined, id ${id} ${roomName}, ${socketId}`);
     // A new producer just joined
     // let all consumers to consume this producer
-    const producers = getProducers(
+    const producers = getProducersWithFilter(
       (producerData) =>
         producerData.socketId !== socketId && producerData.roomName === roomName
     );
@@ -190,12 +193,12 @@ export const handleConnect = async (socket) => {
     producers.forEach((producerData) => {
       const producerSocket = getPeer(producerData.socketId).socket;
       // use socket to send producer id to producer
-      producerSocket.emit("new-producer", { producerId: id });
+      producerSocket.emit(protocol.NEW_PRODUCER, { producerId: id });
     });
   };
 
-  // see client's socket.emit('transport-connect', ...)
-  socket.on("transport-connect", ({ dtlsParameters }) => {
+  // see client's socket.emit('transport-producer-connect', ...)
+  socket.on(protocol.TRANSPORT_PRODUCER_CONNECT, ({ dtlsParameters }) => {
     console.log("DTLS PARAMS... ", { dtlsParameters });
 
     getTransport(socket.id).connect({ dtlsParameters });
@@ -203,7 +206,7 @@ export const handleConnect = async (socket) => {
 
   // see client's socket.emit('transport-produce', ...)
   socket.on(
-    "transport-produce",
+    protocol.TRANSPORT_PRODUCER,
     async ({ kind, rtpParameters, appData }, callback) => {
       // call produce based on the prameters from the client
       const producer = await getTransport(socket.id).produce({
@@ -233,9 +236,8 @@ export const handleConnect = async (socket) => {
     }
   );
 
-  // see client's socket.emit('transport-recv-connect', ...)
   socket.on(
-    "transport-recv-connect",
+    protocol.TRANSPORT_RECEIVER_CONNECT,
     async ({ dtlsParameters, serverConsumerTransportId }) => {
       console.log(`DTLS PARAMS: ${dtlsParameters}`);
       const consumerTransport = findConsumerTrasport(
@@ -246,7 +248,7 @@ export const handleConnect = async (socket) => {
   );
 
   socket.on(
-    "consume",
+    protocol.CONSUME,
     async (
       { rtpCapabilities, remoteProducerId, serverConsumerTransportId },
       callback
@@ -279,7 +281,7 @@ export const handleConnect = async (socket) => {
 
           consumer.on("producerclose", () => {
             console.log("producer of consumer closed");
-            socket.emit("producer-closed", { remoteProducerId });
+            socket.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
 
             removeTransportByTransportId(consumerTransport.transport.id);
 
@@ -312,7 +314,7 @@ export const handleConnect = async (socket) => {
     }
   );
 
-  socket.on("consumer-resume", async ({ serverConsumerId }) => {
+  socket.on(protocol.CONSUME_RESUME, async ({ serverConsumerId }) => {
     console.log("consumer resume");
     const { consumer } = getConsumer(serverConsumerId);
     await consumer.resume();
