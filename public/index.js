@@ -1,10 +1,12 @@
+import * as protocol from "../protocol.js";
+
 //index.js
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 
 const roomName = window.location.pathname.split("/")[2];
 
-const socket = io("/mediasoup");
+const socket = io(protocol.NAME_SPACE);
 
 socket.on("connection-success", ({ socketId }) => {
   console.log(socketId);

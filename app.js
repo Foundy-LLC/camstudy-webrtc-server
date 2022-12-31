@@ -4,12 +4,13 @@ import path from "path";
 import { Server } from "socket.io";
 import { handleConnect } from "./src/worker.js";
 import { tlsconfig } from "./config.js";
+import * as protocol from "./protocol.js";
 
 const __dirname = path.resolve();
 const app = express();
 
 app.get("*", (req, res, next) => {
-  const path = "/room/";
+  const path = "/rooms/";
 
   if (req.path.indexOf(path) == 0 && req.path.length > path.length)
     return next();
@@ -19,7 +20,7 @@ app.get("*", (req, res, next) => {
   );
 });
 
-app.use("/room/:roomId", express.static(path.join(__dirname, "public")));
+app.use("/rooms/:roomId", express.static(path.join(__dirname, "public")));
 
 const httpsServer = https.createServer(tlsconfig, app);
 httpsServer.listen(3000, () => {
@@ -29,6 +30,6 @@ httpsServer.listen(3000, () => {
 const io = new Server(httpsServer);
 
 // socket.io namespace (could represent a room?)
-const connections = io.of("/mediasoup");
+const connections = io.of(protocol.NAME_SPACE);
 
-connections.on("connection", async (socket) => handleConnect(socket));
+connections.on(protocol.CONNECTION, async (socket) => handleConnect(socket));

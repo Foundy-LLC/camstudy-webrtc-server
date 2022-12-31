@@ -28,6 +28,7 @@ import {
   removeTransportBySocketId,
   removeTransportByTransportId,
 } from "./transport.js";
+import * as protocol from "../protocol.js";
 
 /**
  * Worker
@@ -60,7 +61,7 @@ worker = createWorker();
 
 export const handleConnect = async (socket) => {
   console.log(socket.id);
-  socket.emit("connection-success", {
+  socket.emit(protocol.CONNECTION_SUCCESS, {
     socketId: socket.id,
   });
 
@@ -325,8 +326,8 @@ const createWebRtcTransport = async (router) => {
       const webRtcTransport_options = {
         listenIps: [
           {
-            ip: "192.168.35.113", // replace with relevant IP address
-            announcedIp: "192.168.35.113",
+            ip: protocol.IP_ADDRESS,
+            announcedIp: protocol.IP_ADDRESS,
           },
         ],
         enableUdp: true,
