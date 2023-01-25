@@ -1,4 +1,4 @@
-const protocol = require("../protocol.cjs");
+const protocol = require("../constant/protocol.cjs");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 

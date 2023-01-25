@@ -15065,7 +15065,7 @@ module.exports = {
 };
 
 },{}],76:[function(require,module,exports){
-const protocol = require("../protocol.cjs");
+const protocol = require("../constant/protocol.cjs");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 
@@ -15455,7 +15455,7 @@ socket.on(protocol.PRODUCER_CLOSED, ({ remoteProducerId }) => {
   videoContainer.removeChild(document.getElementById(`td-${remoteProducerId}`));
 });
 
-},{"../protocol.cjs":75,"mediasoup-client":53,"socket.io-client":65}],77:[function(require,module,exports){
+},{"../constant/protocol.cjs":75,"mediasoup-client":53,"socket.io-client":65}],77:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength

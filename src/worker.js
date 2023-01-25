@@ -4,7 +4,7 @@ import {
   addConsumer,
   getConsumer,
   removeConsumerBySocketId,
-} from "./repository/consumer.js";
+} from "./repository/consumer.ts";
 import {
   addPeerConsumer,
   addPeerProducer,
