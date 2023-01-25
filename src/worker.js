@@ -15,11 +15,10 @@ import {
 } from "./repository/peer.js";
 import {
   addProducer,
-  getProducerIdsWithFilter,
-  getProducersWithFilter,
+  getOthersProducerBy,
   isProducerExists,
   removeProducerBySocketId,
-} from "./repository/producer.js";
+} from "./repository/producer.ts";
 import {
   getRoomByName,
   removeSocketFromRoom,
@@ -162,7 +161,7 @@ export const handleConnect = async (socket) => {
   };
 
   const onProducerCreated = (producer, roomName) => {
-    addProducer(socket, producer, roomName);
+    addProducer(socket.id, producer, roomName);
     addPeerProducer(socket, producer);
   };
 
@@ -174,28 +173,23 @@ export const handleConnect = async (socket) => {
   socket.on(protocol.GET_PRODUCERS, (callback) => {
     //return all producer transports
     const { roomName } = getPeer(socket.id);
-    const producerList = getProducerIdsWithFilter((producerData) => {
-      return (
-        producerData.socketId !== socket.id &&
-        producerData.roomName === roomName
-      );
-    });
-    console.log("getProducers: callback with ", producerList);
+    const producerIds = getOthersProducerBy(socket.id, roomName).map(
+      (wrapper) => wrapper.producer.id
+    );
+    console.log("getProducers: callback with ", producerIds);
     // return the producer list back to the client
-    callback(producerList);
+    callback(producerIds);
   });
 
   const informConsumers = (roomName, socketId, id) => {
     console.log(`just joined, id ${id} ${roomName}, ${socketId}`);
     // A new producer just joined
     // let all consumers to consume this producer
-    const producers = getProducersWithFilter(
-      (producerData) =>
-        producerData.socketId !== socketId && producerData.roomName === roomName
-    );
+    const producers = getOthersProducerBy(socketId, roomName);
 
-    producers.forEach((producerData) => {
-      const producerSocket = getPeer(producerData.socketId).socket;
+    producers.forEach((producerWrapper) => {
+      const peer = getPeer(producerWrapper.socketId);
+      const producerSocket = peer.socket;
       // use socket to send producer id to producer
       producerSocket.emit(protocol.NEW_PRODUCER, { producerId: id });
     });
