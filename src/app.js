@@ -2,9 +2,9 @@ import express from "express";
 import https from "httpolyglot";
 import path from "path";
 import { Server } from "socket.io";
-import { handleConnect } from "./src/worker.js";
-import { tlsconfig } from "./config.js";
-import * as protocol from "./protocol.cjs";
+import { handleConnect } from "./worker.js";
+import { tlsconfig } from "./constant/config.js";
+import * as protocol from "./constant/protocol.cjs";
 
 const __dirname = path.resolve();
 const app = express();
@@ -20,7 +20,7 @@ app.get("*", (req, res, next) => {
   );
 });
 
-app.use("/rooms/:roomId", express.static(path.join(__dirname, "public")));
+app.use("/rooms/:roomId", express.static(path.join(__dirname, "src/public")));
 
 const httpsServer = https.createServer(tlsconfig, app);
 httpsServer.listen(3000, () => {

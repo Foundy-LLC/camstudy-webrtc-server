@@ -1,10 +1,10 @@
 import mediasoup from "mediasoup";
-import { mediaCodecs } from "../config.js";
+import { mediaCodecs } from "./constant/config.js";
 import {
   addConsumer,
   getConsumer,
   removeConsumerBySocketId,
-} from "./consumer.js";
+} from "./repository/consumer.js";
 import {
   addPeerConsumer,
   addPeerProducer,
@@ -12,23 +12,27 @@ import {
   deletePeer,
   getPeer,
   joinPeer,
-} from "./peer.js";
+} from "./repository/peer.js";
 import {
   addProducer,
   getProducerIdsWithFilter,
   getProducersWithFilter,
   isProducerExists,
   removeProducerBySocketId,
-} from "./producer.js";
-import { getRoomByName, removeSocketFromRoom, setRoom } from "./room.js";
+} from "./repository/producer.js";
+import {
+  getRoomByName,
+  removeSocketFromRoom,
+  setRoom,
+} from "./repository/room.js";
 import {
   addTransport,
   findConsumerTrasport,
   getTransport,
   removeTransportBySocketId,
   removeTransportByTransportId,
-} from "./transport.js";
-import * as protocol from "../protocol.cjs";
+} from "./repository/transport.js";
+import * as protocol from "./constant/protocol.cjs";
 
 /**
  * Worker
