@@ -94,7 +94,7 @@ export const handleConnect = async (socket: Socket) => {
         if (peer !== undefined) {
             const {roomName} = peer;
             deletePeer(socket.id);
-            roomRepository.removeSocketFromRoom(socket.id, roomName);
+            roomRepository.removeSocket(socket.id, roomName);
         }
     });
 
@@ -106,12 +106,15 @@ export const handleConnect = async (socket: Socket) => {
         ) => {
             // create Router if it does not exist
             // const router1 = rooms[roomName] && rooms[roomName].get('data').router || await createRoom(roomName, socket.id)
-            const router1 = await roomRepository.createRoom(roomName, socket.id, worker);
+            let router = roomRepository.joinRoom(roomName, socket.id)
+            if (router === undefined) {
+                router = await roomRepository.createRoom(roomName, socket.id, worker);
+            }
             console.log("JOIN ROOM: ", roomName);
             joinPeer(socket, roomName);
 
             // get Router RTP Capabilities
-            const rtpCapabilities = router1.rtpCapabilities;
+            const rtpCapabilities = router.rtpCapabilities;
 
             // call callback from the client and send back the rtpCapabilities
             callback({rtpCapabilities});

@@ -10,28 +10,24 @@ export interface Room {
 class RoomRepository {
     #rooms: Map<string, Room> = new Map<string, Room>();
 
-    createRoom = async (roomName: string, socketId: string, worker: Worker) => {
-        // worker.createRouter(options)
-        // options = { mediaCodecs, appData }
-        // mediaCodecs -> defined above
-        // appData -> custom application data - we are not supplying any
-        // none of the two are required
-        let router: Router;
-        let socketIds: string[] = [];
-        const room = this.getRoomByName(roomName);
-
-        if (room !== undefined) {
-            router = room.router;
-            socketIds = room.socketIds || [];
-        } else {
-            router = await worker.createRouter({mediaCodecs});
+    joinRoom = (roomName: string, socketId: string): Router | undefined => {
+        const room = this.getRoomByName(roomName)
+        if (room === undefined) {
+            return undefined
         }
-        console.log(`Router ID: ${router.id}`, socketIds.length);
-        this.setRoom(roomName, {
-            router: router,
-            socketIds: [...socketIds, socketId],
-        });
+        this.#rooms.set(roomName, {
+            router: room.router,
+            socketIds: [...room.socketIds, socketId]
+        })
+        return room.router
+    }
 
+    createRoom = async (roomName: string, socketId: string, worker: Worker) => {
+        const router = await worker.createRouter({mediaCodecs});
+        this.#rooms.set(roomName, {
+            router: router,
+            socketIds: [socketId],
+        });
         return router;
     };
 
@@ -39,11 +35,7 @@ class RoomRepository {
         return this.#rooms.get(roomName);
     };
 
-    setRoom = (roomName: string, room: Room) => {
-        this.#rooms.set(roomName, room);
-    };
-
-    removeSocketFromRoom = (socketId: string, roomName: string) => {
+    removeSocket = (socketId: string, roomName: string) => {
         const room = this.#rooms.get(roomName);
         if (room === undefined) {
             throw Error("해당 방이 존재하지 않습니다.");
