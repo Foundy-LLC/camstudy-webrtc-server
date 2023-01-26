@@ -27,9 +27,9 @@ const createPeer = (
 
 class RoomRepository {
 
-  #roomByRoomName: Map<string, Room> = new Map<string, Room>();
+  readonly #roomByRoomName: Map<string, Room> = new Map<string, Room>();
 
-  #roomNameBySocketId: Map<string, string> = new Map<string, string>();
+  readonly #roomNameBySocketId: Map<string, string> = new Map<string, string>();
 
   /**
    * 방에 접속한다. 만약 {@link roomName} 방이 없다면 `undefined`를 반환한다.
