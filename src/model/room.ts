@@ -3,6 +3,6 @@ import { Peer } from "./peer";
 
 export interface Room {
   router: Router;
-  name: string;
+  id: string;
   peers: Peer[];
 }
