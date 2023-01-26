@@ -1,20 +1,31 @@
-let transports = []; // [ { socketId1, roomName1, transport, isConsumer }, ... ]
+import { Transport } from "mediasoup/node/lib/Transport";
 
-export const addTransport = (socketId, transport, roomName, isConsumer) => {
-  transports = [
-    ...transports,
-    { socketId: socketId, transport, roomName, isConsumer },
-  ];
+export interface TransportWrapper {
+  socketId: string;
+  roomName: string;
+  transport: Transport;
+  isConsumer: boolean;
+}
+
+let transports: TransportWrapper[] = []; // [ { socketId1, roomName1, transport, isConsumer }, ... ]
+
+export const addTransport = (
+  socketId: string,
+  transport: Transport,
+  roomName: string,
+  isConsumer: boolean
+) => {
+  transports = [...transports, { socketId, transport, roomName, isConsumer }];
 };
 
-export const getTransport = (socketId) => {
+export const getTransport = (socketId: string) => {
   const [producerTransport] = transports.filter(
     (transport) => transport.socketId === socketId && !transport.isConsumer
   );
   return producerTransport.transport;
 };
 
-export const findConsumerTrasport = (consumerTransportId) => {
+export const findConsumerTrasport = (consumerTransportId: string) => {
   return transports.find(
     (transportData) =>
       transportData.isConsumer &&
@@ -22,11 +33,11 @@ export const findConsumerTrasport = (consumerTransportId) => {
   );
 };
 
-export const removeTransportByTransportId = (transportId) => {
+export const removeTransportByTransportId = (transportId: string) => {
   transports.forEach((transportData) => {
     const transport = transportData.transport;
     if (transport.id === transportId) {
-      transport.close([]);
+      transport.close();
     }
   });
   transports = transports.filter(
@@ -34,7 +45,7 @@ export const removeTransportByTransportId = (transportId) => {
   );
 };
 
-export const removeTransportBySocketId = (socketId) => {
+export const removeTransportBySocketId = (socketId: string) => {
   transports.forEach((transportData) => {
     if (transportData.socketId === socketId) {
       transportData.transport.close();
