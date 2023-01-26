@@ -85,9 +85,9 @@ class RoomRepository {
     peer?.producerTransport?.close();
 
     room.peers = room.peers.filter((e: Peer) => e !== peer);
+    this.#roomNameBySocketId.delete(socketId);
     if (room.peers.length === 0) {
       this.#roomByRoomName.delete(roomName);
-      this.#roomNameBySocketId.delete(socketId);
     }
   };
 
