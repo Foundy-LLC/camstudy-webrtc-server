@@ -26,7 +26,7 @@ import {
   getTransport,
   removeTransportBySocketId,
   removeTransportByTransportId,
-} from "./repository/transport.js";
+} from "./repository/transport.ts";
 import * as protocol from "./constant/protocol.cjs";
 
 /**
