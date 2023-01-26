@@ -1,43 +1,43 @@
-import { Consumer } from "mediasoup/node/lib/Consumer";
+import {Consumer} from "mediasoup/node/lib/Consumer";
 
 export interface ConsumerWrapper {
-  socketId: string;
-  roomName: string;
-  consumer: Consumer;
+    socketId: string;
+    roomName: string;
+    consumer: Consumer;
 }
 
 let consumers: ConsumerWrapper[] = []; // [ { socketId1, roomName1, consumer, }, ... ]
 
 export const addConsumer = (
-  socketId: string,
-  consumer: Consumer,
-  roomName: string
+    socketId: string,
+    consumer: Consumer,
+    roomName: string
 ) => {
-  consumers = [...consumers, { socketId: socketId, consumer, roomName }];
+    consumers = [...consumers, {socketId: socketId, consumer, roomName}];
 };
 
 export const removeConsumer = (consumer: Consumer) => {
-  consumer.close();
-  consumers = consumers.filter(
-    (consumerData) => consumerData.consumer.id !== consumer.id
-  );
+    consumer.close();
+    consumers = consumers.filter(
+        (consumerData) => consumerData.consumer.id !== consumer.id
+    );
 };
 
 export const getConsumer = (
-  consumerId: string
+    consumerId: string
 ): ConsumerWrapper | undefined => {
-  return consumers.find(
-    (consumerData) => consumerData.consumer.id === consumerId
-  );
+    return consumers.find(
+        (consumerData) => consumerData.consumer.id === consumerId
+    );
 };
 
 export const removeConsumerBySocketId = (socketId: string) => {
-  consumers.forEach((consumerData) => {
-    if (consumerData.socketId === socketId) {
-      consumerData.consumer.close();
-    }
-  });
-  consumers = consumers.filter(
-    (consumerData) => consumerData.socketId !== socketId
-  );
+    consumers.forEach((consumerData) => {
+        if (consumerData.socketId === socketId) {
+            consumerData.consumer.close();
+        }
+    });
+    consumers = consumers.filter(
+        (consumerData) => consumerData.socketId !== socketId
+    );
 };
