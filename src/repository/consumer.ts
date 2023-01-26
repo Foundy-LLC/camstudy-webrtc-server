@@ -6,7 +6,7 @@ export interface ConsumerWrapper {
     consumer: Consumer;
 }
 
-let consumers: ConsumerWrapper[] = []; // [ { socketId1, roomName1, consumer, }, ... ]
+let consumers: ConsumerWrapper[] = [];
 
 export const addConsumer = (
     socketId: string,

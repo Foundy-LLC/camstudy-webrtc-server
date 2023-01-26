@@ -7,7 +7,7 @@ export interface TransportWrapper {
     isConsumer: boolean;
 }
 
-let transports: TransportWrapper[] = []; // [ { socketId1, roomName1, transport, isConsumer }, ... ]
+let transports: TransportWrapper[] = [];
 
 export const addTransport = (
     socketId: string,

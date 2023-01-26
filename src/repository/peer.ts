@@ -11,7 +11,6 @@ export interface Peer {
     consumers: string[];
 }
 
-// { socketId1: { roomName1, socket, transports = [id1, id2,] }, producers = [id1, id2,] }, consumers = [id1, id2,], peerDetails }, ...}
 const peers: Map<string, Peer> = new Map<string, Peer>();
 
 export const getPeer = (socketId: string): Peer | undefined => {

@@ -6,7 +6,7 @@ export interface ProducerWrapper {
     producer: Producer;
 }
 
-let producers: ProducerWrapper[] = []; // [ { socketId1, roomName1, producer, }, ... ]
+let producers: ProducerWrapper[] = [];
 
 export const addProducer = (
     socketId: string,
