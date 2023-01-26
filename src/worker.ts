@@ -1,5 +1,4 @@
 import mediasoup from "mediasoup";
-import {mediaCodecs} from "./constant/config.js";
 import {
     addConsumer,
     getConsumer,
@@ -32,9 +31,7 @@ import * as protocol from "./constant/protocol.js";
 import {Worker} from "mediasoup/node/lib/Worker.js";
 import {Socket} from "socket.io";
 import {Router} from "mediasoup/node/lib/Router.js";
-import {Transport} from "mediasoup/node/lib/Transport.js";
-import {Producer, ProducerOptions} from "mediasoup/node/lib/Producer.js";
-import {Consumer} from "mediasoup/node/lib/Consumer.js";
+import {ProducerOptions} from "mediasoup/node/lib/Producer.js";
 import {
     MediaKind,
     RtpCapabilities,
@@ -80,6 +77,7 @@ createWorker().then((value) => {
 
 export const handleConnect = async (socket: Socket) => {
     console.log(socket.id);
+
     socket.emit(protocol.CONNECTION_SUCCESS, {
         socketId: socket.id,
     });
@@ -104,15 +102,11 @@ export const handleConnect = async (socket: Socket) => {
         protocol.JOIN_ROOM,
         async (
             {roomName}: { roomName: string },
-            callback: ({
-                           rtpCapabilities,
-                       }: {
-                rtpCapabilities: RtpCapabilities;
-            }) => void
+            callback: ({rtpCapabilities}: { rtpCapabilities: RtpCapabilities; }) => void
         ) => {
             // create Router if it does not exist
             // const router1 = rooms[roomName] && rooms[roomName].get('data').router || await createRoom(roomName, socket.id)
-            const router1 = await createRoom(roomName, socket.id);
+            const router1 = await roomRepository.createRoom(roomName, socket.id, worker);
             console.log("JOIN ROOM: ", roomName);
             joinPeer(socket, roomName);
 
@@ -124,41 +118,13 @@ export const handleConnect = async (socket: Socket) => {
         }
     );
 
-    const createRoom = async (roomName: string, socketId: string) => {
-        // worker.createRouter(options)
-        // options = { mediaCodecs, appData }
-        // mediaCodecs -> defined above
-        // appData -> custom application data - we are not supplying any
-        // none of the two are required
-        let router: Router;
-        let socketIds: string[] = [];
-        const room = roomRepository.getRoomByName(roomName);
-        if (room !== undefined) {
-            router = room.router;
-            socketIds = room.socketIds || [];
-        } else {
-            router = await worker.createRouter({mediaCodecs});
-        }
-
-        console.log(`Router ID: ${router.id}`, socketIds.length);
-
-        roomRepository.setRoom(roomName, {
-            router: router,
-            socketIds: [...socketIds, socketId],
-        });
-
-        return router;
-    };
-
     // Client emits a request to create server side Transport
     // We need to differentiate between the producer and consumer transports
     socket.on(
         protocol.CREATE_WEB_RTC_TRANSPORT,
         async (
             {isConsumer}: { isConsumer: boolean },
-            callback: ({
-                           params,
-                       }: {
+            callback: ({params}: {
                 params: {
                     id: string;
                     iceParameters: IceParameters;
@@ -198,31 +164,13 @@ export const handleConnect = async (socket: Socket) => {
                 });
 
                 // add transport to Peer's properties
-                onTransportCreated(transport, roomName, isConsumer);
+                addTransport(socket.id, transport, roomName, isConsumer);
+                addPeerTransport(socket.id, transport.id);
             } catch (e) {
                 console.log(e);
             }
         }
     );
-
-    const onTransportCreated = (
-        transport: Transport,
-        roomName: string,
-        isConsumer: boolean
-    ) => {
-        addTransport(socket.id, transport, roomName, isConsumer);
-        addPeerTransport(socket.id, transport.id);
-    };
-
-    const onProducerCreated = (producer: Producer, roomName: string) => {
-        addProducer(socket.id, producer, roomName);
-        addPeerProducer(socket.id, producer.id);
-    };
-
-    const onConsume = (consumer: Consumer, roomName: string) => {
-        addConsumer(socket.id, consumer, roomName);
-        addPeerConsumer(socket.id, consumer.id);
-    };
 
     socket.on(protocol.GET_PRODUCERS, (callback: (ids: string[]) => void) => {
         const peer = getPeer(socket.id);
@@ -240,26 +188,6 @@ export const handleConnect = async (socket: Socket) => {
         callback(producerIds);
     });
 
-    const informConsumers = (
-        roomName: string,
-        socketId: string,
-        producerId: string
-    ) => {
-        console.log(`just joined, id ${producerId} ${roomName}, ${socketId}`);
-        // A new producer just joined
-        // let all consumers to consume this producer
-        const producers = getOthersProducerBy(socketId, roomName);
-
-        producers.forEach((producerWrapper) => {
-            const peer = getPeer(producerWrapper.socketId);
-            if (peer !== undefined) {
-                const producerSocket = peer.socket;
-                // use socket to send producer id to producer
-                producerSocket.emit(protocol.NEW_PRODUCER, {producerId: producerId});
-            }
-        });
-    };
-
     // see client's socket.emit('transport-producer-connect', ...)
     socket.on(
         protocol.TRANSPORT_PRODUCER_CONNECT,
@@ -275,13 +203,7 @@ export const handleConnect = async (socket: Socket) => {
         protocol.TRANSPORT_PRODUCER,
         async (
             {kind, rtpParameters, appData}: ProducerOptions,
-            callback: ({
-                           id,
-                           producersExist,
-                       }: {
-                id: string;
-                producersExist: boolean;
-            }) => void
+            callback: ({id, producersExist}: { id: string; producersExist: boolean; }) => void
         ) => {
             // call produce based on the prameters from the client
             const producer = await getTransport(socket.id).produce({
@@ -296,9 +218,10 @@ export const handleConnect = async (socket: Socket) => {
             // add producer to the producers array
             const {roomName} = peer;
 
-            onProducerCreated(producer, roomName);
+            addProducer(socket.id, producer, roomName);
+            addPeerProducer(socket.id, producer.id);
 
-            informConsumers(roomName, socket.id, producer.id);
+            informConsumersNewProducerAppeared(roomName, socket.id, producer.id);
 
             console.log("Producer ID: ", producer.id, producer.kind);
 
@@ -349,18 +272,14 @@ export const handleConnect = async (socket: Socket) => {
                 remoteProducerId: string;
                 serverConsumerTransportId: string;
             },
-            callback: ({
-                           params,
-                       }: {
-                params:
-                    | {
+            callback: ({params}: {
+                params: {
                     id: string;
                     producerId: string;
                     kind: MediaKind;
                     rtpParameters: RtpParameters;
                     serverConsumerId: string;
-                }
-                    | { error: any };
+                } | { error: any };
             }) => void
         ) => {
             try {
@@ -412,7 +331,8 @@ export const handleConnect = async (socket: Socket) => {
                         removeConsumer(consumer);
                     });
 
-                    onConsume(consumer, roomName);
+                    addConsumer(socket.id, consumer, roomName);
+                    addPeerConsumer(socket.id, consumer.id);
 
                     // from the consumer extract the following params
                     // to send back to the Client
@@ -453,6 +373,26 @@ export const handleConnect = async (socket: Socket) => {
             await consumer.resume();
         }
     );
+};
+
+const informConsumersNewProducerAppeared = (
+    roomName: string,
+    socketId: string,
+    producerId: string
+) => {
+    console.log(`just joined, id ${producerId} ${roomName}, ${socketId}`);
+    // A new producer just joined
+    // let all consumers to consume this producer
+    const producers = getOthersProducerBy(socketId, roomName);
+
+    producers.forEach((producerWrapper) => {
+        const peer = getPeer(producerWrapper.socketId);
+        if (peer !== undefined) {
+            const producerSocket = peer.socket;
+            // use socket to send producer id to producer
+            producerSocket.emit(protocol.NEW_PRODUCER, {producerId: producerId});
+        }
+    });
 };
 
 const createWebRtcTransport = async (
