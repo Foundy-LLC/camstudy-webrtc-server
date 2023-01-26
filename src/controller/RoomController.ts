@@ -136,14 +136,15 @@ class RoomController {
     });
   };
 
-  findConsumerById = (socketId: string, consumerId: string): Consumer | undefined => {
+  resumeConsumer = async (socketId: string, consumerId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       return;
     }
-    return peer.consumers.find((consumer) => {
+    const consumer = peer.consumers.find((consumer) => {
       return consumer.id === consumerId;
     });
+    await consumer?.resume()
   };
 
   isProducerExists = (socketId: string): boolean => {

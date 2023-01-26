@@ -256,8 +256,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.CONSUME_RESUME,
     async ({ serverConsumerId }: { serverConsumerId: string }) => {
       console.log("consumer resume");
-      const consumer = roomController.findConsumerById(socket.id, serverConsumerId);
-      await consumer?.resume();
+      await roomController.resumeConsumer(socket.id, serverConsumerId);
     }
   );
 };
