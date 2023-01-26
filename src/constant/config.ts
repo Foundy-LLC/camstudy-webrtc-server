@@ -1,10 +1,10 @@
 import fs from "fs";
-import { RtpCodecCapability } from "mediasoup/node/lib/RtpParameters";
+import {RtpCodecCapability} from "mediasoup/node/lib/RtpParameters";
 
 // SSL cert for HTTPS access
 export const tlsconfig = {
-  key: fs.readFileSync("./server/ssl/key.pem", "utf-8"),
-  cert: fs.readFileSync("./server/ssl/cert.pem", "utf-8"),
+    key: fs.readFileSync("./server/ssl/key.pem", "utf-8"),
+    cert: fs.readFileSync("./server/ssl/cert.pem", "utf-8"),
 };
 
 // This is an Array of RtpCapabilities
@@ -12,18 +12,18 @@ export const tlsconfig = {
 // list of media codecs supported by mediasoup ...
 // https://github.com/versatica/mediasoup/blob/v3/src/supportedRtpCapabilities.ts
 export const mediaCodecs: RtpCodecCapability[] = [
-  {
-    kind: "audio",
-    mimeType: "audio/opus",
-    clockRate: 48000,
-    channels: 2,
-  },
-  {
-    kind: "video",
-    mimeType: "video/VP8",
-    clockRate: 90000,
-    parameters: {
-      "x-google-start-bitrate": 1000,
+    {
+        kind: "audio",
+        mimeType: "audio/opus",
+        clockRate: 48000,
+        channels: 2,
     },
-  },
+    {
+        kind: "video",
+        mimeType: "video/VP8",
+        clockRate: 90000,
+        parameters: {
+            "x-google-start-bitrate": 1000,
+        },
+    },
 ];

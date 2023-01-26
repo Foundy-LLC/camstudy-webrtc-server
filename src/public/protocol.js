@@ -68,7 +68,7 @@ const TRANSPORT_RECEIVER_CONNECT = "transport-receiver-connected";
 const CONSUME = "consume";
 
 /**
- * 클라이언트가 소비를 다시 재개할 요청을 서버에 보낸다.
+ * 클라이언트가 소비를 다시 재개할 때 요청을 서버에 보낸다.
  */
 const CONSUME_RESUME = "consumer-resume";
 
@@ -77,7 +77,7 @@ const CONSUME_RESUME = "consumer-resume";
  *
  * 클라이언트에서 서버로 전송된다.
  */
-const GET_PRODUCERS = "getProducers";
+const GET_PRODUCER_IDS = "getProducers";
 
 /**
  * 새로운 생성자가 등장했다고 서버가 클라이언트에게 전송한다.
@@ -92,19 +92,19 @@ const NEW_PRODUCER = "new-producer";
 const PRODUCER_CLOSED = "producer-closed";
 
 module.exports = {
-  IP_ADDRESS,
-  NAME_SPACE,
-  CONNECTION,
-  CONNECTION_SUCCESS,
-  DISCONNECT,
-  JOIN_ROOM,
-  CREATE_WEB_RTC_TRANSPORT,
-  TRANSPORT_PRODUCER,
-  TRANSPORT_PRODUCER_CONNECT,
-  TRANSPORT_RECEIVER_CONNECT,
-  CONSUME,
-  CONSUME_RESUME,
-  GET_PRODUCERS,
-  NEW_PRODUCER,
-  PRODUCER_CLOSED,
+    IP_ADDRESS,
+    NAME_SPACE,
+    CONNECTION,
+    CONNECTION_SUCCESS,
+    DISCONNECT,
+    JOIN_ROOM,
+    CREATE_WEB_RTC_TRANSPORT,
+    TRANSPORT_PRODUCER,
+    TRANSPORT_PRODUCER_CONNECT,
+    TRANSPORT_RECEIVER_CONNECT,
+    CONSUME,
+    CONSUME_RESUME,
+    GET_PRODUCERS: GET_PRODUCER_IDS,
+    NEW_PRODUCER,
+    PRODUCER_CLOSED,
 };
