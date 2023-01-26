@@ -19,11 +19,7 @@ import {
   isProducerExists,
   removeProducerBySocketId,
 } from "./repository/producer.ts";
-import {
-  getRoomByName,
-  removeSocketFromRoom,
-  setRoom,
-} from "./repository/room.js";
+import { roomRepository } from "./repository/room.ts";
 import {
   addTransport,
   findConsumerTrasport,
@@ -80,7 +76,7 @@ export const handleConnect = async (socket) => {
     if (peer !== undefined) {
       const { roomName } = peer;
       deletePeer(socket.id);
-      removeSocketFromRoom(socket, roomName);
+      roomRepository.removeSocketFromRoom(socket, roomName);
     }
   });
 
@@ -106,7 +102,7 @@ export const handleConnect = async (socket) => {
     // none of the two are required
     let router;
     let peers = [];
-    const room = getRoomByName(roomName);
+    const room = roomRepository.getRoomByName(roomName);
     if (room !== undefined) {
       router = room.router;
       peers = room.peers || [];
@@ -116,9 +112,9 @@ export const handleConnect = async (socket) => {
 
     console.log(`Router ID: ${router.id}`, peers.length);
 
-    setRoom(roomName, {
+    roomRepository.setRoom(roomName, {
       router: router,
-      peers: [...peers, socketId],
+      socketIds: [...peers, socketId],
     });
 
     return router;
@@ -133,7 +129,7 @@ export const handleConnect = async (socket) => {
       const roomName = getPeer(socket.id).roomName;
 
       // get Router (Room) object this peer is in based on RoomName
-      const router = getRoomByName(roomName).router;
+      const router = roomRepository.getRoomByName(roomName).router;
 
       try {
         const transport = await createWebRtcTransport(router);
@@ -253,7 +249,7 @@ export const handleConnect = async (socket) => {
     ) => {
       try {
         const { roomName } = getPeer(socket.id);
-        const router = getRoomByName(roomName).router;
+        const router = roomRepository.getRoomByName(roomName).router;
         const consumerTransport = findConsumerTrasport(
           serverConsumerTransportId
         ).transport;
