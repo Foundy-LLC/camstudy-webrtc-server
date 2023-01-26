@@ -22,7 +22,7 @@ import {
 import {roomRepository} from "./repository/room.js";
 import {
     addTransport,
-    findConsumerTrasport,
+    findConsumerTransport,
     getTransport,
     removeTransportBySocketId,
     removeTransportByTransportId,
@@ -248,7 +248,7 @@ export const handleConnect = async (socket: Socket) => {
             serverConsumerTransportId: string;
         }) => {
             console.log(`DTLS PARAMS: ${dtlsParameters}`);
-            const wrapper = findConsumerTrasport(serverConsumerTransportId);
+            const wrapper = findConsumerTransport(serverConsumerTransportId);
             if (wrapper === undefined) {
                 console.error(
                     `There is no consumer transport! : ${protocol.TRANSPORT_RECEIVER_CONNECT}`
@@ -295,7 +295,7 @@ export const handleConnect = async (socket: Socket) => {
                     return;
                 }
                 const router = room.router;
-                const transportWrapper = findConsumerTrasport(
+                const transportWrapper = findConsumerTransport(
                     serverConsumerTransportId
                 );
                 if (transportWrapper === undefined) {

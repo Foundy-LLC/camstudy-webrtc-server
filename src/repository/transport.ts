@@ -25,7 +25,7 @@ export const getTransport = (socketId: string) => {
     return producerTransport.transport;
 };
 
-export const findConsumerTrasport = (consumerTransportId: string) => {
+export const findConsumerTransport = (consumerTransportId: string) => {
     return transports.find(
         (transportData) =>
             transportData.isConsumer &&
