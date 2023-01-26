@@ -12,7 +12,7 @@ import {
   deletePeer,
   getPeer,
   joinPeer,
-} from "./repository/peer.js";
+} from "./repository/peer.ts";
 import {
   addProducer,
   getOthersProducerBy,
@@ -153,17 +153,17 @@ export const handleConnect = async (socket) => {
 
   const onTransportCreated = (transport, roomName, isConsumer) => {
     addTransport(socket.id, transport, roomName, isConsumer);
-    addPeerTransport(socket, transport);
+    addPeerTransport(socket.id, transport.id);
   };
 
   const onProducerCreated = (producer, roomName) => {
     addProducer(socket.id, producer, roomName);
-    addPeerProducer(socket, producer);
+    addPeerProducer(socket.id, producer.id);
   };
 
   const onConsume = (consumer, roomName) => {
     addConsumer(socket.id, consumer, roomName);
-    addPeerConsumer(socket, consumer);
+    addPeerConsumer(socket.id, consumer.id);
   };
 
   socket.on(protocol.GET_PRODUCERS, (callback) => {
