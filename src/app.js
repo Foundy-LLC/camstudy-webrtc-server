@@ -12,7 +12,7 @@ const app = express();
 app.get("*", (req, res, next) => {
   const path = "/rooms/";
 
-  if (req.path.indexOf(path) == 0 && req.path.length > path.length)
+  if (req.path.indexOf(path) === 0 && req.path.length > path.length)
     return next();
 
   res.send(
@@ -32,4 +32,6 @@ const io = new Server(httpsServer);
 // socket.io namespace (could represent a room?)
 const connections = io.of(protocol.NAME_SPACE);
 
-connections.on(protocol.CONNECTION, async (socket) => handleConnect(socket));
+connections.on(protocol.CONNECTION, async (socket) => {
+  await handleConnect(socket)
+});

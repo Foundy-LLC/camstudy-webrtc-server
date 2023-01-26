@@ -3,6 +3,7 @@ import { mediaCodecs } from "./constant/config.js";
 import {
   addConsumer,
   getConsumer,
+  removeConsumer,
   removeConsumerBySocketId,
 } from "./repository/consumer.js";
 import {
@@ -63,7 +64,7 @@ const createWorker = async (): Promise<Worker> => {
   });
   console.log(`worker pid ${worker.pid}`);
 
-  worker.on("died", (error) => {
+  worker.on("died", () => {
     // This implies something serious happened, so kill the application
     console.error("mediasoup worker has died");
     setTimeout(() => process.exit(1), 2000); // exit in 2 seconds
@@ -408,8 +409,7 @@ export const handleConnect = async (socket: Socket) => {
             socket.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
 
             removeTransportByTransportId(consumerTransport.id);
-            // TODO: 아래 함수 어디로 사라짐.. 만들거나 찾아야함.
-            // removeConsumer(consumer);
+            removeConsumer(consumer);
           });
 
           onConsume(consumer, roomName);
