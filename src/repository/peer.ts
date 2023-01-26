@@ -6,9 +6,9 @@ export interface Peer {
   name: string;
   isAdmin: boolean;
   // ID만 있음
-  transports: number[];
-  producers: number[];
-  consumers: number[];
+  transports: string[];
+  producers: string[];
+  consumers: string[];
 }
 
 // { socketId1: { roomName1, socket, transports = [id1, id2,] }, producers = [id1, id2,] }, consumers = [id1, id2,], peerDetails }, ...}
@@ -34,7 +34,7 @@ export const joinPeer = (socket: Socket, roomName: string) => {
   });
 };
 
-export const addPeerTransport = (socketId: string, transportId: number) => {
+export const addPeerTransport = (socketId: string, transportId: string) => {
   const peer = requirePeerBySocket(socketId);
   peers.set(socketId, {
     ...peer,
@@ -42,7 +42,7 @@ export const addPeerTransport = (socketId: string, transportId: number) => {
   });
 };
 
-export const addPeerProducer = (socketId: string, producerId: number) => {
+export const addPeerProducer = (socketId: string, producerId: string) => {
   const peer = requirePeerBySocket(socketId);
   peers.set(socketId, {
     ...peer,
@@ -50,7 +50,7 @@ export const addPeerProducer = (socketId: string, producerId: number) => {
   });
 };
 
-export const addPeerConsumer = (socketId: string, consumerId: number) => {
+export const addPeerConsumer = (socketId: string, consumerId: string) => {
   const peer = requirePeerBySocket(socketId);
   peers.set(socketId, {
     ...peer,

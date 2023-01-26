@@ -1,7 +1,7 @@
-import { Consumer } from "mediasoup-client/lib/Consumer";
+import { Consumer } from "mediasoup/node/lib/Consumer";
 
 export interface ConsumerWrapper {
-  socketId: number;
+  socketId: string;
   roomName: string;
   consumer: Consumer;
 }
@@ -9,7 +9,7 @@ export interface ConsumerWrapper {
 let consumers: ConsumerWrapper[] = []; // [ { socketId1, roomName1, consumer, }, ... ]
 
 export const addConsumer = (
-  socketId: number,
+  socketId: string,
   consumer: Consumer,
   roomName: string
 ) => {
@@ -31,7 +31,7 @@ export const getConsumer = (
   );
 };
 
-export const removeConsumerBySocketId = (socketId: number) => {
+export const removeConsumerBySocketId = (socketId: string) => {
   consumers.forEach((consumerData) => {
     if (consumerData.socketId === socketId) {
       consumerData.consumer.close();

@@ -1,7 +1,7 @@
 import { Transport } from "mediasoup/node/lib/Transport";
 
 export interface TransportWrapper {
-  socketId: number;
+  socketId: string;
   roomName: string;
   transport: Transport;
   isConsumer: boolean;
@@ -10,7 +10,7 @@ export interface TransportWrapper {
 let transports: TransportWrapper[] = []; // [ { socketId1, roomName1, transport, isConsumer }, ... ]
 
 export const addTransport = (
-  socketId: number,
+  socketId: string,
   transport: Transport,
   roomName: string,
   isConsumer: boolean
@@ -18,7 +18,7 @@ export const addTransport = (
   transports = [...transports, { socketId, transport, roomName, isConsumer }];
 };
 
-export const getTransport = (socketId: number) => {
+export const getTransport = (socketId: string) => {
   const [producerTransport] = transports.filter(
     (transport) => transport.socketId === socketId && !transport.isConsumer
   );
@@ -45,7 +45,7 @@ export const removeTransportByTransportId = (transportId: string) => {
   );
 };
 
-export const removeTransportBySocketId = (socketId: number) => {
+export const removeTransportBySocketId = (socketId: string) => {
   transports.forEach((transportData) => {
     if (transportData.socketId === socketId) {
       transportData.transport.close();

@@ -1,7 +1,7 @@
-import { Producer } from "mediasoup-client/lib/Producer";
+import { Producer } from "mediasoup/node/lib/Producer";
 
 export interface ProducerWrapper {
-  socketId: number;
+  socketId: string;
   roomName: string;
   producer: Producer;
 }
@@ -9,7 +9,7 @@ export interface ProducerWrapper {
 let producers: ProducerWrapper[] = []; // [ { socketId1, roomName1, producer, }, ... ]
 
 export const addProducer = (
-  socketId: number,
+  socketId: string,
   producer: Producer,
   roomName: string
 ) => {
@@ -17,7 +17,7 @@ export const addProducer = (
 };
 
 export const getOthersProducerBy = (
-  mySocketId: number,
+  mySocketId: string,
   roomName: string
 ): ProducerWrapper[] => {
   return producers.filter(
@@ -29,7 +29,7 @@ export const getOthersProducerBy = (
 
 export const isProducerExists = (): boolean => producers.length > 1;
 
-export const removeProducerBySocketId = (socketId: number) => {
+export const removeProducerBySocketId = (socketId: string) => {
   producers.forEach((producerData) => {
     if (producerData.socketId === socketId) {
       producerData.producer.close();

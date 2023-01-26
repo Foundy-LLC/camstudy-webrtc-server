@@ -2,7 +2,7 @@ import { Router } from "mediasoup/node/lib/Router";
 
 export interface Room {
   router: Router;
-  socketIds: number[];
+  socketIds: string[];
 }
 
 class RoomRepository {
@@ -16,7 +16,7 @@ class RoomRepository {
     this.#rooms.set(roomName, room);
   };
 
-  removeSocketFromRoom = (socketId: number, roomName: string) => {
+  removeSocketFromRoom = (socketId: string, roomName: string) => {
     const room = this.#rooms.get(roomName);
     if (room === undefined) {
       throw Error("해당 방이 존재하지 않습니다.");
