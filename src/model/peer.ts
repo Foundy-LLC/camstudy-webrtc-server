@@ -12,3 +12,19 @@ export interface Peer {
   producers: Producer[];
   consumers: Consumer[];
 }
+
+export const createPeer = (
+  socket: Socket,
+  name: string,
+  isAdmin: boolean
+): Peer => {
+  return {
+    socket,
+    name: "",
+    isAdmin: isAdmin,
+    producerTransport: undefined,
+    consumerTransports: [],
+    producers: [],
+    consumers: []
+  };
+};

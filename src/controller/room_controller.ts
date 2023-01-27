@@ -6,25 +6,9 @@ import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
-import { Peer } from "../model/peer.js";
+import { createPeer, Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
-
-const createPeer = (
-  socket: Socket,
-  name: string,
-  isAdmin: boolean
-): Peer => {
-  return {
-    socket,
-    name: "",
-    isAdmin: isAdmin,
-    producerTransport: undefined,
-    consumerTransports: [],
-    producers: [],
-    consumers: []
-  };
-};
 
 class RoomController {
 
