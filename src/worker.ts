@@ -6,7 +6,7 @@ import { Router } from "mediasoup/node/lib/Router.js";
 import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport.js";
-import { roomRepository } from "./repository/room_repository.js";
+import { roomService } from "./service/room_service.js";
 
 /**
  * Worker
@@ -48,7 +48,7 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(protocol.DISCONNECT, () => {
     console.log("peer disconnected");
-    roomRepository.disconnect(socket.id);
+    roomService.disconnect(socket.id);
   });
 
   socket.on(
@@ -57,9 +57,9 @@ export const handleConnect = async (socket: Socket) => {
       { roomName }: { roomName: string },
       callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
     ) => {
-      let router = roomRepository.joinRoom(roomName, socket);
+      let router = roomService.joinRoom(roomName, socket);
       if (router === undefined) {
-        router = await roomRepository.createAndJoinRoom(roomName, socket, worker);
+        router = await roomService.createAndJoinRoom(roomName, socket, worker);
       }
       console.log("JOIN ROOM: ", roomName);
 
@@ -83,16 +83,16 @@ export const handleConnect = async (socket: Socket) => {
         };
       }) => void
     ) => {
-      const room = roomRepository.findRoomBySocketId(socket.id);
-      if (room === undefined) {
+      const router = roomService.findRoomRouterBy(socket.id);
+      if (router === undefined) {
         console.error(`There is no room! : ${protocol.CREATE_WEB_RTC_TRANSPORT}`);
         return;
       }
 
       try {
-        const transport = await createWebRtcTransport(room.router);
+        const transport = await createWebRtcTransport(router);
 
-        roomRepository.addTransport(socket.id, transport, isConsumer);
+        roomService.addTransport(socket.id, transport, isConsumer);
 
         callback({
           params: {
@@ -112,10 +112,8 @@ export const handleConnect = async (socket: Socket) => {
     protocol.GET_PRODUCER_IDS,
     (callback: (ids: string[]) => void
     ) => {
-      const producers = roomRepository.findOthersProducerInRoom(socket.id);
-      const ids = producers.map((producer) => producer.id);
+      const ids = roomService.findOthersProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);
-
       callback(ids);
     });
 
@@ -126,7 +124,7 @@ export const handleConnect = async (socket: Socket) => {
       { kind, rtpParameters, appData }: ProducerOptions,
       callback: ({ id, producersExist }: { id: string; producersExist: boolean; }) => void
     ) => {
-      const producerTransport = roomRepository.findProducerTransportBy(socket.id);
+      const producerTransport = roomService.findProducerTransportBy(socket.id);
       if (producerTransport === undefined) {
         // TODO: 예외 처리가 필요할 수도?
         return;
@@ -136,14 +134,14 @@ export const handleConnect = async (socket: Socket) => {
         rtpParameters
       });
 
-      roomRepository.addProducer(socket.id, producer);
-      roomRepository.informConsumersNewProducerAppeared(socket.id, producer.id);
+      roomService.addProducer(socket.id, producer);
+      roomService.informConsumersNewProducerAppeared(socket.id, producer.id);
 
       console.log("Producer ID: ", producer.id, producer.kind);
       // Send back to the client the Producer's id
       callback({
         id: producer.id,
-        producersExist: roomRepository.isProducerExists(socket.id)
+        producersExist: roomService.isProducerExists(socket.id)
       });
     }
   );
@@ -154,7 +152,7 @@ export const handleConnect = async (socket: Socket) => {
     ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
       console.log("DTLS PARAMS... ", { dtlsParameters });
 
-      const producerTransport = roomRepository.findProducerTransportBy(socket.id);
+      const producerTransport = roomService.findProducerTransportBy(socket.id);
       producerTransport?.connect({ dtlsParameters });
     }
   );
@@ -182,12 +180,12 @@ export const handleConnect = async (socket: Socket) => {
       }) => void
     ) => {
       try {
-        const room = roomRepository.findRoomBySocketId(socket.id);
-        if (room === undefined) {
+        const router = roomService.findRoomRouterBy(socket.id);
+        if (router === undefined) {
           // TODO: 예외처리가 필요할 수도?
           return;
         }
-        const consumerTransport = roomRepository.findConsumerTransportBy(
+        const consumerTransport = roomService.findConsumerTransportBy(
           socket.id,
           serverConsumerTransportId
         );
@@ -195,7 +193,7 @@ export const handleConnect = async (socket: Socket) => {
           // TODO: 예외처리가 필요할 수도?
           return;
         }
-        const canConsume = room.router.canConsume({
+        const canConsume = router.canConsume({
           producerId: remoteProducerId,
           rtpCapabilities
         });
@@ -211,7 +209,7 @@ export const handleConnect = async (socket: Socket) => {
             paused: true
           });
 
-          roomRepository.addConsumer(socket.id, consumer, remoteProducerId);
+          roomService.addConsumer(socket.id, consumer, remoteProducerId);
 
           // from the consumer extract the following params
           // to send back to the Client
@@ -244,7 +242,7 @@ export const handleConnect = async (socket: Socket) => {
       dtlsParameters: DtlsParameters;
       serverConsumerTransportId: string;
     }) => {
-      const consumerTransport = roomRepository.findConsumerTransportBy(
+      const consumerTransport = roomService.findConsumerTransportBy(
         socket.id,
         serverConsumerTransportId
       );
@@ -256,8 +254,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.CONSUME_RESUME,
     async ({ serverConsumerId }: { serverConsumerId: string }) => {
       console.log("consumer resume");
-      const consumer = roomRepository.findConsumerById(socket.id, serverConsumerId);
-      await consumer?.resume();
+      await roomService.resumeConsumer(socket.id, serverConsumerId);
     }
   );
 };
