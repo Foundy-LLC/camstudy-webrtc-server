@@ -28,7 +28,7 @@ export class RoomRepository {
     if (room === undefined) {
       return;
     }
-    return room.peers.find((peer) => peer.socketId === socketId);
+    return room.findPeerBy(socketId);
   };
 
   public deleteSocketId = (socketId: string) => {

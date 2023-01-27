@@ -8,7 +8,7 @@ const fakeSocket = {
   }
 };
 
-export const fakeRoom: Room = {
+export const fakeRoom: Room = new Room({
   router: new Router({
     internal: 0,
     data: 0,
@@ -18,4 +18,4 @@ export const fakeRoom: Room = {
   }),
   id: "roomId",
   peers: []
-};
+});

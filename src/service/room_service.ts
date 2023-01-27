@@ -10,7 +10,7 @@ import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
 
-class RoomController {
+class RoomService {
 
   private readonly _roomRepository: RoomRepository = new RoomRepository();
 
@@ -27,10 +27,7 @@ class RoomController {
     // TODO: admin인 경우 매개변수로 받아서 처리하기
     // TODO: 회원 이름 받아서 넣기
     const newPeer: Peer = new Peer(socket, "TODO", false);
-    const newRoom: Room = {
-      ...room,
-      peers: [...room.peers, newPeer]
-    };
+    const newRoom: Room = room.copyWithNewPeer(newPeer);
     this._roomRepository.setRoom(newRoom, socket.id);
     return room.router;
   };
@@ -40,11 +37,11 @@ class RoomController {
     // TODO: admin인 경우 매개변수로 받아서 처리하기
     // TODO: 회원 이름 받아서 넣기
     const newPeer = new Peer(socket, "TODO", false);
-    const newRoom: Room = {
+    const newRoom: Room = new Room({
       router: router,
       id: roomName,
       peers: [newPeer]
-    };
+    });
     this._roomRepository.setRoom(newRoom, socket.id);
     return router;
   };
@@ -55,14 +52,11 @@ class RoomController {
       // TODO: 아마 예외처리가 필요할수도?
       return;
     }
-    const peer = room.peers.find((peer: Peer) => peer.socketId === socketId);
 
-    peer?.dispose();
-
-    room.peers = room.peers.filter((e: Peer) => e !== peer);
+    room.disposePeer(socketId);
 
     this._roomRepository.deleteSocketId(socketId);
-    if (room.peers.length === 0) {
+    if (!room.hasPeer) {
       this._roomRepository.deleteRoom(room);
     }
   };
@@ -86,13 +80,7 @@ class RoomController {
 
   findOthersProducerIdsInRoom = (requesterSocketId: string): string[] => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
-    let producers: string[] = [];
-    room?.peers.forEach((peer) => {
-      if (peer.socketId !== requesterSocketId) {
-        producers = [...producers, ...peer.getProducerIds()];
-      }
-    });
-    return producers;
+    return room?.findOthersProducerIds(requesterSocketId) ?? [];
   };
 
   findProducerTransportBy = (socketId: string): Transport | undefined => {
@@ -116,7 +104,7 @@ class RoomController {
     if (peer === undefined) {
       return;
     }
-    peer?.resumeConsumer(consumerId);
+    await peer?.resumeConsumer(consumerId);
   };
 
   isProducerExists = (socketId: string): boolean => {
@@ -124,7 +112,7 @@ class RoomController {
     if (room === undefined) {
       return false;
     }
-    return room.peers.some(peer => peer.hasProducer);
+    return room.hasProducer();
   };
 
   addProducer = (socketId: string, producer: Producer) => {
@@ -168,12 +156,8 @@ class RoomController {
     producerId: string
   ) => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
-    room?.peers.forEach((peer) => {
-      if (socketId !== peer.socketId) {
-        peer.emit(protocol.NEW_PRODUCER, { producerId: producerId });
-      }
-    });
+    room?.informConsumersNewProducerAppeared(socketId, producerId);
   };
 }
 
-export const roomController = new RoomController();
+export const roomService = new RoomService();

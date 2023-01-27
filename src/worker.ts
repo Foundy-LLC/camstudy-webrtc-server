@@ -6,7 +6,7 @@ import { Router } from "mediasoup/node/lib/Router.js";
 import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport.js";
-import { roomController } from "./controller/room_controller.js";
+import { roomService } from "./service/room_service.js";
 
 /**
  * Worker
@@ -48,7 +48,7 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(protocol.DISCONNECT, () => {
     console.log("peer disconnected");
-    roomController.disconnect(socket.id);
+    roomService.disconnect(socket.id);
   });
 
   socket.on(
@@ -57,9 +57,9 @@ export const handleConnect = async (socket: Socket) => {
       { roomName }: { roomName: string },
       callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
     ) => {
-      let router = roomController.joinRoom(roomName, socket);
+      let router = roomService.joinRoom(roomName, socket);
       if (router === undefined) {
-        router = await roomController.createAndJoinRoom(roomName, socket, worker);
+        router = await roomService.createAndJoinRoom(roomName, socket, worker);
       }
       console.log("JOIN ROOM: ", roomName);
 
@@ -83,7 +83,7 @@ export const handleConnect = async (socket: Socket) => {
         };
       }) => void
     ) => {
-      const router = roomController.findRoomRouterBy(socket.id);
+      const router = roomService.findRoomRouterBy(socket.id);
       if (router === undefined) {
         console.error(`There is no room! : ${protocol.CREATE_WEB_RTC_TRANSPORT}`);
         return;
@@ -92,7 +92,7 @@ export const handleConnect = async (socket: Socket) => {
       try {
         const transport = await createWebRtcTransport(router);
 
-        roomController.addTransport(socket.id, transport, isConsumer);
+        roomService.addTransport(socket.id, transport, isConsumer);
 
         callback({
           params: {
@@ -112,7 +112,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.GET_PRODUCER_IDS,
     (callback: (ids: string[]) => void
     ) => {
-      const ids = roomController.findOthersProducerIdsInRoom(socket.id);
+      const ids = roomService.findOthersProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);
       callback(ids);
     });
@@ -124,7 +124,7 @@ export const handleConnect = async (socket: Socket) => {
       { kind, rtpParameters, appData }: ProducerOptions,
       callback: ({ id, producersExist }: { id: string; producersExist: boolean; }) => void
     ) => {
-      const producerTransport = roomController.findProducerTransportBy(socket.id);
+      const producerTransport = roomService.findProducerTransportBy(socket.id);
       if (producerTransport === undefined) {
         // TODO: 예외 처리가 필요할 수도?
         return;
@@ -134,14 +134,14 @@ export const handleConnect = async (socket: Socket) => {
         rtpParameters
       });
 
-      roomController.addProducer(socket.id, producer);
-      roomController.informConsumersNewProducerAppeared(socket.id, producer.id);
+      roomService.addProducer(socket.id, producer);
+      roomService.informConsumersNewProducerAppeared(socket.id, producer.id);
 
       console.log("Producer ID: ", producer.id, producer.kind);
       // Send back to the client the Producer's id
       callback({
         id: producer.id,
-        producersExist: roomController.isProducerExists(socket.id)
+        producersExist: roomService.isProducerExists(socket.id)
       });
     }
   );
@@ -152,7 +152,7 @@ export const handleConnect = async (socket: Socket) => {
     ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
       console.log("DTLS PARAMS... ", { dtlsParameters });
 
-      const producerTransport = roomController.findProducerTransportBy(socket.id);
+      const producerTransport = roomService.findProducerTransportBy(socket.id);
       producerTransport?.connect({ dtlsParameters });
     }
   );
@@ -180,12 +180,12 @@ export const handleConnect = async (socket: Socket) => {
       }) => void
     ) => {
       try {
-        const router = roomController.findRoomRouterBy(socket.id);
+        const router = roomService.findRoomRouterBy(socket.id);
         if (router === undefined) {
           // TODO: 예외처리가 필요할 수도?
           return;
         }
-        const consumerTransport = roomController.findConsumerTransportBy(
+        const consumerTransport = roomService.findConsumerTransportBy(
           socket.id,
           serverConsumerTransportId
         );
@@ -209,7 +209,7 @@ export const handleConnect = async (socket: Socket) => {
             paused: true
           });
 
-          roomController.addConsumer(socket.id, consumer, remoteProducerId);
+          roomService.addConsumer(socket.id, consumer, remoteProducerId);
 
           // from the consumer extract the following params
           // to send back to the Client
@@ -242,7 +242,7 @@ export const handleConnect = async (socket: Socket) => {
       dtlsParameters: DtlsParameters;
       serverConsumerTransportId: string;
     }) => {
-      const consumerTransport = roomController.findConsumerTransportBy(
+      const consumerTransport = roomService.findConsumerTransportBy(
         socket.id,
         serverConsumerTransportId
       );
@@ -254,7 +254,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.CONSUME_RESUME,
     async ({ serverConsumerId }: { serverConsumerId: string }) => {
       console.log("consumer resume");
-      await roomController.resumeConsumer(socket.id, serverConsumerId);
+      await roomService.resumeConsumer(socket.id, serverConsumerId);
     }
   );
 };
