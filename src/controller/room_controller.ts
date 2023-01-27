@@ -6,7 +6,7 @@ import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
-import { createPeer, Peer } from "../model/peer.js";
+import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
 
@@ -26,7 +26,7 @@ class RoomController {
     }
     // TODO: admin인 경우 매개변수로 받아서 처리하기
     // TODO: 회원 이름 받아서 넣기
-    const newPeer: Peer = createPeer(socket, "TODO", false);
+    const newPeer: Peer = new Peer(socket, "TODO", false);
     const newRoom: Room = {
       ...room,
       peers: [...room.peers, newPeer]
@@ -39,7 +39,7 @@ class RoomController {
     const router = await worker.createRouter({ mediaCodecs });
     // TODO: admin인 경우 매개변수로 받아서 처리하기
     // TODO: 회원 이름 받아서 넣기
-    const newPeer = createPeer(socket, "TODO", false);
+    const newPeer = new Peer(socket, "TODO", false);
     const newRoom: Room = {
       router: router,
       id: roomName,
@@ -55,16 +55,13 @@ class RoomController {
       // TODO: 아마 예외처리가 필요할수도?
       return;
     }
-    const peer = room.peers.find((peer: Peer) => peer.socket.id === socketId);
+    const peer = room.peers.find((peer: Peer) => peer.socketId === socketId);
 
-    peer?.consumers.forEach((consumer: Consumer) => consumer.close());
-    peer?.producers.forEach((producer: Producer) => producer.close());
-    peer?.consumerTransports.forEach((transport: Transport) => transport.close());
-    peer?.producerTransport?.close();
+    peer?.dispose();
 
     room.peers = room.peers.filter((e: Peer) => e !== peer);
 
-    this._roomRepository.deleteSocketId(socketId)
+    this._roomRepository.deleteSocketId(socketId);
     if (room.peers.length === 0) {
       this._roomRepository.deleteRoom(room);
     }
@@ -80,23 +77,19 @@ class RoomController {
       // TODO: 예외 처리가 필요할 수도?
       return;
     }
-    if (isConsumer) {
-      peer.consumerTransports = [...peer.consumerTransports, transport];
-    } else {
-      peer.producerTransport = transport;
-    }
+    peer.addTransport(transport, isConsumer);
   };
 
   findRoomRouterBy = (socketId: string): Router | undefined => {
-    return this._roomRepository.findRoomBySocketId(socketId)?.router
-  }
+    return this._roomRepository.findRoomBySocketId(socketId)?.router;
+  };
 
-  findOthersProducerInRoom = (requesterSocketId: string): Producer[] => {
+  findOthersProducerIdsInRoom = (requesterSocketId: string): string[] => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
-    let producers: Producer[] = [];
+    let producers: string[] = [];
     room?.peers.forEach((peer) => {
-      if (peer.socket.id !== requesterSocketId) {
-        producers = [...producers, ...peer.producers];
+      if (peer.socketId !== requesterSocketId) {
+        producers = [...producers, ...peer.getProducerIds()];
       }
     });
     return producers;
@@ -115,9 +108,7 @@ class RoomController {
     if (peer === undefined) {
       return;
     }
-    return peer.consumerTransports.find((transport) => {
-      return transport.id === consumerTransportId;
-    });
+    return peer.findConsumerTransportBy(consumerTransportId);
   };
 
   resumeConsumer = async (socketId: string, consumerId: string) => {
@@ -125,10 +116,7 @@ class RoomController {
     if (peer === undefined) {
       return;
     }
-    const consumer = peer.consumers.find((consumer) => {
-      return consumer.id === consumerId;
-    });
-    await consumer?.resume()
+    peer?.resumeConsumer(consumerId);
   };
 
   isProducerExists = (socketId: string): boolean => {
@@ -136,7 +124,7 @@ class RoomController {
     if (room === undefined) {
       return false;
     }
-    return room.peers.some(peer => peer.producers.length > 0);
+    return room.peers.some(peer => peer.hasProducer);
   };
 
   addProducer = (socketId: string, producer: Producer) => {
@@ -145,11 +133,11 @@ class RoomController {
       // TODO: 예외 처리가 필요할 수도?
       return;
     }
-    peer.producers = [...peer.producers, producer];
+    peer.addProducer(producer);
 
     producer.on("transportclose", () => {
       console.log("transport for this producer closed ");
-      peer.producers = peer.producers.filter((e) => e.id !== producer.id);
+      peer.removeProducer(producer);
       producer.close();
     });
   };
@@ -160,7 +148,7 @@ class RoomController {
       // TODO: 예외 처리가 필요할 수도?
       return;
     }
-    peer.consumers = [...peer.consumers, consumer];
+    peer.addConsumer(consumer);
 
     consumer.on("transportclose", () => {
       // TODO: what should I do at here?
@@ -169,8 +157,8 @@ class RoomController {
 
     consumer.on("producerclose", () => {
       console.log("producer of consumer closed");
-      peer.socket.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
-      peer.consumers = peer.consumers.filter((e) => e.id !== consumer.id);
+      peer.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
+      peer.removeConsumer(consumer);
       consumer.close();
     });
   };
@@ -181,8 +169,8 @@ class RoomController {
   ) => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
     room?.peers.forEach((peer) => {
-      if (socketId !== peer.socket.id) {
-        peer.socket.emit(protocol.NEW_PRODUCER, { producerId: producerId });
+      if (socketId !== peer.socketId) {
+        peer.emit(protocol.NEW_PRODUCER, { producerId: producerId });
       }
     });
   };

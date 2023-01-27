@@ -1,9 +1,9 @@
 import { RoomRepository } from "../src/repository/room_repository";
 import { fakeRoom } from "./fake_room";
 import { instance, mock, when } from "ts-mockito";
-import { createPeer, Peer } from "../src/model/peer";
 import { Room } from "../src/model/room";
 import { Socket } from "socket.io";
+import { Peer } from "../src/model/peer";
 
 describe("findRoomBySocketId", () => {
   it("should return room when there is", async () => {
@@ -64,7 +64,7 @@ describe("findPeerBy", () => {
     const socketId = "id";
     const mockSocket: Socket = mock();
     when(mockSocket.id).thenReturn(socketId);
-    const peer = createPeer(instance(mockSocket), "name", false);
+    const peer = new Peer(instance(mockSocket), "name", false);
     const repository = new RoomRepository();
     const room: Room = {
       ...fakeRoom,
@@ -73,7 +73,7 @@ describe("findPeerBy", () => {
     repository.setRoom(room, socketId);
 
     // when
-    const result = repository.findPeerBy(peer.socket.id);
+    const result = repository.findPeerBy(peer.socketId);
 
     // then
     expect(result).toBeDefined();

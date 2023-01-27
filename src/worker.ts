@@ -112,10 +112,8 @@ export const handleConnect = async (socket: Socket) => {
     protocol.GET_PRODUCER_IDS,
     (callback: (ids: string[]) => void
     ) => {
-      const producers = roomController.findOthersProducerInRoom(socket.id);
-      const ids = producers.map((producer) => producer.id);
+      const ids = roomController.findOthersProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);
-
       callback(ids);
     });
 
