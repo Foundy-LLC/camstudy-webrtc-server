@@ -8,7 +8,7 @@ import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
-import { RoomRepository } from "../repository/RoomRepository.js";
+import { RoomRepository } from "../repository/room_repository.js";
 
 const createPeer = (
   socket: Socket,

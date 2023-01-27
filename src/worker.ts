@@ -6,7 +6,7 @@ import { Router } from "mediasoup/node/lib/Router.js";
 import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport.js";
-import { roomController } from "./controller/RoomController.js";
+import { roomController } from "./controller/room_controller.js";
 
 /**
  * Worker

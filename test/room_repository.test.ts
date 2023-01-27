@@ -1,4 +1,4 @@
-import { RoomRepository } from "../src/repository/RoomRepository";
+import { RoomRepository } from "../src/repository/room_repository";
 import { fakeRoom } from "./fake_room";
 
 describe("findRoomBySocketId", () => {
