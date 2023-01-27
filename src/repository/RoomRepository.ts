@@ -3,16 +3,8 @@ import { Peer } from "../model/peer.js";
 
 export class RoomRepository {
 
-  private readonly _roomById: Map<string, Room>;
-  private readonly _roomIdBySocketId: Map<string, string>;
-
-  constructor(
-    roomById = new Map<string, Room>(),
-    roomIdBySocketId = new Map<string, string>()
-  ) {
-    this._roomById = roomById;
-    this._roomIdBySocketId = roomIdBySocketId;
-  }
+  private readonly _roomById = new Map<string, Room>();
+  private readonly _roomIdBySocketId = new Map<string, string>();
 
   public setRoom = (room: Room, socketId: string) => {
     this._roomById.set(room.id, room);
