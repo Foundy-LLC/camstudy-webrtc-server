@@ -234,11 +234,7 @@ export const handleConnect = async (socket: Socket) => {
       dtlsParameters: DtlsParameters;
       serverConsumerTransportId: string;
     }) => {
-      const consumerTransport = roomService.findConsumerTransportBy(
-        socket.id,
-        serverConsumerTransportId
-      );
-      await consumerTransport?.connect({ dtlsParameters });
+      roomService.connectConsumerTransport(socket.id, serverConsumerTransportId, dtlsParameters);
     }
   );
 

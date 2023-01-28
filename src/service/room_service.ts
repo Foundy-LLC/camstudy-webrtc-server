@@ -88,6 +88,18 @@ class RoomService {
     producerTransport?.connect({ dtlsParameters });
   }
 
+  connectConsumerTransport = (
+    socketId: string,
+    consumerTransportId: string,
+    dtlsParameters: DtlsParameters,
+  ) => {
+    const consumerTransport = this.findConsumerTransportBy(
+      socketId,
+      consumerTransportId
+    );
+    consumerTransport?.connect({ dtlsParameters });
+  }
+
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
   };
