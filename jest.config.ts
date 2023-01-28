@@ -20,7 +20,7 @@ const config: Config = {
   transformIgnorePatterns: [
     "node_modules/(?!variables/.*)"
   ],
-  roots: ["<rootDir>/src/", "<rootDir>/test/"],
+  roots: ["<rootDir>", "<rootDir>/test/"],
   testEnvironment: "node",
   testMatch: ["**/test/*.test.ts"]
 };

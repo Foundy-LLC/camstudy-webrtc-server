@@ -13,9 +13,13 @@ import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
 
-class RoomService {
+export class RoomService {
 
-  private readonly _roomRepository: RoomRepository = new RoomRepository();
+  private readonly _roomRepository: RoomRepository;
+
+  constructor(roomRepository: RoomRepository = new RoomRepository()) {
+    this._roomRepository = roomRepository;
+  }
 
   /**
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.
@@ -198,7 +202,7 @@ class RoomService {
       });
       const peer = this._roomRepository.findPeerBy(socketId);
       if (peer === undefined) {
-        consumer.close()
+        consumer.close();
         return undefined;
       }
       peer.addConsumer(consumer);
@@ -218,7 +222,7 @@ class RoomService {
     }
     peer.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
     peer.removeConsumer(consumer);
-  }
+  };
 
   informConsumersNewProducerAppeared = (
     socketId: string,
