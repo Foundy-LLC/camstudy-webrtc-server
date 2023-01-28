@@ -2,10 +2,9 @@ import mediasoup from "mediasoup";
 import * as protocol from "./constant/protocol.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { Socket } from "socket.io";
-import { Router } from "mediasoup/node/lib/Router.js";
 import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
-import { DtlsParameters, IceCandidate, IceParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport.js";
+import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
 
 /**
@@ -83,17 +82,12 @@ export const handleConnect = async (socket: Socket) => {
         };
       }) => void
     ) => {
-      const router = roomService.findRoomRouterBy(socket.id);
-      if (router === undefined) {
-        console.error(`There is no room! : ${protocol.CREATE_WEB_RTC_TRANSPORT}`);
-        return;
-      }
-
       try {
-        const transport = await createWebRtcTransport(router);
-
-        roomService.addTransport(socket.id, transport, isConsumer);
-
+        const transport = await roomService.createTransport(socket.id, isConsumer);
+        if (transport === undefined) {
+          console.error(`There is no room! : ${protocol.CREATE_WEB_RTC_TRANSPORT}`);
+          return;
+        }
         callback({
           params: {
             id: transport.id,
@@ -103,6 +97,7 @@ export const handleConnect = async (socket: Socket) => {
           }
         });
       } catch (e) {
+        // TODO: 클라이언트에 에러 전달하기
         console.log(e);
       }
     }
@@ -257,45 +252,4 @@ export const handleConnect = async (socket: Socket) => {
       await roomService.resumeConsumer(socket.id, serverConsumerId);
     }
   );
-};
-
-const createWebRtcTransport = async (
-  router: Router
-): Promise<WebRtcTransport> => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
-      const webRtcTransport_options = {
-        listenIps: [
-          {
-            ip: protocol.IP_ADDRESS,
-            announcedIp: protocol.IP_ADDRESS
-          }
-        ],
-        enableUdp: true,
-        enableTcp: true,
-        preferUdp: true
-      };
-
-      // https://mediasoup.org/documentation/v3/mediasoup/api/#router-createWebRtcTransport
-      const transport = await router.createWebRtcTransport(
-        webRtcTransport_options
-      );
-      console.log(`transport id: ${transport.id}`);
-
-      transport.on("dtlsstatechange", (dtlsState) => {
-        if (dtlsState === "closed") {
-          transport.close();
-        }
-      });
-
-      transport.on("close", () => {
-        console.log("transport closed");
-      });
-
-      resolve(transport);
-    } catch (error) {
-      reject(error);
-    }
-  });
 };

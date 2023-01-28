@@ -1,6 +1,5 @@
 import { Router } from "mediasoup/node/lib/Router.js";
 import { Socket } from "socket.io";
-import { Transport } from "mediasoup/node/lib/Transport.js";
 import { Producer } from "mediasoup/node/lib/Producer.js";
 import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
@@ -9,6 +8,7 @@ import * as protocol from "../constant/protocol.js";
 import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
+import { WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 
 class RoomService {
 
@@ -61,18 +61,22 @@ class RoomService {
     }
   };
 
-  addTransport = (
+  createTransport = async (
     socketId: string,
-    transport: Transport,
     isConsumer: boolean
-  ) => {
+  ): Promise<WebRtcTransport | undefined> => {
+    const router = this.findRoomRouterBy(socketId)
+    if (router === undefined) {
+      return undefined;
+    }
+    const transport = await createWebRtcTransport(router);
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
-      // TODO: 예외 처리가 필요할 수도?
-      return;
+      return undefined;
     }
     peer.addTransport(transport, isConsumer);
-  };
+    return transport
+  }
 
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
@@ -159,5 +163,46 @@ class RoomService {
     room?.informConsumersNewProducerAppeared(socketId, producerId);
   };
 }
+
+const createWebRtcTransport = async (
+  router: Router
+): Promise<WebRtcTransport> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
+      const webRtcTransport_options = {
+        listenIps: [
+          {
+            ip: protocol.IP_ADDRESS,
+            announcedIp: protocol.IP_ADDRESS
+          }
+        ],
+        enableUdp: true,
+        enableTcp: true,
+        preferUdp: true
+      };
+
+      // https://mediasoup.org/documentation/v3/mediasoup/api/#router-createWebRtcTransport
+      const transport = await router.createWebRtcTransport(
+        webRtcTransport_options
+      );
+      console.log(`transport id: ${transport.id}`);
+
+      transport.on("dtlsstatechange", (dtlsState) => {
+        if (dtlsState === "closed") {
+          transport.close();
+        }
+      });
+
+      transport.on("close", () => {
+        console.log("transport closed");
+      });
+
+      resolve(transport);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 export const roomService = new RoomService();
