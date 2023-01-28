@@ -8,7 +8,7 @@ import * as protocol from "../constant/protocol.js";
 import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
-import { WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
+import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 
@@ -79,6 +79,14 @@ class RoomService {
     peer.addTransport(transport, isConsumer);
     return transport;
   };
+
+  connectProducerTransport = (
+    socketId: string,
+    dtlsParameters: DtlsParameters
+  ) => {
+    const producerTransport = this.findProducerTransportBy(socketId);
+    producerTransport?.connect({ dtlsParameters });
+  }
 
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;

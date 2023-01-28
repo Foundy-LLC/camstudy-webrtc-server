@@ -145,9 +145,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.TRANSPORT_PRODUCER_CONNECT,
     ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
       console.log("DTLS PARAMS... ", { dtlsParameters });
-
-      const producerTransport = roomService.findProducerTransportBy(socket.id);
-      producerTransport?.connect({ dtlsParameters });
+      roomService.connectProducerTransport(socket.id, dtlsParameters);
     }
   );
 
