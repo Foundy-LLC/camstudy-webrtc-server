@@ -15006,6 +15006,7 @@ let audioParams;
 let videoParams = { params };
 let consumingTransports = [];
 let videoOn = true;
+let audioOn = true;
 
 const streamSuccess = (stream) => {
   localVideo.srcObject = stream;
@@ -15013,19 +15014,25 @@ const streamSuccess = (stream) => {
   audioParams = { track: stream.getAudioTracks()[0], ...audioParams };
   videoParams = { track: stream.getVideoTracks()[0], ...videoParams };
 
-  setVideoToggleButton();
+  setToggleButtons();
   joinRoom();
 };
 
 const onDeniedMediaPermission = () => {
+  videoOn = false;
+  audioOn = false;
   // TODO 구현
 };
 
 const getVideoToggleButton = () => document.getElementById("video_toggle");
+const getAudioToggleButton = () => document.getElementById("audio_toggle");
 
-const setVideoToggleButton = () => {
-  const button = getVideoToggleButton();
-  button.onclick = onClickVideoToggleButton;
+const setToggleButtons = () => {
+  const videoButton = getVideoToggleButton();
+  const audioButton = getAudioToggleButton();
+
+  videoButton.onclick = onClickVideoToggleButton;
+  audioButton.onclick = onClickAudioToggleButton;
 };
 
 const onClickVideoToggleButton = () => {
@@ -15037,6 +15044,18 @@ const onClickVideoToggleButton = () => {
   } else {
     button.innerText = "Video ON";
     videoParams.track.enabled = false;
+  }
+};
+
+const onClickAudioToggleButton = () => {
+  const button = getAudioToggleButton();
+  audioOn = !audioOn;
+  if (audioOn) {
+    button.innerText = "Audio OFF";
+    audioParams.track.enabled = true;
+  } else {
+    button.innerText = "Audio ON";
+    audioParams.track.enabled = false;
   }
 };
 
