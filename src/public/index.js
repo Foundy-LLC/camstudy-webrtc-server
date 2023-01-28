@@ -50,6 +50,7 @@ let params = {
 let audioParams;
 let videoParams = { params };
 let consumingTransports = [];
+let videoOn = true
 
 const streamSuccess = (stream) => {
   localVideo.srcObject = stream;
@@ -57,8 +58,32 @@ const streamSuccess = (stream) => {
   audioParams = { track: stream.getAudioTracks()[0], ...audioParams };
   videoParams = { track: stream.getVideoTracks()[0], ...videoParams };
 
+  setVideoToggleButton();
   joinRoom();
 };
+
+const onDeniedMediaPermission = () => {
+
+}
+
+const getVideoToggleButton = () => document.getElementById("video_toggle")
+
+const setVideoToggleButton = () => {
+  const button = getVideoToggleButton()
+  button.onclick = onClickVideoToggleButton
+}
+
+const onClickVideoToggleButton = () => {
+  const button = getVideoToggleButton()
+  videoOn = !videoOn
+  if (videoOn) {
+    button.innerText = "Video OFF"
+    console.log("hi")
+  } else {
+    button.innerText = "Video ON"
+    console.log("bye")
+  }
+}
 
 const joinRoom = () => {
   socket.emit(protocol.JOIN_ROOM, { roomName }, (data) => {
@@ -89,6 +114,7 @@ const getLocalStream = () => {
     })
     .then(streamSuccess)
     .catch((error) => {
+      onDeniedMediaPermission()
       console.log(error.message);
     });
 };
@@ -123,7 +149,7 @@ const createSendTransport = () => {
   socket.emit(
     protocol.CREATE_WEB_RTC_TRANSPORT,
     { isConsumer: false },
-    ({ params }) => {
+    async ({ params }) => {
       // The server sends back params needed
       // to create Send Transport on the client side
       if (params.error) {
@@ -188,7 +214,7 @@ const createSendTransport = () => {
         }
       });
 
-      connectSendTransport();
+      await connectSendTransport();
     }
   );
 };
