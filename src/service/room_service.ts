@@ -11,6 +11,7 @@ import { RoomRepository } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
+import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
 
 class RoomService {
 
@@ -86,19 +87,19 @@ class RoomService {
   ) => {
     const producerTransport = this.findProducerTransportBy(socketId);
     producerTransport?.connect({ dtlsParameters });
-  }
+  };
 
   connectConsumerTransport = (
     socketId: string,
     consumerTransportId: string,
-    dtlsParameters: DtlsParameters,
+    dtlsParameters: DtlsParameters
   ) => {
     const consumerTransport = this.findConsumerTransportBy(
       socketId,
       consumerTransportId
     );
     consumerTransport?.connect({ dtlsParameters });
-  }
+  };
 
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
@@ -152,11 +153,11 @@ class RoomService {
     const producer = await producerTransport.produce(options);
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
-      producer.close()
+      producer.close();
       return;
     }
     peer.addProducer(producer);
-    return producer
+    return producer;
   };
 
   removeProducer = (socketId: string, producer: Producer) => {
@@ -166,28 +167,58 @@ class RoomService {
       return;
     }
     peer.removeProducer(producer);
-  }
+  };
 
-  addConsumer = (socketId: string, consumer: Consumer, remoteProducerId: string) => {
+  createConsumer = async (
+    socketId: string,
+    producerId: string,
+    consumerTransportId: string,
+    rtpCapabilities: RtpCapabilities
+  ): Promise<Consumer | undefined> => {
+    const router = roomService.findRoomRouterBy(socketId);
+    if (router === undefined) {
+      return undefined;
+    }
+    const consumerTransport = roomService.findConsumerTransportBy(
+      socketId,
+      consumerTransportId
+    );
+    if (consumerTransport === undefined) {
+      return undefined;
+    }
+    const canConsume = router.canConsume({
+      producerId: producerId,
+      rtpCapabilities
+    });
+    if (canConsume) {
+      const consumer = await consumerTransport.consume({
+        producerId: producerId,
+        rtpCapabilities,
+        paused: true
+      });
+      const peer = this._roomRepository.findPeerBy(socketId);
+      if (peer === undefined) {
+        consumer.close()
+        return undefined;
+      }
+      peer.addConsumer(consumer);
+      return consumer;
+    }
+    return undefined;
+  };
+
+  removeConsumerAndNotify = (
+    socketId: string,
+    consumer: Consumer,
+    remoteProducerId: string
+  ) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
-      // TODO: 예외 처리가 필요할 수도?
       return;
     }
-    peer.addConsumer(consumer);
-
-    consumer.on("transportclose", () => {
-      // TODO: what should I do at here?
-      console.log("transport close from consumer");
-    });
-
-    consumer.on("producerclose", () => {
-      console.log("producer of consumer closed");
-      peer.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
-      peer.removeConsumer(consumer);
-      consumer.close();
-    });
-  };
+    peer.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
+    peer.removeConsumer(consumer);
+  }
 
   informConsumersNewProducerAppeared = (
     socketId: string,

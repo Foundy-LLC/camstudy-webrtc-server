@@ -172,50 +172,33 @@ export const handleConnect = async (socket: Socket) => {
       }) => void
     ) => {
       try {
-        const router = roomService.findRoomRouterBy(socket.id);
-        if (router === undefined) {
-          // TODO: 예외처리가 필요할 수도?
-          return;
-        }
-        const consumerTransport = roomService.findConsumerTransportBy(
+        const consumer = await roomService.createConsumer(
           socket.id,
-          serverConsumerTransportId
+          remoteProducerId,
+          serverConsumerTransportId,
+          rtpCapabilities
         );
-        if (consumerTransport === undefined) {
-          // TODO: 예외처리가 필요할 수도?
+        if (consumer === undefined) {
           return;
         }
-        const canConsume = router.canConsume({
+        const params = {
+          id: consumer.id,
           producerId: remoteProducerId,
-          rtpCapabilities
+          kind: consumer.kind,
+          rtpParameters: consumer.rtpParameters,
+          serverConsumerId: consumer.id
+        };
+        callback({ params });
+
+        consumer.on("transportclose", () => {
+          // TODO: what should I do at here?
+          console.log("transport close from consumer");
         });
-
-        console.log("can consume: ", canConsume);
-
-        // check if the router can consume the specified producer
-        if (canConsume) {
-          // transport can now consume and return a consumer
-          const consumer = await consumerTransport.consume({
-            producerId: remoteProducerId,
-            rtpCapabilities,
-            paused: true
-          });
-
-          roomService.addConsumer(socket.id, consumer, remoteProducerId);
-
-          // from the consumer extract the following params
-          // to send back to the Client
-          const params = {
-            id: consumer.id,
-            producerId: remoteProducerId,
-            kind: consumer.kind,
-            rtpParameters: consumer.rtpParameters,
-            serverConsumerId: consumer.id
-          };
-
-          // send the parameters to the client
-          callback({ params });
-        }
+        consumer.on("producerclose", () => {
+          console.log("producer of consumer closed");
+          roomService.removeConsumerAndNotify(socket.id, consumer, remoteProducerId);
+          consumer.close();
+        });
       } catch (error: any) {
         console.log(error.message);
         callback({
