@@ -9,6 +9,8 @@ import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
 import { WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
+import { ProducerOptions } from "mediasoup/node/lib/Producer";
+import { Transport } from "mediasoup/node/lib/Transport";
 
 class RoomService {
 
@@ -65,7 +67,7 @@ class RoomService {
     socketId: string,
     isConsumer: boolean
   ): Promise<WebRtcTransport | undefined> => {
-    const router = this.findRoomRouterBy(socketId)
+    const router = this.findRoomRouterBy(socketId);
     if (router === undefined) {
       return undefined;
     }
@@ -75,8 +77,8 @@ class RoomService {
       return undefined;
     }
     peer.addTransport(transport, isConsumer);
-    return transport
-  }
+    return transport;
+  };
 
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
@@ -119,20 +121,32 @@ class RoomService {
     return room.hasProducer();
   };
 
-  addProducer = (socketId: string, producer: Producer) => {
+  createProducer = async (
+    socketId: string,
+    options: ProducerOptions
+  ): Promise<Producer | undefined> => {
+    const producerTransport = roomService.findProducerTransportBy(socketId);
+    if (producerTransport === undefined) {
+      return undefined;
+    }
+    const producer = await producerTransport.produce(options);
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      producer.close()
+      return;
+    }
+    peer.addProducer(producer);
+    return producer
+  };
+
+  removeProducer = (socketId: string, producer: Producer) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       // TODO: 예외 처리가 필요할 수도?
       return;
     }
-    peer.addProducer(producer);
-
-    producer.on("transportclose", () => {
-      console.log("transport for this producer closed ");
-      peer.removeProducer(producer);
-      producer.close();
-    });
-  };
+    peer.removeProducer(producer);
+  }
 
   addConsumer = (socketId: string, consumer: Consumer, remoteProducerId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);

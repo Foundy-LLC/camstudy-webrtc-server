@@ -116,20 +116,13 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.TRANSPORT_PRODUCER,
     async (
-      { kind, rtpParameters, appData }: ProducerOptions,
+      options: ProducerOptions,
       callback: ({ id, producersExist }: { id: string; producersExist: boolean; }) => void
     ) => {
-      const producerTransport = roomService.findProducerTransportBy(socket.id);
-      if (producerTransport === undefined) {
-        // TODO: 예외 처리가 필요할 수도?
+      const producer = await roomService.createProducer(socket.id, options);
+      if (producer === undefined) {
         return;
       }
-      const producer = await producerTransport.produce({
-        kind,
-        rtpParameters
-      });
-
-      roomService.addProducer(socket.id, producer);
       roomService.informConsumersNewProducerAppeared(socket.id, producer.id);
 
       console.log("Producer ID: ", producer.id, producer.kind);
@@ -137,6 +130,12 @@ export const handleConnect = async (socket: Socket) => {
       callback({
         id: producer.id,
         producersExist: roomService.isProducerExists(socket.id)
+      });
+
+      producer.on("transportclose", () => {
+        console.log("transport for this producer closed ");
+        roomService.removeProducer(socket.id, producer);
+        producer.close();
       });
     }
   );
