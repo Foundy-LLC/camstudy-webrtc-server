@@ -15005,7 +15005,7 @@ let params = {
 let audioParams;
 let videoParams = { params };
 let consumingTransports = [];
-let videoOn = true
+let videoOn = true;
 
 const streamSuccess = (stream) => {
   localVideo.srcObject = stream;
@@ -15018,27 +15018,27 @@ const streamSuccess = (stream) => {
 };
 
 const onDeniedMediaPermission = () => {
+  // TODO 구현
+};
 
-}
-
-const getVideoToggleButton = () => document.getElementById("video_toggle")
+const getVideoToggleButton = () => document.getElementById("video_toggle");
 
 const setVideoToggleButton = () => {
-  const button = getVideoToggleButton()
-  button.onclick = onClickVideoToggleButton
-}
+  const button = getVideoToggleButton();
+  button.onclick = onClickVideoToggleButton;
+};
 
 const onClickVideoToggleButton = () => {
-  const button = getVideoToggleButton()
-  videoOn = !videoOn
+  const button = getVideoToggleButton();
+  videoOn = !videoOn;
   if (videoOn) {
-    button.innerText = "Video OFF"
-    console.log("hi")
+    button.innerText = "Video OFF";
+    videoParams.track.enabled = true;
   } else {
-    button.innerText = "Video ON"
-    console.log("bye")
+    button.innerText = "Video ON";
+    videoParams.track.enabled = false;
   }
-}
+};
 
 const joinRoom = () => {
   socket.emit(protocol.JOIN_ROOM, { roomName }, (data) => {
@@ -15069,7 +15069,7 @@ const getLocalStream = () => {
     })
     .then(streamSuccess)
     .catch((error) => {
-      onDeniedMediaPermission()
+      onDeniedMediaPermission();
       console.log(error.message);
     });
 };
