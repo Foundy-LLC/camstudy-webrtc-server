@@ -15,10 +15,9 @@ import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
 
 export class RoomService {
 
-  private readonly _roomRepository: RoomRepository;
-
-  constructor(roomRepository: RoomRepository = new RoomRepository()) {
-    this._roomRepository = roomRepository;
+  constructor(
+    private readonly _roomRepository: RoomRepository = new RoomRepository()
+  ) {
   }
 
   /**
