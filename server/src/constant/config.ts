@@ -3,8 +3,8 @@ import {RtpCodecCapability} from "mediasoup/node/lib/RtpParameters";
 
 // SSL cert for HTTPS access
 export const tlsconfig = {
-    key: fs.readFileSync("./server/ssl/key.pem", "utf-8"),
-    cert: fs.readFileSync("./server/ssl/cert.pem", "utf-8"),
+    key: fs.readFileSync("./ssl/key.pem", "utf-8"),
+    cert: fs.readFileSync("./ssl/cert.pem", "utf-8"),
 };
 
 // This is an Array of RtpCapabilities

@@ -20,7 +20,7 @@ app.get("*", (req, res, next) => {
     );
 });
 
-app.use("/rooms/:roomId", express.static(path.join(__dirname, "src/public")));
+app.use("/rooms/:roomId", express.static(path.join(__dirname, "public")));
 
 const httpsServer = https.createServer(tlsconfig, app);
 httpsServer.listen(3000, () => {
