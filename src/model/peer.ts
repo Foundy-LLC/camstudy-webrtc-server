@@ -5,6 +5,7 @@ import { Consumer } from "mediasoup/node/lib/Consumer";
 
 export class Peer {
 
+  private readonly _uid: string;
   private readonly _socket: Socket;
   private readonly _name: string;
   private readonly _isAdmin: boolean;
@@ -14,10 +15,12 @@ export class Peer {
   private _consumers: Consumer[];
 
   public constructor(
+    uid: string,
     socket: Socket,
     name: string,
     isAdmin: boolean
   ) {
+    this._uid = uid;
     this._socket = socket;
     this._name = name;
     this._isAdmin = isAdmin;
@@ -27,12 +30,16 @@ export class Peer {
     this._consumers = [];
   }
 
+  public get uid(): string {
+    return this._uid;
+  }
+
   public get socketId(): string {
     return this._socket.id;
   }
 
-  public emit = (protocol: string, args: any) => {
-    this._socket.emit(protocol, args);
+  public emit = (protocol: string, args: any, callback: any = undefined) => {
+    this._socket.emit(protocol, args, callback);
   };
 
   public get producerTransport(): Transport | undefined {
@@ -82,6 +89,15 @@ export class Peer {
 
   public removeConsumer = (consumer: Consumer) => {
     this._consumers = this._consumers.filter((e) => e.id !== consumer.id);
+  };
+
+  public closeAndRemoveVideoProducer = () => {
+    const videoProducer = this._producers.find((producer) => producer.kind === "video");
+    if (videoProducer === undefined) {
+      return;
+    }
+    videoProducer.close();
+    this._producers = this._producers.filter((producer) => producer !== videoProducer);
   };
 
   public dispose = () => {

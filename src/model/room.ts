@@ -1,6 +1,5 @@
 import { Peer } from "./peer";
 import { Router } from "mediasoup/node/lib/Router.js";
-import * as protocol from "../constant/protocol.js";
 
 export class Room {
 
@@ -44,21 +43,27 @@ export class Room {
     return producers;
   };
 
-  public informConsumersNewProducerAppeared = (
-    socketId: string,
-    producerId: string
+  public broadcastMessage = (
+    excludeSocketId: string,
+    protocol: string,
+    args: any = undefined,
+    callback: any = undefined
   ) => {
     this._peers.forEach((peer) => {
-      if (socketId !== peer.socketId) {
-        peer.emit(protocol.NEW_PRODUCER, { producerId: producerId });
+      if (excludeSocketId !== peer.socketId) {
+        peer.emit(protocol, args, callback);
       }
     });
   };
 
-  public disposePeer = (socketId: string) => {
+  public disposePeer = (socketId: string): string => {
     const peer = this.findPeerBy(socketId);
-    peer?.dispose();
+    if (peer === undefined) {
+      throw Error("There is no peer to dispose!")
+    }
+    peer.dispose();
     this._peers = this._peers.filter((e: Peer) => e !== peer);
+    return peer.uid
   };
 
   public copyWithNewPeer = (newPeer: Peer): Room => {

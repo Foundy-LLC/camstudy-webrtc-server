@@ -53,12 +53,12 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { roomName }: { roomName: string },
+      { roomName, userId }: { roomName: string, userId: string },
       callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
     ) => {
-      let router = roomService.joinRoom(roomName, socket);
+      let router = roomService.joinRoom(roomName, userId, socket);
       if (router === undefined) {
-        router = await roomService.createAndJoinRoom(roomName, socket, worker);
+        router = await roomService.createAndJoinRoom(roomName, userId, socket, worker);
       }
       console.log("JOIN ROOM: ", roomName);
 
@@ -135,7 +135,6 @@ export const handleConnect = async (socket: Socket) => {
       producer.on("transportclose", () => {
         console.log("transport for this producer closed ");
         roomService.removeProducer(socket.id, producer);
-        producer.close();
       });
     }
   );
@@ -197,7 +196,6 @@ export const handleConnect = async (socket: Socket) => {
         consumer.on("producerclose", () => {
           console.log("producer of consumer closed");
           roomService.removeConsumerAndNotify(socket.id, consumer, remoteProducerId);
-          consumer.close();
         });
       } catch (error: any) {
         console.log(error.message);
@@ -226,6 +224,13 @@ export const handleConnect = async (socket: Socket) => {
     async ({ serverConsumerId }: { serverConsumerId: string }) => {
       console.log("consumer resume");
       await roomService.resumeConsumer(socket.id, serverConsumerId);
+    }
+  );
+
+  socket.on(
+    protocol.CLOSE_PRODUCER,
+    () => {
+      roomService.closeProducer(socket.id);
     }
   );
 };

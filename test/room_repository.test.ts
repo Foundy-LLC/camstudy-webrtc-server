@@ -64,7 +64,7 @@ describe("findPeerBy", () => {
     const socketId = "id";
     const mockSocket: Socket = mock();
     when(mockSocket.id).thenReturn(socketId);
-    const peer = new Peer(instance(mockSocket), "name", false);
+    const peer = new Peer("uid", instance(mockSocket), "name", false);
     const repository = new RoomRepository();
     const room: Room = new Room({
       router: fakeRoom.router,
