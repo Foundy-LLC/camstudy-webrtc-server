@@ -15938,7 +15938,6 @@ const onClickVideoToggleButton = async () => {
 };
 
 const disableVideoTrack = () => {
-  console.log(videoProducer);
   videoProducer.close();
   videoProducer = undefined;
   videoToggleButton.innerText = "Show Video";
@@ -15946,11 +15945,21 @@ const disableVideoTrack = () => {
 };
 
 const enableVideoTrack = async () => {
-
-  // const media = await navigator.mediaDevices.getUserMedia({ video: true });
-  // videoParams = { track: media.getVideoTracks()[0], ...videoParams };
-  // localVideo.srcObject = media;
-  // videoToggleButton.innerText = "Hide Video";
+  if (videoProducer) {
+    return;
+  }
+  if (producerTransport === undefined || producerTransport.closed) {
+    // TODO: 포트 다시 열어야함 or 경고 문구
+    return;
+  }
+  const media = await navigator.mediaDevices.getUserMedia({ video: true });
+  const newTrack = media.getVideoTracks()[0];
+  console.log(newTrack);
+  console.log(producerTransport);
+  videoParams = { track: newTrack, ...videoParams };
+  videoProducer = await producerTransport.produce({ track: newTrack, ...producerOptions });
+  videoToggleButton.innerText = "Hide Video";
+  localVideo.srcObject = media;
 };
 
 const onClickAudioToggleButton = () => {
@@ -16171,11 +16180,13 @@ socket.on(protocol.NEW_PRODUCER, ({ producerId, userId }) =>
 );
 
 const getProducers = () => {
-  socket.emit(protocol.GET_PRODUCERS, (producerIds) => {
-    console.log(producerIds);
+  socket.emit(protocol.GET_PRODUCERS, (userProducerIds) => {
+    console.log(userProducerIds);
     // for each of the producer create a consumer
     // producerIds.forEach(id => signalNewConsumerTransport(id))
-    producerIds.forEach(onComeNewProducer);
+    userProducerIds.forEach(async (userProducerIdSet) => {
+      await onComeNewProducer(userProducerIdSet.producerId, userProducerIdSet.userId);
+    });
   });
 };
 
@@ -16221,24 +16232,32 @@ const connectRecvTransport = async (
         }
       ];
 
-      // create a new div element for the new consumer media
-      const newElem = document.createElement("div");
-
-      if (params.kind === "audio") {
-        newElem.setAttribute("id", createAudioNodeIdWith(userId));
-        //append to the audio container
-        newElem.innerHTML =
-          "<audio id=\"" + remoteProducerId + "\" autoplay></audio>";
-      } else {
-        newElem.setAttribute("id", createVideoNodeIdWith(userId));
-        //append to the video container
-        newElem.innerHTML =
-          "<video id=\"" +
-          remoteProducerId +
-          "\" autoplay class=\"video\" ></video>";
+      let mediaElement = findPreviousMediaElement(userId, params.kind);
+      const isNew = mediaElement === null;
+      if (isNew) {
+        mediaElement = document.createElement("div");
       }
-
-      remoteVideoContainer.appendChild(newElem);
+      switch (params.kind) {
+        case "audio":
+          mediaElement.setAttribute("id", createAudioNodeIdWith(userId));
+          //append to the audio container
+          mediaElement.innerHTML =
+            "<audio id=\"" + remoteProducerId + "\" autoplay></audio>";
+          break;
+        case "video":
+          mediaElement.setAttribute("id", createVideoNodeIdWith(userId));
+          //append to the video container
+          mediaElement.innerHTML =
+            "<video id=\"" +
+            remoteProducerId +
+            "\" autoplay class=\"video\" ></video>";
+          break;
+        default:
+          throw Error("잘못된 kind임");
+      }
+      if (isNew) {
+        remoteVideoContainer.appendChild(mediaElement);
+      }
 
       // destructure and retrieve the video track from the producer
       const { track } = consumer;
@@ -16288,13 +16307,23 @@ socket.on(protocol.OTHER_PEER_DISCONNECTED, ({ disposedPeerId }) => {
     document.getElementById(createAudioNodeIdWith(disposedPeerId))
   ];
   for (let i = 0; i < nodes.length; ++i) {
-    console.log(nodes[i])
-    remoteVideoContainer.removeChild(nodes[i])
+    remoteVideoContainer.removeChild(nodes[i]);
   }
 });
 
 const createAudioNodeIdWith = (userId) => `audio-${userId}`;
 const createVideoNodeIdWith = (userId) => `video-${userId}`;
+
+const findPreviousMediaElement = (userId, kind) => {
+  switch (kind) {
+    case "audio":
+      return document.getElementById(createAudioNodeIdWith(userId));
+    case "video":
+      return document.getElementById(createVideoNodeIdWith(userId));
+    default:
+      throw Error("잘못된 kind임");
+  }
+};
 },{"./constants.js":91,"./protocol.js":93,"mediasoup-client":53,"socket.io-client":65,"uuidv4":89}],93:[function(require,module,exports){
 /**
  * 서버에서 연결을 수신할 IP 주소이다.

@@ -6,6 +6,7 @@ import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
+import { UserProducerIdSet } from "./model/UserProducerIdSet";
 
 /**
  * Worker
@@ -105,7 +106,7 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(
     protocol.GET_PRODUCER_IDS,
-    (callback: (ids: string[]) => void
+    (callback: (ids: UserProducerIdSet[]) => void
     ) => {
       const ids = roomService.findOthersProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);

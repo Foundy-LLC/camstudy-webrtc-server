@@ -12,6 +12,7 @@ import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransp
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
+import { UserProducerIdSet } from "../model/UserProducerIdSet";
 
 export class RoomService {
 
@@ -122,7 +123,7 @@ export class RoomService {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
   };
 
-  findOthersProducerIdsInRoom = (requesterSocketId: string): string[] => {
+  findOthersProducerIdsInRoom = (requesterSocketId: string): UserProducerIdSet[] => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
     return room?.findOthersProducerIds(requesterSocketId) ?? [];
   };

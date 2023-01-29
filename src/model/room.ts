@@ -1,5 +1,6 @@
 import { Peer } from "./peer";
 import { Router } from "mediasoup/node/lib/Router.js";
+import { UserProducerIdSet } from "./UserProducerIdSet";
 
 export class Room {
 
@@ -33,14 +34,21 @@ export class Room {
     return this._peers.find((peer: Peer) => peer.socketId === socketId);
   };
 
-  public findOthersProducerIds = (requesterSocketId: string): string[] => {
-    let producers: string[] = [];
+  public findOthersProducerIds = (requesterSocketId: string): UserProducerIdSet[] => {
+    let result: UserProducerIdSet[] = [];
     this._peers.forEach((peer) => {
       if (peer.socketId !== requesterSocketId) {
-        producers = [...producers, ...peer.getProducerIds()];
+        const producerIds = peer.getProducerIds();
+        const userProducerIdSets = producerIds.map<UserProducerIdSet>((producerId) => {
+          return { producerId, userId: peer.uid };
+        });
+        result = [
+          ...result,
+          ...userProducerIdSets
+        ];
       }
     });
-    return producers;
+    return result;
   };
 
   public broadcastMessage = (
@@ -59,11 +67,11 @@ export class Room {
   public disposePeer = (socketId: string): string => {
     const peer = this.findPeerBy(socketId);
     if (peer === undefined) {
-      throw Error("There is no peer to dispose!")
+      throw Error("There is no peer to dispose!");
     }
     peer.dispose();
     this._peers = this._peers.filter((e: Peer) => e !== peer);
-    return peer.uid
+    return peer.uid;
   };
 
   public copyWithNewPeer = (newPeer: Peer): Room => {
