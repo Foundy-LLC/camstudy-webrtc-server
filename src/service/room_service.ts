@@ -12,7 +12,7 @@ import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransp
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
-import { UserProducerIdSet } from "../model/UserProducerIdSet";
+import { UserProducerIdSet } from "../model/user_producer_id_set";
 
 export class RoomService {
 
