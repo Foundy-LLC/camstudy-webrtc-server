@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
-import { Transport } from "mediasoup/node/lib/Transport.js";
-import { Producer } from "mediasoup/node/lib/Producer.js";
-import { Consumer } from "mediasoup/node/lib/Consumer.js";
+import { Transport } from "mediasoup/node/lib/Transport";
+import { Producer } from "mediasoup/node/lib/Producer";
+import { Consumer } from "mediasoup/node/lib/Consumer";
 
 export class Peer {
 
