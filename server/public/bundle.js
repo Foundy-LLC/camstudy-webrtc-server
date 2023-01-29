@@ -15863,7 +15863,7 @@ module.exports = {
   mediaConstraints
 };
 },{}],92:[function(require,module,exports){
-const protocol = require("../../shared/protocol.js");
+const protocol = require("./protocol.js");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 const { producerOptions, mediaConstraints } = require("./constants.js");
@@ -16180,7 +16180,7 @@ socket.on(protocol.NEW_PRODUCER, ({ producerId, userId }) =>
 );
 
 const getProducers = () => {
-  socket.emit(protocol.GET_PRODUCER_IDS, (userProducerIds) => {
+  socket.emit(protocol.GET_PRODUCERS, (userProducerIds) => {
     console.log(userProducerIds);
     // for each of the producer create a consumer
     // producerIds.forEach(id => signalNewConsumerTransport(id))
@@ -16324,7 +16324,7 @@ const findPreviousMediaElement = (userId, kind) => {
       throw Error("잘못된 kind임");
   }
 };
-},{"../../shared/protocol.js":93,"./constants.js":91,"mediasoup-client":53,"socket.io-client":65,"uuidv4":89}],93:[function(require,module,exports){
+},{"./constants.js":91,"./protocol.js":93,"mediasoup-client":53,"socket.io-client":65,"uuidv4":89}],93:[function(require,module,exports){
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
@@ -16441,7 +16441,7 @@ module.exports = {
     TRANSPORT_RECEIVER_CONNECT,
     CONSUME,
     CONSUME_RESUME,
-    GET_PRODUCER_IDS,
+    GET_PRODUCERS: GET_PRODUCER_IDS,
     NEW_PRODUCER,
     PRODUCER_CLOSED,
     CLOSE_PRODUCER,
