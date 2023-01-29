@@ -10,6 +10,8 @@
     "allowJs": true,
     "noImplicitAny": true
   },
-  "include": ["src/**/*.ts", "src/constant/protocol.ts"],
+  "include": ["src/**/*.ts",
+    "../shared/protocol.js"
+  ],
   "exclude": ["node_modules"]
 }

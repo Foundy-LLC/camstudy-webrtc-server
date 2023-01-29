@@ -1,4 +1,4 @@
-const protocol = require("./protocol.js");
+const protocol = require("../../shared/protocol.js");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
 const { producerOptions, mediaConstraints } = require("./constants.js");
@@ -315,7 +315,7 @@ socket.on(protocol.NEW_PRODUCER, ({ producerId, userId }) =>
 );
 
 const getProducers = () => {
-  socket.emit(protocol.GET_PRODUCERS, (userProducerIds) => {
+  socket.emit(protocol.GET_PRODUCER_IDS, (userProducerIds) => {
     console.log(userProducerIds);
     // for each of the producer create a consumer
     // producerIds.forEach(id => signalNewConsumerTransport(id))

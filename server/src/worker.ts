@@ -1,5 +1,5 @@
 import mediasoup from "mediasoup";
-import * as protocol from "./constant/protocol.js";
+import * as protocol from "../../shared/protocol.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { Socket } from "socket.io";
 import { ProducerOptions } from "mediasoup/node/lib/Producer.js";

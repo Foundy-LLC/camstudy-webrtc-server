@@ -101,7 +101,7 @@ const CLOSE_PRODUCER = "close-producer";
  */
 const OTHER_PEER_DISCONNECTED = "other-peer-disconnected"
 
-export {
+module.exports = {
     IP_ADDRESS,
     NAME_SPACE,
     CONNECTION,

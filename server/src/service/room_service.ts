@@ -4,7 +4,7 @@ import { Producer } from "mediasoup/node/lib/Producer.js";
 import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
-import * as protocol from "../constant/protocol.js";
+import * as protocol from "../../../shared/protocol.js";
 import { Peer } from "../model/peer.js";
 import { Room } from "../model/room.js";
 import { RoomRepository } from "../repository/room_repository.js";
