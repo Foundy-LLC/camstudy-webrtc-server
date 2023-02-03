@@ -111,12 +111,20 @@ export class RoomService {
     consumerTransport?.connect({ dtlsParameters });
   };
 
-  closeProducer = (socketId: string) => {
+  closeVideoProducer = (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       throw Error(`There is no peer by ${socketId}`);
     }
     peer.closeAndRemoveVideoProducer();
+  };
+
+  closeAudioProducer = (socketId: string) => {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.closeAndRemoveAudioProducer();
   };
 
   findRoomRouterBy = (socketId: string): Router | undefined => {

@@ -130,4 +130,4 @@ dist
 
 *.pem
 
-/.idea/
+.idea/

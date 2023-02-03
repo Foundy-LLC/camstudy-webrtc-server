@@ -162,6 +162,7 @@ export const handleConnect = async (socket: Socket) => {
         serverConsumerTransportId: string;
       },
       callback: ({ params }: {
+        // TODO: media-soup에 존자해는 타입으로 변환하기
         params: {
           id: string;
           producerId: string;
@@ -229,9 +230,18 @@ export const handleConnect = async (socket: Socket) => {
   );
 
   socket.on(
-    protocol.CLOSE_PRODUCER,
+    protocol.CLOSE_VIDEO_PRODUCER,
     () => {
-      roomService.closeProducer(socket.id);
+      console.log("Close video producer: ", socket.id);
+      roomService.closeVideoProducer(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.CLOSE_AUDIO_PRODUCER,
+    () => {
+      console.log("Close audio producer: ", socket.id);
+      roomService.closeAudioProducer(socket.id);
     }
   );
 };

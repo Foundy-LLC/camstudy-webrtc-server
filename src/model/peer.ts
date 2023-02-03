@@ -100,6 +100,15 @@ export class Peer {
     this._producers = this._producers.filter((producer) => producer !== videoProducer);
   };
 
+  public closeAndRemoveAudioProducer = () => {
+    const audioProducer = this._producers.find((producer) => producer.kind === "audio");
+    if (audioProducer === undefined) {
+      return;
+    }
+    audioProducer.close();
+    this._producers = this._producers.filter((producer) => producer !== audioProducer);
+  };
+
   public dispose = () => {
     this._consumers.forEach((consumer: Consumer) => consumer.close());
     this._producers.forEach((producer: Producer) => producer.close());

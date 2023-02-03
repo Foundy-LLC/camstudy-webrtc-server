@@ -1,7 +1,7 @@
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
-const IP_ADDRESS = "192.168.35.2";
+const IP_ADDRESS = "192.168.35.113";
 
 const PORT = 2000;
 
@@ -94,9 +94,14 @@ const NEW_PRODUCER = "new-producer";
 const PRODUCER_CLOSED = "producer-closed";
 
 /**
- * 클라이언트가 서버에게 생산자를 닫으라는 요청을 보낸다.
+ * 클라이언트가 서버에게 비디오 생산자를 닫으라는 요청을 보낸다.
  */
-const CLOSE_PRODUCER = "close-producer";
+const CLOSE_VIDEO_PRODUCER = "close-video-producer";
+
+/**
+ * 클라이언트가 서버에게 오디오 생산자를 닫으라는 요청을 보낸다.
+ */
+const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
 
 /**
  * 다른 피어가 연결을 끊었을 때 서버에서 클라이언트들에게 브로드캐스트한다.
@@ -120,6 +125,7 @@ export {
   GET_PRODUCER_IDS,
   NEW_PRODUCER,
   PRODUCER_CLOSED,
-  CLOSE_PRODUCER,
+  CLOSE_VIDEO_PRODUCER,
+  CLOSE_AUDIO_PRODUCER,
   OTHER_PEER_DISCONNECTED
 };
