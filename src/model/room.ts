@@ -51,14 +51,14 @@ export class Room {
     return result;
   };
 
-  public broadcastMessage = (
-    excludeSocketId: string,
+  public broadcastProtocol = (
+    excludeSocketId: string | undefined,
     protocol: string,
     args: any = undefined,
     callback: any = undefined
   ) => {
     this._peers.forEach((peer) => {
-      if (excludeSocketId !== peer.socketId) {
+      if (excludeSocketId === undefined || excludeSocketId !== peer.socketId) {
         peer.emit(protocol, args, callback);
       }
     });

@@ -244,4 +244,11 @@ export const handleConnect = async (socket: Socket) => {
       roomService.closeAudioProducer(socket.id);
     }
   );
+
+  socket.on(
+    protocol.SEND_CHAT,
+    (message: string) => {
+      roomService.broadcastChat(message, socket.id)
+    }
+  )
 };

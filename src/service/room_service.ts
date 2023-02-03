@@ -13,6 +13,8 @@ import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
 import { UserProducerIdSet } from "../model/user_producer_id_set";
+import { ChatMessage } from "../model/ChatMessage";
+import { uuid } from "uuidv4";
 
 export class RoomService {
 
@@ -64,7 +66,7 @@ export class RoomService {
     const disposedPeerId = room.disposePeer(socketId);
     this._roomRepository.deleteSocketId(socketId);
     if (room.hasPeer) {
-      room.broadcastMessage(
+      room.broadcastProtocol(
         socketId,
         protocol.OTHER_PEER_DISCONNECTED,
         { disposedPeerId: disposedPeerId }
@@ -258,12 +260,30 @@ export class RoomService {
     if (peer === undefined) {
       throw Error("There is no peer!");
     }
-    room?.broadcastMessage(
+    room.broadcastProtocol(
       socketId,
       protocol.NEW_PRODUCER,
       { producerId: producerId, userId: peer.uid }
     );
   };
+
+  broadcastChat = (message: string, socketId: string) => {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const chatMessage: ChatMessage = {
+      id: uuid(),
+      // TODO: 실제 회원 이름으로 변경하기
+      authorName: "name",
+      content: message
+    }
+    room.broadcastProtocol(
+      undefined,
+      protocol.SEND_CHAT,
+      chatMessage
+    )
+  }
 }
 
 const createWebRtcTransport = async (

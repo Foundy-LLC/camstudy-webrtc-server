@@ -108,6 +108,13 @@ const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
  */
 const OTHER_PEER_DISCONNECTED = "other-peer-disconnected";
 
+/**
+ * 채팅을 보내는 프로토콜이다.
+ *
+ * 클라이언트가 서버에 전송하면 모든 클라이언트에게 브로드캐스트된다.
+ */
+const SEND_CHAT = "send-chat"
+
 export {
   IP_ADDRESS,
   PORT,
@@ -127,5 +134,6 @@ export {
   PRODUCER_CLOSED,
   CLOSE_VIDEO_PRODUCER,
   CLOSE_AUDIO_PRODUCER,
-  OTHER_PEER_DISCONNECTED
+  OTHER_PEER_DISCONNECTED,
+  SEND_CHAT
 };
