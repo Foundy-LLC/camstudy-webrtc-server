@@ -1,5 +1,4 @@
 import { convertToKoreaDate } from "../util/date.util";
-import { clearTimeout } from "timers";
 
 export interface PomodoroTimerObserver {
   onEndTimer: () => void;
@@ -116,6 +115,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
       this._longBreakInterval = longBreakInterval;
     }
 
+    this._shortBreakCount = 0;
     this.start();
   };
 }
