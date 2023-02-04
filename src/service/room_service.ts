@@ -27,26 +27,36 @@ export class RoomService {
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.
    * @param roomId 접속할 방의 아이디
    * @param userId 접속하는 유저의 아이디
+   * @param userName 접속하는 유저의 이름
    * @param socket 접속하는 피어의 소켓
    */
-  joinRoom = (roomId: string, userId: string, socket: Socket): Router | undefined => {
+  joinRoom = (
+    roomId: string,
+    userId: string,
+    userName: string,
+    socket: Socket
+  ): Router | undefined => {
     const room = this._roomRepository.findRoomById(roomId);
     if (room === undefined) {
       return undefined;
     }
     // TODO: admin인 경우 매개변수로 받아서 처리하기
-    // TODO: 회원 이름 받아서 넣기
-    const newPeer: Peer = new Peer(userId, socket, "TODO", false);
+    const newPeer: Peer = new Peer(userId, socket, userName, false);
     const newRoom: Room = room.copyWithNewPeer(newPeer);
     this._roomRepository.setRoom(newRoom, socket.id);
     return room.router;
   };
 
-  createAndJoinRoom = async (roomName: string, userId: string, socket: Socket, worker: Worker) => {
+  createAndJoinRoom = async (
+    roomName: string,
+    userId: string,
+    userName: string,
+    socket: Socket,
+    worker: Worker
+  ) => {
     const router = await worker.createRouter({ mediaCodecs });
     // TODO: admin인 경우 매개변수로 받아서 처리하기
-    // TODO: 회원 이름 받아서 넣기
-    const newPeer = new Peer(userId, socket, "TODO", false);
+    const newPeer = new Peer(userId, socket, userName, false);
     const newRoom: Room = new Room({
       router: router,
       id: roomName,
@@ -272,18 +282,21 @@ export class RoomService {
     if (room === undefined) {
       throw Error("There is no room!");
     }
+    const peer = room.findPeerBy(socketId)
+    if (peer === undefined) {
+      throw Error("There is no peer in the room!")
+    }
     const chatMessage: ChatMessage = {
       id: uuid(),
-      // TODO: 실제 회원 이름으로 변경하기
-      authorName: "name",
+      authorName: peer.name,
       content: message
-    }
+    };
     room.broadcastProtocol(
       undefined,
       protocol.SEND_CHAT,
       chatMessage
-    )
-  }
+    );
+  };
 }
 
 const createWebRtcTransport = async (

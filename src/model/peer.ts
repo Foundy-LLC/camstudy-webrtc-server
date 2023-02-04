@@ -38,6 +38,10 @@ export class Peer {
     return this._socket.id;
   }
 
+  public get name(): string {
+    return this._name;
+  }
+
   public emit = (protocol: string, args: any, callback: any = undefined) => {
     this._socket.emit(protocol, args, callback);
   };

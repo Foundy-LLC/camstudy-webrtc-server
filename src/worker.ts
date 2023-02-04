@@ -54,12 +54,12 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { roomName, userId }: { roomName: string, userId: string },
+      { roomName, userId, userName }: { roomName: string, userId: string, userName: string },
       callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
     ) => {
-      let router = roomService.joinRoom(roomName, userId, socket);
+      let router = roomService.joinRoom(roomName, userId, userName, socket);
       if (router === undefined) {
-        router = await roomService.createAndJoinRoom(roomName, userId, socket, worker);
+        router = await roomService.createAndJoinRoom(roomName, userId, userName, socket, worker);
       }
       console.log("JOIN ROOM: ", roomName);
 
@@ -248,7 +248,7 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.SEND_CHAT,
     (message: string) => {
-      roomService.broadcastChat(message, socket.id)
+      roomService.broadcastChat(message, socket.id);
     }
-  )
+  );
 };
