@@ -10,7 +10,7 @@ describe("joinRoom", () => {
     const mockSocket: Socket = mock();
 
     // when
-    const router = roomService.joinRoom("roomId", "uid", instance(mockSocket));
+    const router = roomService.joinRoom("roomId", "uid", "roomName", instance(mockSocket));
 
     // then
     expect(router).toBeUndefined();
@@ -25,7 +25,7 @@ describe("joinRoom", () => {
     const roomService = new RoomService(roomRepository);
 
     // when
-    const router = roomService.joinRoom(room.id, "uid", instance(mockSocket));
+    const router = roomService.joinRoom(room.id, "uid", "roomName", instance(mockSocket));
 
     // then
     expect(router).toBeDefined();
