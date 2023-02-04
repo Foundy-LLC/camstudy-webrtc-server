@@ -77,12 +77,14 @@ describe("PomodoroTimer.endAndRestart", () => {
 
     // when
     timer.start();
+    // longInterval 직전까지 집중 및 휴식 수행
     for (let i = 0; i < longBreakInterval - 1; ++i) {
       // 집중시간 타이머 진행
       jest.runOnlyPendingTimers();
       // 휴식시간 타이머 진행
       jest.runOnlyPendingTimers();
     }
+
     timer.editAndRestart({})
     jest.runOnlyPendingTimers();
     jest.runOnlyPendingTimers();
