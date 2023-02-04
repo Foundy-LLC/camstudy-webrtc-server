@@ -6,7 +6,7 @@ export interface PomodoroTimerObserver {
   onEndLongBreak: () => void;
 }
 
-export class PomodoroTimerObservable {
+abstract class PomodoroTimerObservable {
   private readonly _observers: Set<PomodoroTimerObserver> = new Set();
 
   public addObserver(observer: PomodoroTimerObserver) {
