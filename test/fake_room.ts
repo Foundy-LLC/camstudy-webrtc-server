@@ -1,4 +1,4 @@
-import { Room } from "../src/model/room";
+import { Room } from "../src/model/Room";
 import { Router } from "mediasoup/node/lib/Router";
 import { Channel } from "mediasoup/node/lib/Channel";
 import { PayloadChannel } from "mediasoup/node/lib/PayloadChannel";

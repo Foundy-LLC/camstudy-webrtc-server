@@ -5,14 +5,14 @@ import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
-import { Peer } from "../model/peer.js";
-import { Room } from "../model/room.js";
+import { Peer } from "../model/Peer.js";
+import { Room } from "../model/Room.js";
 import { RoomRepository } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
-import { UserProducerIdSet } from "../model/user_producer_id_set";
+import { UserProducerIdSet } from "../model/UserProducerIdSet";
 import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
 

@@ -1,6 +1,6 @@
-import { Peer } from "./peer";
+import { Peer } from "./Peer";
 import { Router } from "mediasoup/node/lib/Router.js";
-import { UserProducerIdSet } from "./user_producer_id_set";
+import { UserProducerIdSet } from "./UserProducerIdSet";
 
 export class Room {
 

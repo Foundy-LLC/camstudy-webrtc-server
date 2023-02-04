@@ -6,7 +6,7 @@ import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
-import { UserProducerIdSet } from "./model/user_producer_id_set";
+import { UserProducerIdSet } from "./model/UserProducerIdSet";
 
 /**
  * Worker

@@ -1,5 +1,5 @@
-import { Room } from "../model/room.js";
-import { Peer } from "../model/peer.js";
+import { Room } from "../model/Room.js";
+import { Peer } from "../model/Peer.js";
 
 export class RoomRepository {
 

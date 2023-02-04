@@ -1,9 +1,9 @@
 import { RoomRepository } from "../src/repository/room_repository";
 import { fakeRoom } from "./fake_room";
 import { instance, mock, when } from "ts-mockito";
-import { Room } from "../src/model/room";
+import { Room } from "../src/model/Room";
 import { Socket } from "socket.io";
-import { Peer } from "../src/model/peer";
+import { Peer } from "../src/model/Peer";
 
 describe("findRoomBySocketId", () => {
   it("should return room when there is", async () => {
