@@ -5,6 +5,7 @@ import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
+import { START_LONG_BREAK, START_SHORT_BREAK, START_TIMER } from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
 import { RoomRepository } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
@@ -14,6 +15,7 @@ import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
 import { UserProducerIdSet } from "../model/UserProducerIdSet";
 import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
+import { PomodoroTimerEvent, PomodoroTimerObserver } from "../model/PomodoroTimer.js";
 
 export class RoomService {
 
@@ -69,6 +71,7 @@ export class RoomService {
         { disposedPeerId: disposedPeerId }
       );
     } else {
+      room.dispose();
       this._roomRepository.deleteRoom(room);
     }
   };
@@ -283,6 +286,31 @@ export class RoomService {
       protocol.SEND_CHAT,
       chatMessage
     );
+  };
+
+  startTimer = (sockId: string) => {
+    const room = this._roomRepository.findRoomBySocketId(sockId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const observer: PomodoroTimerObserver = {
+      onEvent: (event: PomodoroTimerEvent) => {
+        let protocolMessage: string
+        switch (event) {
+          case PomodoroTimerEvent.ON_START:
+            protocolMessage = START_TIMER
+            break;
+          case PomodoroTimerEvent.ON_SHORT_BREAK:
+            protocolMessage = START_SHORT_BREAK
+            break;
+          case PomodoroTimerEvent.ON_LONG_BREAK:
+            protocolMessage = START_LONG_BREAK
+            break;
+        }
+        room.broadcastProtocol(undefined, protocolMessage);
+      },
+    };
+    room.startTimer(observer);
   };
 }
 

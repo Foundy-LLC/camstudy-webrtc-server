@@ -251,4 +251,11 @@ export const handleConnect = async (socket: Socket) => {
       roomService.broadcastChat(message, socket.id);
     }
   );
+
+  socket.on(
+    protocol.START_TIMER,
+    () => {
+      roomService.startTimer(socket.id);
+    }
+  );
 };

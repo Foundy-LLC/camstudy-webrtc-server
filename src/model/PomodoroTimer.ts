@@ -1,9 +1,13 @@
 import { convertToKoreaDate } from "../util/dateUtil.js";
 
+export enum PomodoroTimerEvent {
+  ON_START,
+  ON_SHORT_BREAK,
+  ON_LONG_BREAK,
+}
+
 export interface PomodoroTimerObserver {
-  onEndTimer: () => void;
-  onEndShortBreak: () => void;
-  onEndLongBreak: () => void;
+  onEvent: (event: PomodoroTimerEvent) => void;
 }
 
 abstract class PomodoroTimerObservable {
@@ -17,21 +21,21 @@ abstract class PomodoroTimerObservable {
     this._observers.delete(observer);
   }
 
-  protected notifyTimerEnd() {
+  protected notifyTimerStarted() {
     for (const observer of this._observers) {
-      observer.onEndTimer();
+      observer.onEvent(PomodoroTimerEvent.ON_START);
     }
   }
 
-  protected notifyShortBreakEnd() {
+  protected notifyShortBreakStarted() {
     for (const observer of this._observers) {
-      observer.onEndShortBreak();
+      observer.onEvent(PomodoroTimerEvent.ON_SHORT_BREAK);
     }
   }
 
-  protected notifyLongBreakEnd() {
+  protected notifyLongBreakStarted() {
     for (const observer of this._observers) {
-      observer.onEndLongBreak();
+      observer.onEvent(PomodoroTimerEvent.ON_LONG_BREAK);
     }
   }
 }
@@ -52,15 +56,15 @@ export class PomodoroTimer extends PomodoroTimerObservable {
 
   public start = () => {
     if (this._timeout != null) {
-      clearTimeout(this._timeout);
+      return;
     }
     this._startedAt = convertToKoreaDate(new Date());
     this._startFocusTimer();
   };
 
   private _startFocusTimer = () => {
+    super.notifyTimerStarted();
     this._timeout = this._setTimeoutInMinutes(this._timerLengthMinutes, () => {
-      super.notifyTimerEnd();
       if (this._shortBreakCount === this._longBreakInterval - 1) {
         this._shortBreakCount = 0;
         this._startLongBreakTimer();
@@ -72,15 +76,15 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   };
 
   private _startShortBreakTimer = () => {
+    super.notifyShortBreakStarted();
     this._timeout = this._setTimeoutInMinutes(this._shortBreakMinutes, () => {
-      super.notifyShortBreakEnd();
       this._startFocusTimer();
     });
   };
 
   private _startLongBreakTimer = () => {
+    super.notifyLongBreakStarted();
     this._timeout = this._setTimeoutInMinutes(this._longBreakMinutes, () => {
-      super.notifyLongBreakEnd();
       this._startFocusTimer();
     });
   };
@@ -116,6 +120,18 @@ export class PomodoroTimer extends PomodoroTimerObservable {
     }
 
     this._shortBreakCount = 0;
+    this._clearTimeout();
     this.start();
+  };
+
+  private _clearTimeout = () => {
+    if (this._timeout != null) {
+      clearTimeout(this._timeout);
+      this._timeout = undefined;
+    }
+  };
+
+  public dispose = () => {
+    this._clearTimeout();
   };
 }

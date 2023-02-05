@@ -1,7 +1,8 @@
 import { Peer } from "./Peer";
 import { Router } from "mediasoup/node/lib/Router.js";
 import { UserProducerIdSet } from "./UserProducerIdSet";
-import { PomodoroTimer } from "./PomodoroTimer.js";
+import { PomodoroTimer, PomodoroTimerObserver } from "./PomodoroTimer.js";
+import { START_TIMER } from "../constant/protocol.js";
 
 export class Room {
 
@@ -66,8 +67,8 @@ export class Room {
   };
 
   public join = (peer: Peer) => {
-    this._peers = [...this._peers, peer]
-  }
+    this._peers = [...this._peers, peer];
+  };
 
   public findOthersProducerIds = (requesterSocketId: string): UserProducerIdSet[] => {
     let result: UserProducerIdSet[] = [];
@@ -99,6 +100,12 @@ export class Room {
     });
   };
 
+  public startTimer = (observer: PomodoroTimerObserver) => {
+    this._pomodoroTimer.start();
+    this._pomodoroTimer.addObserver(observer);
+    this.broadcastProtocol(undefined, START_TIMER);
+  };
+
   public disposePeer = (socketId: string): string => {
     const peer = this.findPeerBy(socketId);
     if (peer === undefined) {
@@ -107,5 +114,9 @@ export class Room {
     peer.dispose();
     this._peers = this._peers.filter((e: Peer) => e !== peer);
     return peer.uid;
+  };
+
+  public dispose = () => {
+    this._pomodoroTimer.dispose();
   };
 }
