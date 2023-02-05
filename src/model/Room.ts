@@ -114,14 +114,14 @@ export class Room {
     this.broadcastProtocol(undefined, START_TIMER);
   };
 
-  public disposePeer = (socketId: string): string => {
+  public disposePeer = (socketId: string): Peer => {
     const peer = this.findPeerBy(socketId);
     if (peer === undefined) {
       throw Error("There is no peer to dispose!");
     }
     peer.dispose();
     this._peers = this._peers.filter((e: Peer) => e !== peer);
-    return peer.uid;
+    return peer;
   };
 
   public dispose = () => {

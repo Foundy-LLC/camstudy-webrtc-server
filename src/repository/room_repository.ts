@@ -13,6 +13,22 @@ const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   });
 };
 
+export const createStudyHistory = async (
+  roomId: string,
+  userId: string,
+  joinAt: Date,
+  exitAt: Date
+) => {
+  await prisma.study_history.create({
+    data: {
+      room_id: roomId,
+      user_id: userId,
+      join_at: joinAt,
+      exit_at: exitAt
+    }
+  });
+};
+
 export class RoomRepository {
 
   private readonly _roomById = new Map<string, Room>();

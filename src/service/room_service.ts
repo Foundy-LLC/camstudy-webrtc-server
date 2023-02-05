@@ -7,7 +7,7 @@ import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import { START_LONG_BREAK, START_SHORT_BREAK, START_TIMER } from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
-import { RoomRepository } from "../repository/room_repository.js";
+import { createStudyHistory, RoomRepository } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
@@ -54,25 +54,27 @@ export class RoomService {
     return await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
   };
 
-  disconnect = (socketId: string) => {
+  disconnect = async (socketId: string) => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
     if (room === undefined) {
       // TODO: 아마 예외처리가 필요할수도?
       return;
     }
 
-    const disposedPeerId = room.disposePeer(socketId);
+    const disposedPeer = room.disposePeer(socketId);
     this._roomRepository.deleteSocketId(socketId);
     if (room.hasPeer) {
       room.broadcastProtocol(
         socketId,
         protocol.OTHER_PEER_DISCONNECTED,
-        { disposedPeerId: disposedPeerId }
+        { disposedPeerId: disposedPeer.uid }
       );
     } else {
       room.dispose();
       this._roomRepository.deleteRoom(room);
     }
+
+    await createStudyHistory(room.id, disposedPeer.uid, disposedPeer.joinAt, new Date());
   };
 
   createTransport = async (
