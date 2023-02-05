@@ -54,14 +54,14 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { roomName, userId, userName }: { roomName: string, userId: string, userName: string },
+      { roomId, userId, userName }: { roomId: string, userId: string, userName: string },
       callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
     ) => {
-      let router = roomService.joinRoom(roomName, userId, userName, socket);
+      console.log("JOIN ROOM:", roomId);
+      let router = roomService.joinRoom(roomId, userId, userName, socket);
       if (router === undefined) {
-        router = await roomService.createAndJoinRoom(roomName, userId, userName, socket, worker);
+        router = await roomService.createAndJoinRoom(roomId, userId, userName, socket, worker);
       }
-      console.log("JOIN ROOM: ", roomName);
 
       const rtpCapabilities = router.rtpCapabilities;
       callback({ rtpCapabilities });

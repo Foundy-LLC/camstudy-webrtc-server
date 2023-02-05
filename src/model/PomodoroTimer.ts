@@ -1,4 +1,4 @@
-import { convertToKoreaDate } from "../util/date.util";
+import { convertToKoreaDate } from "../util/dateUtil.js";
 
 export interface PomodoroTimerObserver {
   onEndTimer: () => void;

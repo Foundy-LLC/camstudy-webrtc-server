@@ -6,7 +6,6 @@ import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
-import { Room } from "../model/Room.js";
 import { RoomRepository } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
@@ -36,33 +35,21 @@ export class RoomService {
     userName: string,
     socket: Socket
   ): Router | undefined => {
-    const room = this._roomRepository.findRoomById(roomId);
-    if (room === undefined) {
-      return undefined;
-    }
-    // TODO: admin인 경우 매개변수로 받아서 처리하기
-    const newPeer: Peer = new Peer(userId, socket, userName, false);
-    const newRoom: Room = room.copyWithNewPeer(newPeer);
-    this._roomRepository.setRoom(newRoom, socket.id);
-    return room.router;
+    const newPeer: Peer = new Peer(userId, socket, userName);
+    const room = this._roomRepository.join(roomId, newPeer, socket.id);
+    return room?.router;
   };
 
   createAndJoinRoom = async (
-    roomName: string,
+    roomId: string,
     userId: string,
     userName: string,
     socket: Socket,
     worker: Worker
   ) => {
     const router = await worker.createRouter({ mediaCodecs });
-    // TODO: admin인 경우 매개변수로 받아서 처리하기
-    const newPeer = new Peer(userId, socket, userName, false);
-    const newRoom: Room = new Room({
-      router: router,
-      id: roomName,
-      peers: [newPeer]
-    });
-    this._roomRepository.setRoom(newRoom, socket.id);
+    const newPeer = new Peer(userId, socket, userName);
+    await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
     return router;
   };
 
@@ -282,9 +269,9 @@ export class RoomService {
     if (room === undefined) {
       throw Error("There is no room!");
     }
-    const peer = room.findPeerBy(socketId)
+    const peer = room.findPeerBy(socketId);
     if (peer === undefined) {
-      throw Error("There is no peer in the room!")
+      throw Error("There is no peer in the room!");
     }
     const chatMessage: ChatMessage = {
       id: uuid(),
@@ -329,7 +316,7 @@ const createWebRtcTransport = async (
         }
       });
 
-      transport.on("close", () => {
+      transport.on("@close", () => {
         console.log("transport closed");
       });
 

@@ -1,6 +1,7 @@
 import { Peer } from "./Peer";
 import { Router } from "mediasoup/node/lib/Router.js";
 import { UserProducerIdSet } from "./UserProducerIdSet";
+import { PomodoroTimer } from "./PomodoroTimer.js";
 
 export class Room {
 
@@ -8,10 +9,40 @@ export class Room {
   private readonly _id: string;
   private _peers: Peer[];
 
-  public constructor({ router, id, peers }: { router: Router, id: string, peers: Peer[] }) {
+  private readonly _masterPeerId: string;
+  private readonly _pomodoroTimer: PomodoroTimer;
+
+  public constructor(
+    {
+      router,
+      id,
+      peers,
+      masterPeerId,
+      timerLengthMinutes,
+      shortBreakMinutes,
+      longBreakMinutes,
+      longBreakInterval
+    }: {
+      router: Router,
+      id: string,
+      peers: Peer[],
+      masterPeerId: string,
+      timerLengthMinutes: number,
+      shortBreakMinutes: number,
+      longBreakMinutes: number,
+      longBreakInterval: number
+    }
+  ) {
     this._router = router;
     this._id = id;
     this._peers = peers;
+    this._masterPeerId = masterPeerId;
+    this._pomodoroTimer = new PomodoroTimer(
+      timerLengthMinutes,
+      shortBreakMinutes,
+      longBreakMinutes,
+      longBreakInterval
+    );
   }
 
   public get router(): Router {
@@ -33,6 +64,10 @@ export class Room {
   public findPeerBy = (socketId: string): Peer | undefined => {
     return this._peers.find((peer: Peer) => peer.socketId === socketId);
   };
+
+  public join = (peer: Peer) => {
+    this._peers = [...this._peers, peer]
+  }
 
   public findOthersProducerIds = (requesterSocketId: string): UserProducerIdSet[] => {
     let result: UserProducerIdSet[] = [];
@@ -72,13 +107,5 @@ export class Room {
     peer.dispose();
     this._peers = this._peers.filter((e: Peer) => e !== peer);
     return peer.uid;
-  };
-
-  public copyWithNewPeer = (newPeer: Peer): Room => {
-    return new Room({
-      router: this._router,
-      id: this._id,
-      peers: [...this._peers, newPeer]
-    });
   };
 }

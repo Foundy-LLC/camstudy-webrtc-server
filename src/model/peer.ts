@@ -8,7 +8,6 @@ export class Peer {
   private readonly _uid: string;
   private readonly _socket: Socket;
   private readonly _name: string;
-  private readonly _isAdmin: boolean;
   private _producerTransport: Transport | undefined;
   private _consumerTransports: Transport[];
   private _producers: Producer[];
@@ -17,13 +16,11 @@ export class Peer {
   public constructor(
     uid: string,
     socket: Socket,
-    name: string,
-    isAdmin: boolean
+    name: string
   ) {
     this._uid = uid;
     this._socket = socket;
     this._name = name;
-    this._isAdmin = isAdmin;
     this._producerTransport = undefined;
     this._consumerTransports = [];
     this._producers = [];
