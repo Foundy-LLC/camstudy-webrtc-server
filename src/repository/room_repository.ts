@@ -2,6 +2,7 @@ import { Room } from "../model/Room.js";
 import { Peer } from "../model/Peer.js";
 import { Router } from "mediasoup/node/lib/Router";
 import { PrismaClient, room } from "@prisma/client";
+import { uuid } from "uuidv4";
 
 const prisma = new PrismaClient();
 
@@ -21,6 +22,7 @@ export const createStudyHistory = async (
 ) => {
   await prisma.study_history.create({
     data: {
+      id: uuid(),
       room_id: roomId,
       user_id: userId,
       join_at: joinAt,
