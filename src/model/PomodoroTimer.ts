@@ -1,5 +1,13 @@
 import { convertToKoreaDate } from "../util/dateUtil.js";
 
+// TODO: 클라이언트랑 같이 쓰이는 클래스임 때문에 한군데다 모으고 동시에 쓰는 방법을 찾아야함
+export enum PomodoroTimerState {
+  STOPPED = "stopped",
+  STARTED = "started",
+  SHORT_BREAK = "shortBreak",
+  LONG_BREAK = "longBreak",
+}
+
 export enum PomodoroTimerEvent {
   ON_START,
   ON_SHORT_BREAK,
@@ -44,6 +52,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   private _startedAt?: Date;
   private _timeout?: NodeJS.Timeout;
   private _shortBreakCount: number = 0;
+  private _state = PomodoroTimerState.STOPPED;
 
   constructor(
     private _timerLengthMinutes: number,
@@ -52,6 +61,14 @@ export class PomodoroTimer extends PomodoroTimerObservable {
     private _longBreakInterval: number
   ) {
     super();
+  }
+
+  public get state(): PomodoroTimerState {
+    return this._state;
+  }
+
+  public get startedDate(): Date | undefined {
+    return this._startedAt;
   }
 
   public start = () => {
@@ -63,6 +80,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   };
 
   private _startFocusTimer = () => {
+    this._state = PomodoroTimerState.STARTED;
     super.notifyTimerStarted();
     this._timeout = this._setTimeoutInMinutes(this._timerLengthMinutes, () => {
       if (this._shortBreakCount === this._longBreakInterval - 1) {
@@ -76,6 +94,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   };
 
   private _startShortBreakTimer = () => {
+    this._state = PomodoroTimerState.SHORT_BREAK;
     super.notifyShortBreakStarted();
     this._timeout = this._setTimeoutInMinutes(this._shortBreakMinutes, () => {
       this._startFocusTimer();
@@ -83,6 +102,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   };
 
   private _startLongBreakTimer = () => {
+    this._state = PomodoroTimerState.LONG_BREAK;
     super.notifyLongBreakStarted();
     this._timeout = this._setTimeoutInMinutes(this._longBreakMinutes, () => {
       this._startFocusTimer();
@@ -133,5 +153,6 @@ export class PomodoroTimer extends PomodoroTimerObservable {
 
   public dispose = () => {
     this._clearTimeout();
+    this._state = PomodoroTimerState.STOPPED;
   };
 }

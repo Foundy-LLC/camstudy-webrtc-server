@@ -16,6 +16,7 @@ import { UserProducerIdSet } from "../model/UserProducerIdSet";
 import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
 import { PomodoroTimerEvent, PomodoroTimerObserver } from "../model/PomodoroTimer.js";
+import { Room } from "../model/Room";
 
 export class RoomService {
 
@@ -36,10 +37,9 @@ export class RoomService {
     userId: string,
     userName: string,
     socket: Socket
-  ): Router | undefined => {
+  ): Room | undefined => {
     const newPeer: Peer = new Peer(userId, socket, userName);
-    const room = this._roomRepository.join(roomId, newPeer, socket.id);
-    return room?.router;
+    return this._roomRepository.join(roomId, newPeer, socket.id);
   };
 
   createAndJoinRoom = async (
@@ -48,11 +48,10 @@ export class RoomService {
     userName: string,
     socket: Socket,
     worker: Worker
-  ) => {
+  ): Promise<Room> => {
     const router = await worker.createRouter({ mediaCodecs });
     const newPeer = new Peer(userId, socket, userName);
-    await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
-    return router;
+    return await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
   };
 
   disconnect = (socketId: string) => {
@@ -295,20 +294,20 @@ export class RoomService {
     }
     const observer: PomodoroTimerObserver = {
       onEvent: (event: PomodoroTimerEvent) => {
-        let protocolMessage: string
+        let protocolMessage: string;
         switch (event) {
           case PomodoroTimerEvent.ON_START:
-            protocolMessage = START_TIMER
+            protocolMessage = START_TIMER;
             break;
           case PomodoroTimerEvent.ON_SHORT_BREAK:
-            protocolMessage = START_SHORT_BREAK
+            protocolMessage = START_SHORT_BREAK;
             break;
           case PomodoroTimerEvent.ON_LONG_BREAK:
-            protocolMessage = START_LONG_BREAK
+            protocolMessage = START_LONG_BREAK;
             break;
         }
         room.broadcastProtocol(undefined, protocolMessage);
-      },
+      }
     };
     room.startTimer(observer);
   };

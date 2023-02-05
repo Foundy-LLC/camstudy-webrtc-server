@@ -23,7 +23,12 @@ export class RoomRepository {
     this._roomIdBySocketId.set(socketId, room.id);
   };
 
-  public createAndJoin = async (socketId: string, router: Router, roomId: string, firstPeer: Peer) => {
+  public createAndJoin = async (
+    socketId: string,
+    router: Router,
+    roomId: string,
+    firstPeer: Peer
+  ): Promise<Room> => {
     const roomFromDB = await findRoomFromDB(roomId);
     if (roomFromDB == null) {
       throw Error("방이 DB에 존재하지 않습니다. 방이 DB에 존재할 때만 소켓에서 방을 생성할 수 있습니다.");
@@ -40,6 +45,7 @@ export class RoomRepository {
     });
     this._setRoom(newRoom, socketId);
     console.log("New room created!: ", newRoom);
+    return newRoom;
   };
 
   public join = (

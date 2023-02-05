@@ -1,7 +1,7 @@
 import { Peer } from "./Peer";
 import { Router } from "mediasoup/node/lib/Router.js";
 import { UserProducerIdSet } from "./UserProducerIdSet";
-import { PomodoroTimer, PomodoroTimerObserver } from "./PomodoroTimer.js";
+import { PomodoroTimer, PomodoroTimerObserver, PomodoroTimerState } from "./PomodoroTimer.js";
 import { START_TIMER } from "../constant/protocol.js";
 
 export class Room {
@@ -56,6 +56,14 @@ export class Room {
 
   public get hasPeer(): boolean {
     return this._peers.length > 0;
+  }
+
+  public get timerState(): PomodoroTimerState {
+    return this._pomodoroTimer.state;
+  }
+
+  public get timerStartedDate(): Date | undefined {
+    return this._pomodoroTimer.startedDate;
   }
 
   public hasProducer = (): boolean => {

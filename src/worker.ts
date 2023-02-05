@@ -7,6 +7,7 @@ import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/Rt
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
 import { UserProducerIdSet } from "./model/UserProducerIdSet";
+import { PomodoroTimerState } from "./model/PomodoroTimer";
 
 /**
  * Worker
@@ -55,16 +56,31 @@ export const handleConnect = async (socket: Socket) => {
     protocol.JOIN_ROOM,
     async (
       { roomId, userId, userName }: { roomId: string, userId: string, userName: string },
-      callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
+      callback: (
+        {
+          rtpCapabilities,
+          timerStartedDate,
+          timerState
+        }: {
+          rtpCapabilities: RtpCapabilities;
+          timerStartedDate?: string;
+          timerState: PomodoroTimerState
+        }
+      ) => void
     ) => {
       console.log("JOIN ROOM:", roomId);
-      let router = roomService.joinRoom(roomId, userId, userName, socket);
-      if (router === undefined) {
-        router = await roomService.createAndJoinRoom(roomId, userId, userName, socket, worker);
+      let room = roomService.joinRoom(roomId, userId, userName, socket);
+      if (room === undefined) {
+        room = await roomService.createAndJoinRoom(roomId, userId, userName, socket, worker);
       }
 
-      const rtpCapabilities = router.rtpCapabilities;
-      callback({ rtpCapabilities });
+      const rtpCapabilities = room.router.rtpCapabilities;
+      callback({
+        rtpCapabilities,
+        // ex: 2023-02-05T11:48:59.636Z
+        timerStartedDate: room.timerStartedDate?.toISOString(),
+        timerState: room.timerState
+      });
     }
   );
 
