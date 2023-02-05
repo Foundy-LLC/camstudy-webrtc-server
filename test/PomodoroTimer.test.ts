@@ -1,4 +1,4 @@
-import { PomodoroTimer, PomodoroTimerObserver } from "../src/model/PomodoroTimer";
+import { PomodoroTimer, PomodoroTimerEvent, PomodoroTimerObserver } from "../src/model/PomodoroTimer";
 import { jest } from "@jest/globals";
 
 describe("PomodoroTimer.start", () => {
@@ -6,18 +6,22 @@ describe("PomodoroTimer.start", () => {
     // given
     jest.useFakeTimers();
     const longBreakInterval = 4;
-    let timerEndCount = 0;
-    let shortBreakEndCount = 0;
-    let longBreakEndCount = 0;
+    let timerStartCount = 0;
+    let shortBreakStartCount = 0;
+    let longBreakStartCount = 0;
     const observer: PomodoroTimerObserver = {
-      onEndTimer: () => {
-        timerEndCount++;
-      },
-      onEndShortBreak: () => {
-        shortBreakEndCount++;
-      },
-      onEndLongBreak: () => {
-        longBreakEndCount++;
+      onEvent: (event) => {
+        switch (event) {
+          case PomodoroTimerEvent.ON_START:
+            timerStartCount++;
+            break;
+          case PomodoroTimerEvent.ON_SHORT_BREAK:
+            shortBreakStartCount++;
+            break;
+          case PomodoroTimerEvent.ON_LONG_BREAK:
+            longBreakStartCount++;
+            break;
+        }
       }
     };
     const timer = new PomodoroTimer(25, 5, 15, longBreakInterval);
@@ -33,9 +37,9 @@ describe("PomodoroTimer.start", () => {
     }
 
     // then
-    expect(timerEndCount).toBe(longBreakInterval);
-    expect(shortBreakEndCount).toBe(longBreakInterval - 1);
-    expect(longBreakEndCount).toBe(1);
+    expect(timerStartCount).toBe(longBreakInterval + 1);
+    expect(shortBreakStartCount).toBe(longBreakInterval - 1);
+    expect(longBreakStartCount).toBe(1);
   });
 });
 
@@ -58,18 +62,22 @@ describe("PomodoroTimer.endAndRestart", () => {
     // given
     jest.useFakeTimers();
     const longBreakInterval = 4;
-    let timerEndCount = 0;
-    let shortBreakEndCount = 0;
-    let longBreakEndCount = 0;
+    let timerStartCount = 0;
+    let shortBreakStartCount = 0;
+    let longBreakStartCount = 0;
     const observer: PomodoroTimerObserver = {
-      onEndTimer: () => {
-        timerEndCount++;
-      },
-      onEndShortBreak: () => {
-        shortBreakEndCount++;
-      },
-      onEndLongBreak: () => {
-        longBreakEndCount++;
+      onEvent: (event) => {
+        switch (event) {
+          case PomodoroTimerEvent.ON_START:
+            timerStartCount++;
+            break;
+          case PomodoroTimerEvent.ON_SHORT_BREAK:
+            shortBreakStartCount++;
+            break;
+          case PomodoroTimerEvent.ON_LONG_BREAK:
+            longBreakStartCount++;
+            break;
+        }
       }
     };
     const timer = new PomodoroTimer(25, 5, 15, longBreakInterval);
@@ -86,12 +94,12 @@ describe("PomodoroTimer.endAndRestart", () => {
     }
 
     timer.editAndRestart({})
-    jest.runOnlyPendingTimers();
+    // 휴식 시작
     jest.runOnlyPendingTimers();
 
     // then
-    expect(timerEndCount).toBe(longBreakInterval);
-    expect(shortBreakEndCount).toBe(longBreakInterval);
-    expect(longBreakEndCount).toBe(0);
+    expect(timerStartCount).toBe(longBreakInterval + 1);
+    expect(shortBreakStartCount).toBe(longBreakInterval);
+    expect(longBreakStartCount).toBe(0);
   });
 });
