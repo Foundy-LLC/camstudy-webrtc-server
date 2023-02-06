@@ -66,7 +66,7 @@ export const handleConnect = async (socket: Socket) => {
       ) => void
     ) => {
       console.log("JOIN ROOM:", roomId);
-      let room = roomService.joinRoom(roomId, userId, userName, socket);
+      let room = await roomService.joinRoom(roomId, userId, userName, socket);
       if (room === undefined) {
         room = await roomService.createAndJoinRoom(roomId, userId, userName, socket, worker);
       }

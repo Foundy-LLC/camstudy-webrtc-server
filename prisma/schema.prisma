@@ -100,7 +100,7 @@ model study_history {
   user_id      String       @db.VarChar(100)
   room_id      String       @db.VarChar(100)
   join_at      DateTime     @db.Timestamp(6)
-  exit_at      DateTime     @db.Timestamp(6)
+  exit_at      DateTime?    @db.Timestamp(6)
   id           String       @db.VarChar(100)
   room         room         @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_to_study_history_1")
   user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_study_history_1")
@@ -144,7 +144,7 @@ enum crops_type {
   tomato
   carrot
   pumkin
-  corn
+  cabbage
 }
 
 enum fruit_grade {

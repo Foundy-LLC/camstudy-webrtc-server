@@ -16,18 +16,45 @@ const findRoomFromDB = async (roomId: string): Promise<room | null> => {
 
 export const createStudyHistory = async (
   roomId: string,
-  userId: string,
-  joinAt: Date,
-  exitAt: Date
+  userId: string
 ) => {
   await prisma.study_history.create({
     data: {
       id: uuid(),
       room_id: roomId,
       user_id: userId,
-      join_at: joinAt,
-      exit_at: exitAt
+      join_at: new Date()
     }
+  });
+};
+
+export const updateExitAtOfStudyHistory = async (
+  roomId: string,
+  userId: string
+) => {
+  await prisma.$transaction(async (tx) => {
+    const history = await tx.study_history.findFirst({
+      where: {
+        room_id: roomId,
+        user_id: userId,
+        exit_at: null
+      }
+    });
+    if (history == null) {
+      return;
+    }
+    await tx.study_history.update({
+      where: {
+        id_user_id_room_id: {
+          id: history.id,
+          user_id: userId,
+          room_id: roomId
+        }
+      },
+      data: {
+        exit_at: new Date()
+      }
+    });
   });
 };
 

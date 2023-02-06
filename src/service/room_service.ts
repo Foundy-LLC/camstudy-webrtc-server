@@ -7,7 +7,7 @@ import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import { START_LONG_BREAK, START_SHORT_BREAK, START_TIMER } from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
-import { createStudyHistory, RoomRepository } from "../repository/room_repository.js";
+import { createStudyHistory, RoomRepository, updateExitAtOfStudyHistory } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
@@ -32,14 +32,19 @@ export class RoomService {
    * @param userName 접속하는 유저의 이름
    * @param socket 접속하는 피어의 소켓
    */
-  joinRoom = (
+  joinRoom = async (
     roomId: string,
     userId: string,
     userName: string,
     socket: Socket
-  ): Room | undefined => {
+  ): Promise<Room | undefined> => {
     const newPeer: Peer = new Peer(userId, socket, userName);
-    return this._roomRepository.join(roomId, newPeer, socket.id);
+    const room = this._roomRepository.join(roomId, newPeer, socket.id);
+    if (room === undefined) {
+      return undefined;
+    }
+    await createStudyHistory(room.id, newPeer.uid);
+    return room;
   };
 
   createAndJoinRoom = async (
@@ -51,7 +56,9 @@ export class RoomService {
   ): Promise<Room> => {
     const router = await worker.createRouter({ mediaCodecs });
     const newPeer = new Peer(userId, socket, userName);
-    return await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
+    const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
+    await createStudyHistory(roomId, newPeer.uid);
+    return room;
   };
 
   disconnect = async (socketId: string) => {
@@ -74,7 +81,7 @@ export class RoomService {
       this._roomRepository.deleteRoom(room);
     }
 
-    await createStudyHistory(room.id, disposedPeer.uid, disposedPeer.joinAt, new Date());
+    await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
   };
 
   createTransport = async (
@@ -319,8 +326,8 @@ export class RoomService {
     if (room === undefined) {
       throw Error("There is no room!");
     }
-    room.editAndStopTimer(property)
-  }
+    room.editAndStopTimer(property);
+  };
 }
 
 const createWebRtcTransport = async (

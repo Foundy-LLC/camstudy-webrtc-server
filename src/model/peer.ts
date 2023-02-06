@@ -12,7 +12,6 @@ export class Peer {
   private _consumerTransports: Transport[];
   private _producers: Producer[];
   private _consumers: Consumer[];
-  private readonly _joinAt: Date = new Date();
 
   public constructor(
     uid: string,
@@ -38,10 +37,6 @@ export class Peer {
 
   public get name(): string {
     return this._name;
-  }
-
-  public get joinAt(): Date {
-    return this._joinAt;
   }
 
   public emit = (protocol: string, args: any, callback: any = undefined) => {
