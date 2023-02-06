@@ -1,11 +1,10 @@
 import { Room } from "../model/Room.js";
 import { Peer } from "../model/Peer.js";
 import { Router } from "mediasoup/node/lib/Router";
-import { PrismaClient, room } from "@prisma/client";
+import { room } from "@prisma/client";
 import { uuid } from "uuidv4";
 import { PomodoroTimerProperty } from "../model/PomodoroTimer";
-
-const prisma = new PrismaClient();
+import prisma from "../../prisma/client.js";
 
 const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   return prisma.room.findUnique({
