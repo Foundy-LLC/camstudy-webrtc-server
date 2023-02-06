@@ -1,16 +1,18 @@
 import { RoomRepository } from "../src/repository/room_repository";
-import { fakeRoom } from "./fake_room";
+import { fakeRoom, fakeRoomEntity } from "./fake_room";
 import { instance, mock, when } from "ts-mockito";
 import { Room } from "../src/model/Room";
 import { Socket } from "socket.io";
 import { Peer } from "../src/model/Peer";
+import { mockPrisma } from "./mockPrisma";
 
 describe("findRoomBySocketId", () => {
   it("should return room when there is", async () => {
     // given
     const socketId = "id";
     const repository = new RoomRepository();
-    repository.setRoom(fakeRoom, socketId);
+    mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    await repository.createAndJoin(socketId, mock(), fakeRoom.id, mock());
 
     // when
     const room = repository.findRoomBySocketId(socketId);
@@ -36,7 +38,8 @@ describe("findRoomById", () => {
   it("should return room when there is", async () => {
     // given
     const repository = new RoomRepository();
-    repository.setRoom(fakeRoom, "socketId");
+    mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    await repository.createAndJoin("socketId", mock(), fakeRoom.id, mock());
 
     // when
     const room = repository.findRoomById(fakeRoom.id);
@@ -66,12 +69,8 @@ describe("findPeerBy", () => {
     when(mockSocket.id).thenReturn(socketId);
     const peer = new Peer("uid", instance(mockSocket), "name");
     const repository = new RoomRepository();
-    const room: Room = new Room({
-      router: fakeRoom.router,
-      id: fakeRoom.id,
-      peers: [peer]
-    });
-    repository.setRoom(room, socketId);
+    mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    await repository.createAndJoin(socketId, mock(), "room.id", peer);
 
     // when
     const result = repository.findPeerBy(peer.socketId);
@@ -97,7 +96,8 @@ describe("deleteSocketId", () => {
     // given
     const socketId = "id";
     const repository = new RoomRepository();
-    repository.setRoom(fakeRoom, socketId);
+    mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    await repository.createAndJoin(socketId, mock(), fakeRoom.id, mock());
 
     // when
     repository.deleteSocketId(socketId);
@@ -112,7 +112,8 @@ describe("deleteRoom", () => {
   it("should delete socketId", async () => {
     // given
     const repository = new RoomRepository();
-    repository.setRoom(fakeRoom, "id");
+    mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    await repository.createAndJoin("socketId", mock(), fakeRoom.id, mock());
 
     // when
     repository.deleteRoom(fakeRoom);

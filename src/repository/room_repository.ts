@@ -6,7 +6,7 @@ import { uuid } from "uuidv4";
 import { PomodoroTimerProperty } from "../model/PomodoroTimer";
 import prisma from "../../prisma/client.js";
 
-const findRoomFromDB = async (roomId: string): Promise<room | null> => {
+export const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   return prisma.room.findUnique({
     where: {
       id: roomId
@@ -106,7 +106,7 @@ export class RoomRepository {
       longBreakInterval: roomFromDB.long_break_interval
     });
     this._setRoom(newRoom, socketId);
-    console.log("New room created!: ", newRoom);
+    console.log("New room created!: ", newRoom.id);
     return newRoom;
   };
 

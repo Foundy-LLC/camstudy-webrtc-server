@@ -1,4 +1,9 @@
-import { PomodoroTimer, PomodoroTimerEvent, PomodoroTimerObserver } from "../src/model/PomodoroTimer";
+import {
+  PomodoroTimer,
+  PomodoroTimerEvent,
+  PomodoroTimerObserver,
+  PomodoroTimerState
+} from "../src/model/PomodoroTimer";
 import { jest } from "@jest/globals";
 
 describe("PomodoroTimer.start", () => {
@@ -24,7 +29,12 @@ describe("PomodoroTimer.start", () => {
         }
       }
     };
-    const timer = new PomodoroTimer(25, 5, 15, longBreakInterval);
+    const timer = new PomodoroTimer({
+      timerLengthMinutes: 25,
+      shortBreakMinutes: 5,
+      longBreakMinutes: 15,
+      longBreakInterval
+    });
     timer.addObserver(observer);
 
     // when
@@ -43,11 +53,16 @@ describe("PomodoroTimer.start", () => {
   });
 });
 
-describe("PomodoroTimer.endAndRestart", () => {
+describe("PomodoroTimer.endAndStop", () => {
   it("should cancel previous timeout", () => {
     // given
     jest.useFakeTimers();
-    const timer = new PomodoroTimer(25, 5, 15, 4);
+    const timer = new PomodoroTimer({
+      timerLengthMinutes: 25,
+      shortBreakMinutes: 5,
+      longBreakMinutes: 15,
+      longBreakInterval: 4
+    });
     timer.start();
     expect(jest.getTimerCount()).toBe(1);
 
@@ -55,10 +70,28 @@ describe("PomodoroTimer.endAndRestart", () => {
     timer.editAndStop({});
 
     // then
-    expect(jest.getTimerCount()).toBe(1);
+    expect(jest.getTimerCount()).toBe(0);
   });
 
-  it("should restart timer", () => {
+  it("should state is STOPPED", () => {
+    // given
+    jest.useFakeTimers();
+    const timer = new PomodoroTimer({
+      timerLengthMinutes: 25,
+      shortBreakMinutes: 5,
+      longBreakMinutes: 15,
+      longBreakInterval: 4
+    });
+    timer.start();
+
+    // when
+    timer.editAndStop({});
+
+    // then
+    expect(timer.state).toBe(PomodoroTimerState.STOPPED);
+  });
+
+  it("should invoke callbacks appropriately", () => {
     // given
     jest.useFakeTimers();
     const longBreakInterval = 4;
@@ -80,7 +113,12 @@ describe("PomodoroTimer.endAndRestart", () => {
         }
       }
     };
-    const timer = new PomodoroTimer(25, 5, 15, longBreakInterval);
+    const timer = new PomodoroTimer({
+      timerLengthMinutes: 25,
+      shortBreakMinutes: 5,
+      longBreakMinutes: 15,
+      longBreakInterval
+    });
     timer.addObserver(observer);
 
     // when
@@ -93,8 +131,8 @@ describe("PomodoroTimer.endAndRestart", () => {
       jest.runOnlyPendingTimers();
     }
 
-    timer.editAndStop({})
-    // 휴식 시작
+    timer.editAndStop({});
+    timer.start();
     jest.runOnlyPendingTimers();
 
     // then
