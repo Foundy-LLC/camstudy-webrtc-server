@@ -52,7 +52,7 @@ describe("PomodoroTimer.endAndRestart", () => {
     expect(jest.getTimerCount()).toBe(1);
 
     // when
-    timer.editAndRestart({});
+    timer.editAndStop({});
 
     // then
     expect(jest.getTimerCount()).toBe(1);
@@ -93,7 +93,7 @@ describe("PomodoroTimer.endAndRestart", () => {
       jest.runOnlyPendingTimers();
     }
 
-    timer.editAndRestart({})
+    timer.editAndStop({})
     // 휴식 시작
     jest.runOnlyPendingTimers();
 

@@ -15,7 +15,7 @@ import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
 import { UserProducerIdSet } from "../model/UserProducerIdSet";
 import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
-import { PomodoroTimerEvent, PomodoroTimerObserver } from "../model/PomodoroTimer.js";
+import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from "../model/PomodoroTimer.js";
 import { Room } from "../model/Room";
 
 export class RoomService {
@@ -289,8 +289,8 @@ export class RoomService {
     );
   };
 
-  startTimer = (sockId: string) => {
-    const room = this._roomRepository.findRoomBySocketId(sockId);
+  startTimer = (socketId: string) => {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
     if (room === undefined) {
       throw Error("There is no room!");
     }
@@ -313,6 +313,14 @@ export class RoomService {
     };
     room.startTimer(observer);
   };
+
+  editAndStopTimer = (socketId: string, property: PomodoroTimerProperty) => {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    room.editAndStopTimer(property)
+  }
 }
 
 const createWebRtcTransport = async (

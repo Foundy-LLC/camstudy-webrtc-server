@@ -8,10 +8,19 @@ export enum PomodoroTimerState {
   LONG_BREAK = "longBreak",
 }
 
+// TODO: API repo에서 중복됨. 하나로 공유할 수 있는 방법을 찾아야함.
 export enum PomodoroTimerEvent {
   ON_START,
   ON_SHORT_BREAK,
   ON_LONG_BREAK,
+}
+
+// TODO: API repo에서 중복됨. 하나로 공유할 수 있는 방법을 찾아야함.
+export interface PomodoroTimerProperty {
+  timerLengthMinutes: number;
+  shortBreakMinutes: number;
+  longBreakMinutes: number;
+  longBreakInterval: number;
 }
 
 export interface PomodoroTimerObserver {
@@ -55,10 +64,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   private _state = PomodoroTimerState.STOPPED;
 
   constructor(
-    private _timerLengthMinutes: number,
-    private _shortBreakMinutes: number,
-    private _longBreakMinutes: number,
-    private _longBreakInterval: number
+    private _property: PomodoroTimerProperty
   ) {
     super();
   }
@@ -69,6 +75,10 @@ export class PomodoroTimer extends PomodoroTimerObservable {
 
   public get startedDate(): Date | undefined {
     return this._startedAt;
+  }
+
+  public get property(): PomodoroTimerProperty {
+    return this._property;
   }
 
   public start = () => {
@@ -82,8 +92,8 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   private _startFocusTimer = () => {
     this._state = PomodoroTimerState.STARTED;
     super.notifyTimerStarted();
-    this._timeout = this._setTimeoutInMinutes(this._timerLengthMinutes, () => {
-      if (this._shortBreakCount === this._longBreakInterval - 1) {
+    this._timeout = this._setTimeoutInMinutes(this._property.timerLengthMinutes, () => {
+      if (this._shortBreakCount === this._property.longBreakInterval - 1) {
         this._shortBreakCount = 0;
         this._startLongBreakTimer();
       } else {
@@ -96,7 +106,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   private _startShortBreakTimer = () => {
     this._state = PomodoroTimerState.SHORT_BREAK;
     super.notifyShortBreakStarted();
-    this._timeout = this._setTimeoutInMinutes(this._shortBreakMinutes, () => {
+    this._timeout = this._setTimeoutInMinutes(this._property.shortBreakMinutes, () => {
       this._startFocusTimer();
     });
   };
@@ -104,7 +114,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
   private _startLongBreakTimer = () => {
     this._state = PomodoroTimerState.LONG_BREAK;
     super.notifyLongBreakStarted();
-    this._timeout = this._setTimeoutInMinutes(this._longBreakMinutes, () => {
+    this._timeout = this._setTimeoutInMinutes(this._property.longBreakMinutes, () => {
       this._startFocusTimer();
     });
   };
@@ -113,7 +123,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
     return setTimeout(callback, minutes * 60 * 1000);
   };
 
-  public editAndRestart = (
+  public editAndStop = (
     {
       timerLengthMinutes,
       shortBreakMinutes,
@@ -126,22 +136,14 @@ export class PomodoroTimer extends PomodoroTimerObservable {
       longBreakInterval?: number
     }
   ) => {
-    if (timerLengthMinutes != null) {
-      this._timerLengthMinutes = timerLengthMinutes;
-    }
-    if (shortBreakMinutes != null) {
-      this._shortBreakMinutes = shortBreakMinutes;
-    }
-    if (longBreakMinutes != null) {
-      this._longBreakMinutes = longBreakMinutes;
-    }
-    if (longBreakInterval != null) {
-      this._longBreakInterval = longBreakInterval;
-    }
-
+    this._property = {
+      timerLengthMinutes: timerLengthMinutes ?? this._property.timerLengthMinutes,
+      shortBreakMinutes: shortBreakMinutes ?? this._property.shortBreakMinutes,
+      longBreakMinutes: longBreakMinutes ?? this._property.longBreakMinutes,
+      longBreakInterval: longBreakInterval ?? this._property.longBreakInterval
+    };
     this._shortBreakCount = 0;
     this._clearTimeout();
-    this.start();
   };
 
   private _clearTimeout = () => {
@@ -149,6 +151,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
       clearTimeout(this._timeout);
       this._timeout = undefined;
     }
+    this._state = PomodoroTimerState.STOPPED;
   };
 
   public dispose = () => {

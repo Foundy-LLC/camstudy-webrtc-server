@@ -7,7 +7,7 @@ import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/Rt
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
 import { UserProducerIdSet } from "./model/UserProducerIdSet";
-import { PomodoroTimerState } from "./model/PomodoroTimer";
+import { PomodoroTimerProperty, PomodoroTimerState } from "./model/PomodoroTimer";
 
 /**
  * Worker
@@ -57,14 +57,11 @@ export const handleConnect = async (socket: Socket) => {
     async (
       { roomId, userId, userName }: { roomId: string, userId: string, userName: string },
       callback: (
-        {
-          rtpCapabilities,
-          timerStartedDate,
-          timerState
-        }: {
+        data: {
           rtpCapabilities: RtpCapabilities;
           timerStartedDate?: string;
-          timerState: PomodoroTimerState
+          timerState: PomodoroTimerState,
+          timerProperty: PomodoroTimerProperty,
         }
       ) => void
     ) => {
@@ -79,7 +76,8 @@ export const handleConnect = async (socket: Socket) => {
         rtpCapabilities,
         // ex: 2023-02-05T11:48:59.636Z
         timerStartedDate: room.timerStartedDate?.toISOString(),
-        timerState: room.timerState
+        timerState: room.timerState,
+        timerProperty: room.timerProperty
       });
     }
   );
@@ -90,7 +88,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.CREATE_WEB_RTC_TRANSPORT,
     async (
       { isConsumer }: { isConsumer: boolean },
-      callback: ({ params }: {
+      callback: (data: {
         params: {
           id: string;
           iceParameters: IceParameters;
@@ -134,7 +132,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.TRANSPORT_PRODUCER,
     async (
       options: ProducerOptions,
-      callback: ({ id, producersExist }: { id: string; producersExist: boolean; }) => void
+      callback: (data: { id: string; producersExist: boolean; }) => void
     ) => {
       const producer = await roomService.createProducer(socket.id, options);
       if (producer === undefined) {
@@ -177,7 +175,7 @@ export const handleConnect = async (socket: Socket) => {
         remoteProducerId: string;
         serverConsumerTransportId: string;
       },
-      callback: ({ params }: {
+      callback: (data: {
         // TODO: media-soup에 존자해는 타입으로 변환하기
         params: {
           id: string;
@@ -272,6 +270,13 @@ export const handleConnect = async (socket: Socket) => {
     protocol.START_TIMER,
     () => {
       roomService.startTimer(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.EDIT_AND_STOP_TIMER,
+    (timerProperty: PomodoroTimerProperty) => {
+      roomService.editAndStopTimer(socket.id, timerProperty);
     }
   );
 };

@@ -3,6 +3,7 @@ import { Peer } from "../model/Peer.js";
 import { Router } from "mediasoup/node/lib/Router";
 import { PrismaClient, room } from "@prisma/client";
 import { uuid } from "uuidv4";
+import { PomodoroTimerProperty } from "../model/PomodoroTimer";
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,23 @@ export const createStudyHistory = async (
       user_id: userId,
       join_at: joinAt,
       exit_at: exitAt
+    }
+  });
+};
+
+export const updatePomodoroTimerInRoom = async (
+  roomId: string,
+  newProperty: PomodoroTimerProperty
+) => {
+  await prisma.room.update({
+    where: {
+      id: roomId
+    },
+    data: {
+      timer: newProperty.timerLengthMinutes,
+      short_break: newProperty.shortBreakMinutes,
+      long_break: newProperty.longBreakMinutes,
+      long_break_interval: newProperty.longBreakInterval
     }
   });
 };
