@@ -5,26 +5,16 @@ import { Consumer } from "mediasoup/node/lib/Consumer";
 
 export class Peer {
 
-  private readonly _uid: string;
-  private readonly _socket: Socket;
-  private readonly _name: string;
-  private _producerTransport: Transport | undefined;
-  private _consumerTransports: Transport[];
-  private _producers: Producer[];
-  private _consumers: Consumer[];
+  private _producerTransport: Transport | undefined = undefined;
+  private _consumerTransports: Transport[] = [];
+  private _producers: Producer[] = [];
+  private _consumers: Consumer[] = [];
 
   public constructor(
-    uid: string,
-    socket: Socket,
-    name: string
+    private readonly _uid: string,
+    private readonly _socket: Socket,
+    private readonly _name: string,
   ) {
-    this._uid = uid;
-    this._socket = socket;
-    this._name = name;
-    this._producerTransport = undefined;
-    this._consumerTransports = [];
-    this._producers = [];
-    this._consumers = [];
   }
 
   public get uid(): string {

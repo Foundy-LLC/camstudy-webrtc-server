@@ -286,8 +286,10 @@ export class RoomService {
     }
     const chatMessage: ChatMessage = {
       id: uuid(),
+      authorId: peer.uid,
       authorName: peer.name,
-      content: message
+      content: message,
+      sentAt: new Date().toISOString()
     };
     room.broadcastProtocol(
       undefined,
