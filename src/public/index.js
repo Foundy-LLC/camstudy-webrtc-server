@@ -1,15 +1,19 @@
 const protocol = require("./protocol.js");
 const io = require("socket.io-client");
 const mediasoupClient = require("mediasoup-client");
+const { producerOptions, mediaConstraints } = require("./constants.js");
+const { uuid } = require("uuidv4");
 
 const roomName = window.location.pathname.split("/")[2];
-
 const socket = io(protocol.NAME_SPACE);
 
-socket.on(protocol.CONNECTION_SUCCESS, ({ socketId }) => {
-  console.log(socketId);
-  getLocalStream();
-});
+const videoToggleButton = document.getElementById("video-toggle");
+const audioToggleButton = document.getElementById("audio-toggle");
+const localVideo = document.getElementById("localVideo");
+const remoteVideoContainer = document.getElementById("remote-video-container");
+
+// TODO: 실제 회원의 uuid 넣기
+const userId = uuid();
 
 let device;
 let rtpCapabilities;
@@ -20,48 +24,94 @@ let videoProducer;
 let consumer;
 let isProducer = false;
 
-// https://mediasoup.org/documentation/v3/mediasoup-client/api/#ProducerOptions
-// https://mediasoup.org/documentation/v3/mediasoup-client/api/#transport-produce
-let params = {
-  // mediasoup params
-  encodings: [
-    {
-      rid: "r0",
-      maxBitrate: 100000,
-      scalabilityMode: "S1T3"
-    },
-    {
-      rid: "r1",
-      maxBitrate: 300000,
-      scalabilityMode: "S1T3"
-    },
-    {
-      rid: "r2",
-      maxBitrate: 900000,
-      scalabilityMode: "S1T3"
-    }
-  ],
-  // https://mediasoup.org/documentation/v3/mediasoup-client/api/#ProducerCodecOptions
-  codecOptions: {
-    videoGoogleStartBitrate: 1000
+let audioParams;
+let videoParams = { producerOptions };
+let consumingTransports = [];
+
+socket.on(protocol.CONNECTION_SUCCESS, async ({ socketId }) => {
+  console.log("Connected: ", socketId);
+  await setLocalStream();
+  setToggleButtons();
+
+  // TODO: 방 입장은 입장 버튼으로 수행하기
+  joinRoom();
+});
+
+const setLocalStream = async () => {
+  try {
+    const media = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    localVideo.srcObject = media;
+    audioParams = { track: media.getAudioTracks()[0], ...audioParams };
+    videoParams = { track: media.getVideoTracks()[0], ...videoParams };
+  } catch (e) {
+    onDeniedMediaPermission();
+    console.log(e.message);
   }
 };
 
-let audioParams;
-let videoParams = { params };
-let consumingTransports = [];
+const onDeniedMediaPermission = () => {
+  // TODO 구현
+};
 
-const streamSuccess = (stream) => {
-  localVideo.srcObject = stream;
+const setToggleButtons = () => {
+  videoToggleButton.onclick = onClickVideoToggleButton;
+  audioToggleButton.onclick = onClickAudioToggleButton;
+};
 
-  audioParams = { track: stream.getAudioTracks()[0], ...audioParams };
-  videoParams = { track: stream.getVideoTracks()[0], ...videoParams };
+const onClickVideoToggleButton = async () => {
+  const enabledVideo = videoProducer !== undefined;
 
-  joinRoom();
+  if (enabledVideo) {
+    disableVideoTrack();
+  } else {
+    try {
+      await enableVideoTrack();
+    } catch (e) {
+      console.error(e.message);
+    }
+  }
+};
+
+const disableVideoTrack = () => {
+  videoProducer.close();
+  videoProducer = undefined;
+  videoToggleButton.innerText = "Show Video";
+  socket.emit(protocol.CLOSE_PRODUCER);
+};
+
+const enableVideoTrack = async () => {
+  if (videoProducer) {
+    return;
+  }
+  if (producerTransport === undefined || producerTransport.closed) {
+    // TODO: 포트 다시 열어야함 or 경고 문구
+    return;
+  }
+  const media = await navigator.mediaDevices.getUserMedia({ video: true });
+  const newTrack = media.getVideoTracks()[0];
+  console.log(newTrack);
+  console.log(producerTransport);
+  videoParams = { track: newTrack, ...videoParams };
+  videoProducer = await producerTransport.produce({ track: newTrack, ...producerOptions });
+  videoToggleButton.innerText = "Hide Video";
+  localVideo.srcObject = media;
+};
+
+const onClickAudioToggleButton = () => {
+  const enabledAudio = audioProducer !== undefined;
+
+  if (enabledAudio) {
+    audioToggleButton.innerText = "Audio OFF";
+    audioParams.track.enabled = true;
+  } else {
+    audioToggleButton.innerText = "Audio ON";
+    audioParams.track.enabled = false;
+  }
 };
 
 const joinRoom = () => {
-  socket.emit(protocol.JOIN_ROOM, { roomName }, (data) => {
+  socket.emit(protocol.JOIN_ROOM, { roomName, userId }, (data) => {
+
     console.log(`Router RTP Capabilities... ${data.rtpCapabilities}`);
     // we assign to local variable and will be used when
     // loading the client Device (see createDevice above)
@@ -70,27 +120,6 @@ const joinRoom = () => {
     // once we have rtpCapabilities from the Router, create Device
     createDevice();
   });
-};
-
-const getLocalStream = () => {
-  navigator.mediaDevices
-    .getUserMedia({
-      audio: true,
-      video: {
-        width: {
-          min: 640,
-          max: 1920
-        },
-        height: {
-          min: 400,
-          max: 1080
-        }
-      }
-    })
-    .then(streamSuccess)
-    .catch((error) => {
-      console.log(error.message);
-    });
 };
 
 // A device is an endpoint connecting to a Router on the
@@ -123,7 +152,7 @@ const createSendTransport = () => {
   socket.emit(
     protocol.CREATE_WEB_RTC_TRANSPORT,
     { isConsumer: false },
-    ({ params }) => {
+    async ({ params }) => {
       // The server sends back params needed
       // to create Send Transport on the client side
       if (params.error) {
@@ -188,7 +217,7 @@ const createSendTransport = () => {
         }
       });
 
-      connectSendTransport();
+      await connectSendTransport();
     }
   );
 };
@@ -205,7 +234,7 @@ const connectSendTransport = async () => {
   audioProducer.on("trackended", () => {
     console.log("audio track ended");
 
-    // close audio track
+    // TODO: close audio track
   });
 
   audioProducer.on("transportclose", () => {
@@ -217,17 +246,17 @@ const connectSendTransport = async () => {
   videoProducer.on("trackended", () => {
     console.log("video track ended");
 
-    // close video track
+    // TODO: close video track
   });
 
   videoProducer.on("transportclose", () => {
     console.log("video transport ended");
 
-    // close video track
+    // TODO: close video track
   });
 };
 
-const signalNewConsumerTransport = async (remoteProducerId) => {
+const onComeNewProducer = async (remoteProducerId, userId) => {
   //check if we are already consuming the remoteProducerId
   if (consumingTransports.includes(remoteProducerId)) return;
   consumingTransports.push(remoteProducerId);
@@ -275,29 +304,32 @@ const signalNewConsumerTransport = async (remoteProducerId) => {
         }
       );
 
-      connectRecvTransport(consumerTransport, remoteProducerId, params.id);
+      connectRecvTransport(consumerTransport, remoteProducerId, params.id, userId);
     }
   );
 };
 
 // server informs the client of a new producer just joined
-socket.on(protocol.NEW_PRODUCER, ({ producerId }) =>
-  signalNewConsumerTransport(producerId)
+socket.on(protocol.NEW_PRODUCER, ({ producerId, userId }) =>
+  onComeNewProducer(producerId, userId)
 );
 
 const getProducers = () => {
-  socket.emit(protocol.GET_PRODUCERS, (producerIds) => {
-    console.log(producerIds);
+  socket.emit(protocol.GET_PRODUCERS, (userProducerIds) => {
+    console.log(userProducerIds);
     // for each of the producer create a consumer
     // producerIds.forEach(id => signalNewConsumerTransport(id))
-    producerIds.forEach(signalNewConsumerTransport);
+    userProducerIds.forEach(async (userProducerIdSet) => {
+      await onComeNewProducer(userProducerIdSet.producerId, userProducerIdSet.userId);
+    });
   });
 };
 
 const connectRecvTransport = async (
   consumerTransport,
   remoteProducerId,
-  serverConsumerTransportId
+  serverConsumerTransportId,
+  userId
 ) => {
   // for consumer, we need to tell the server first
   // to create a consumer based on the rtpCapabilities and consume
@@ -324,10 +356,10 @@ const connectRecvTransport = async (
         kind: params.kind,
         rtpParameters: params.rtpParameters
       });
-
       consumerTransports = [
         ...consumerTransports,
         {
+          userId,
           consumerTransport,
           serverConsumerTransportId: params.id,
           producerId: remoteProducerId,
@@ -335,24 +367,32 @@ const connectRecvTransport = async (
         }
       ];
 
-      // create a new div element for the new consumer media
-      const newElem = document.createElement("div");
-      newElem.setAttribute("id", `td-${remoteProducerId}`);
-
-      if (params.kind == "audio") {
-        //append to the audio container
-        newElem.innerHTML =
-          "<audio id=\"" + remoteProducerId + "\" autoplay></audio>";
-      } else {
-        //append to the video container
-        newElem.setAttribute("class", "remoteVideo");
-        newElem.innerHTML =
-          "<video id=\"" +
-          remoteProducerId +
-          "\" autoplay class=\"video\" ></video>";
+      let mediaElement = findPreviousMediaElement(userId, params.kind);
+      const isNew = mediaElement === null;
+      if (isNew) {
+        mediaElement = document.createElement("div");
       }
-
-      videoContainer.appendChild(newElem);
+      switch (params.kind) {
+        case "audio":
+          mediaElement.setAttribute("id", createAudioNodeIdWith(userId));
+          //append to the audio container
+          mediaElement.innerHTML =
+            "<audio id=\"" + remoteProducerId + "\" autoplay></audio>";
+          break;
+        case "video":
+          mediaElement.setAttribute("id", createVideoNodeIdWith(userId));
+          //append to the video container
+          mediaElement.innerHTML =
+            "<video id=\"" +
+            remoteProducerId +
+            "\" autoplay class=\"video\" ></video>";
+          break;
+        default:
+          throw Error("잘못된 kind임");
+      }
+      if (isNew) {
+        remoteVideoContainer.appendChild(mediaElement);
+      }
 
       // destructure and retrieve the video track from the producer
       const { track } = consumer;
@@ -373,17 +413,49 @@ const connectRecvTransport = async (
 socket.on(protocol.PRODUCER_CLOSED, ({ remoteProducerId }) => {
   // server notification is received when a producer is closed
   // we need to close the client-side consumer and associated transport
-  const producerToClose = consumerTransports.find(
+  const consumerTransport = consumerTransports.find(
     (transportData) => transportData.producerId === remoteProducerId
+  );
+  if (consumerTransport === undefined) {
+    return;
+  }
+  consumerTransport.consumer.close();
+});
+
+socket.on(protocol.OTHER_PEER_DISCONNECTED, ({ disposedPeerId }) => {
+  // server notification is received when a producer is closed
+  // we need to close the client-side consumer and associated transport
+  const producerToClose = consumerTransports.find(
+    (transportData) => transportData.userId === disposedPeerId
   );
   producerToClose.consumerTransport.close();
   producerToClose.consumer.close();
 
   // remove the consumer transport from the list
   consumerTransports = consumerTransports.filter(
-    (transportData) => transportData.producerId !== remoteProducerId
+    (transportData) => transportData.userId !== disposedPeerId
   );
 
   // remove the video div element
-  videoContainer.removeChild(document.getElementById(`td-${remoteProducerId}`));
+  const nodes = [
+    document.getElementById(createVideoNodeIdWith(disposedPeerId)),
+    document.getElementById(createAudioNodeIdWith(disposedPeerId))
+  ];
+  for (let i = 0; i < nodes.length; ++i) {
+    remoteVideoContainer.removeChild(nodes[i]);
+  }
 });
+
+const createAudioNodeIdWith = (userId) => `audio-${userId}`;
+const createVideoNodeIdWith = (userId) => `video-${userId}`;
+
+const findPreviousMediaElement = (userId, kind) => {
+  switch (kind) {
+    case "audio":
+      return document.getElementById(createAudioNodeIdWith(userId));
+    case "video":
+      return document.getElementById(createVideoNodeIdWith(userId));
+    default:
+      throw Error("잘못된 kind임");
+  }
+};

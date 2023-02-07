@@ -8,8 +8,15 @@
     "experimentalDecorators": true,
     "strict": true,
     "allowJs": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "src/constant/protocol.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts",
+    "src/model/PomodoroTimer.ts",
+    "src/util/dateUtil.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

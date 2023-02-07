@@ -5,67 +5,83 @@ import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
-import { Peer } from "../model/peer.js";
-import { Room } from "../model/room.js";
-import { RoomRepository } from "../repository/room_repository.js";
+import { START_LONG_BREAK, START_SHORT_BREAK, START_TIMER } from "../constant/protocol.js";
+import { Peer } from "../model/Peer.js";
+import { createStudyHistory, RoomRepository, updateExitAtOfStudyHistory } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
+import { UserProducerIdSet } from "../model/UserProducerIdSet";
+import { ChatMessage } from "../model/ChatMessage";
+import { uuid } from "uuidv4";
+import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from "../model/PomodoroTimer.js";
+import { Room } from "../model/Room";
 
 export class RoomService {
 
-  private readonly _roomRepository: RoomRepository;
-
-  constructor(roomRepository: RoomRepository = new RoomRepository()) {
-    this._roomRepository = roomRepository;
+  constructor(
+    private readonly _roomRepository: RoomRepository = new RoomRepository()
+  ) {
   }
 
   /**
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.
    * @param roomId 접속할 방의 아이디
+   * @param userId 접속하는 유저의 아이디
+   * @param userName 접속하는 유저의 이름
    * @param socket 접속하는 피어의 소켓
    */
-  joinRoom = (roomId: string, socket: Socket): Router | undefined => {
-    const room = this._roomRepository.findRoomById(roomId);
+  joinRoom = async (
+    roomId: string,
+    userId: string,
+    userName: string,
+    socket: Socket
+  ): Promise<Room | undefined> => {
+    const newPeer: Peer = new Peer(userId, socket, userName);
+    const room = this._roomRepository.join(roomId, newPeer, socket.id);
     if (room === undefined) {
       return undefined;
     }
-    // TODO: admin인 경우 매개변수로 받아서 처리하기
-    // TODO: 회원 이름 받아서 넣기
-    const newPeer: Peer = new Peer(socket, "TODO", false);
-    const newRoom: Room = room.copyWithNewPeer(newPeer);
-    this._roomRepository.setRoom(newRoom, socket.id);
-    return room.router;
+    await createStudyHistory(room.id, newPeer.uid);
+    return room;
   };
 
-  createAndJoinRoom = async (roomName: string, socket: Socket, worker: Worker) => {
+  createAndJoinRoom = async (
+    roomId: string,
+    userId: string,
+    userName: string,
+    socket: Socket,
+    worker: Worker
+  ): Promise<Room> => {
     const router = await worker.createRouter({ mediaCodecs });
-    // TODO: admin인 경우 매개변수로 받아서 처리하기
-    // TODO: 회원 이름 받아서 넣기
-    const newPeer = new Peer(socket, "TODO", false);
-    const newRoom: Room = new Room({
-      router: router,
-      id: roomName,
-      peers: [newPeer]
-    });
-    this._roomRepository.setRoom(newRoom, socket.id);
-    return router;
+    const newPeer = new Peer(userId, socket, userName);
+    const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
+    await createStudyHistory(roomId, newPeer.uid);
+    return room;
   };
 
-  disconnect = (socketId: string) => {
+  disconnect = async (socketId: string) => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
     if (room === undefined) {
       // TODO: 아마 예외처리가 필요할수도?
       return;
     }
 
-    room.disposePeer(socketId);
-
+    const disposedPeer = room.disposePeer(socketId);
     this._roomRepository.deleteSocketId(socketId);
-    if (!room.hasPeer) {
+    if (room.hasPeer) {
+      room.broadcastProtocol(
+        socketId,
+        protocol.OTHER_PEER_DISCONNECTED,
+        { disposedPeerId: disposedPeer.uid }
+      );
+    } else {
+      room.dispose();
       this._roomRepository.deleteRoom(room);
     }
+
+    await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
   };
 
   createTransport = async (
@@ -105,11 +121,27 @@ export class RoomService {
     consumerTransport?.connect({ dtlsParameters });
   };
 
+  closeVideoProducer = (socketId: string) => {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.closeAndRemoveVideoProducer();
+  };
+
+  closeAudioProducer = (socketId: string) => {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.closeAndRemoveAudioProducer();
+  };
+
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
   };
 
-  findOthersProducerIdsInRoom = (requesterSocketId: string): string[] => {
+  findOthersProducerIdsInRoom = (requesterSocketId: string): UserProducerIdSet[] => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
     return room?.findOthersProducerIds(requesterSocketId) ?? [];
   };
@@ -229,7 +261,74 @@ export class RoomService {
     producerId: string
   ) => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
-    room?.informConsumersNewProducerAppeared(socketId, producerId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const peer = room.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error("There is no peer!");
+    }
+    room.broadcastProtocol(
+      socketId,
+      protocol.NEW_PRODUCER,
+      { producerId: producerId, userId: peer.uid }
+    );
+  };
+
+  broadcastChat = (message: string, socketId: string) => {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const peer = room.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error("There is no peer in the room!");
+    }
+    const chatMessage: ChatMessage = {
+      id: uuid(),
+      authorId: peer.uid,
+      authorName: peer.name,
+      content: message,
+      sentAt: new Date().toISOString()
+    };
+    room.broadcastProtocol(
+      undefined,
+      protocol.SEND_CHAT,
+      chatMessage
+    );
+  };
+
+  startTimer = (socketId: string) => {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const observer: PomodoroTimerObserver = {
+      onEvent: (event: PomodoroTimerEvent) => {
+        let protocolMessage: string;
+        switch (event) {
+          case PomodoroTimerEvent.ON_START:
+            protocolMessage = START_TIMER;
+            break;
+          case PomodoroTimerEvent.ON_SHORT_BREAK:
+            protocolMessage = START_SHORT_BREAK;
+            break;
+          case PomodoroTimerEvent.ON_LONG_BREAK:
+            protocolMessage = START_LONG_BREAK;
+            break;
+        }
+        room.broadcastProtocol(undefined, protocolMessage);
+      }
+    };
+    room.startTimer(observer);
+  };
+
+  editAndStopTimer = (socketId: string, property: PomodoroTimerProperty) => {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    room.editAndStopTimer(property);
   };
 }
 
@@ -263,7 +362,7 @@ const createWebRtcTransport = async (
         }
       });
 
-      transport.on("close", () => {
+      transport.on("@close", () => {
         console.log("transport closed");
       });
 

@@ -6,6 +6,8 @@ import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
+import { UserProducerIdSet } from "./model/UserProducerIdSet";
+import { PomodoroTimerProperty, PomodoroTimerState } from "./model/PomodoroTimer";
 
 /**
  * Worker
@@ -53,17 +55,30 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { roomName }: { roomName: string },
-      callback: ({ rtpCapabilities }: { rtpCapabilities: RtpCapabilities; }) => void
+      { roomId, userId, userName }: { roomId: string, userId: string, userName: string },
+      callback: (
+        data: {
+          rtpCapabilities: RtpCapabilities;
+          timerStartedDate?: string;
+          timerState: PomodoroTimerState,
+          timerProperty: PomodoroTimerProperty,
+        }
+      ) => void
     ) => {
-      let router = roomService.joinRoom(roomName, socket);
-      if (router === undefined) {
-        router = await roomService.createAndJoinRoom(roomName, socket, worker);
+      console.log("JOIN ROOM:", roomId);
+      let room = await roomService.joinRoom(roomId, userId, userName, socket);
+      if (room === undefined) {
+        room = await roomService.createAndJoinRoom(roomId, userId, userName, socket, worker);
       }
-      console.log("JOIN ROOM: ", roomName);
 
-      const rtpCapabilities = router.rtpCapabilities;
-      callback({ rtpCapabilities });
+      const rtpCapabilities = room.router.rtpCapabilities;
+      callback({
+        rtpCapabilities,
+        // ex: 2023-02-05T11:48:59.636Z
+        timerStartedDate: room.timerStartedDate?.toISOString(),
+        timerState: room.timerState,
+        timerProperty: room.timerProperty
+      });
     }
   );
 
@@ -73,7 +88,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.CREATE_WEB_RTC_TRANSPORT,
     async (
       { isConsumer }: { isConsumer: boolean },
-      callback: ({ params }: {
+      callback: (data: {
         params: {
           id: string;
           iceParameters: IceParameters;
@@ -105,7 +120,7 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(
     protocol.GET_PRODUCER_IDS,
-    (callback: (ids: string[]) => void
+    (callback: (ids: UserProducerIdSet[]) => void
     ) => {
       const ids = roomService.findOthersProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);
@@ -117,7 +132,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.TRANSPORT_PRODUCER,
     async (
       options: ProducerOptions,
-      callback: ({ id, producersExist }: { id: string; producersExist: boolean; }) => void
+      callback: (data: { id: string; producersExist: boolean; }) => void
     ) => {
       const producer = await roomService.createProducer(socket.id, options);
       if (producer === undefined) {
@@ -135,7 +150,6 @@ export const handleConnect = async (socket: Socket) => {
       producer.on("transportclose", () => {
         console.log("transport for this producer closed ");
         roomService.removeProducer(socket.id, producer);
-        producer.close();
       });
     }
   );
@@ -161,7 +175,8 @@ export const handleConnect = async (socket: Socket) => {
         remoteProducerId: string;
         serverConsumerTransportId: string;
       },
-      callback: ({ params }: {
+      callback: (data: {
+        // TODO: media-soup에 존자해는 타입으로 변환하기
         params: {
           id: string;
           producerId: string;
@@ -197,7 +212,6 @@ export const handleConnect = async (socket: Socket) => {
         consumer.on("producerclose", () => {
           console.log("producer of consumer closed");
           roomService.removeConsumerAndNotify(socket.id, consumer, remoteProducerId);
-          consumer.close();
         });
       } catch (error: any) {
         console.log(error.message);
@@ -226,6 +240,43 @@ export const handleConnect = async (socket: Socket) => {
     async ({ serverConsumerId }: { serverConsumerId: string }) => {
       console.log("consumer resume");
       await roomService.resumeConsumer(socket.id, serverConsumerId);
+    }
+  );
+
+  socket.on(
+    protocol.CLOSE_VIDEO_PRODUCER,
+    () => {
+      console.log("Close video producer: ", socket.id);
+      roomService.closeVideoProducer(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.CLOSE_AUDIO_PRODUCER,
+    () => {
+      console.log("Close audio producer: ", socket.id);
+      roomService.closeAudioProducer(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.SEND_CHAT,
+    (message: string) => {
+      roomService.broadcastChat(message, socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.START_TIMER,
+    () => {
+      roomService.startTimer(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.EDIT_AND_STOP_TIMER,
+    (timerProperty: PomodoroTimerProperty) => {
+      roomService.editAndStopTimer(socket.id, timerProperty);
     }
   );
 };

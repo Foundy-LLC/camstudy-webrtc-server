@@ -1,14 +1,16 @@
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
-const IP_ADDRESS = "192.168.35.2";
+const IP_ADDRESS = "192.168.35.113";
+
+const PORT = 2000;
 
 /**
  * 소켓의 네임 스페이스이다.
  *
  * https://socket.io/docs/v4/namespaces/
  */
-const NAME_SPACE = "/mediasoup";
+const NAME_SPACE = "/room";
 
 /**
  * 초기 소켓 연결을 위한 프로토콜이다.
@@ -91,20 +93,64 @@ const NEW_PRODUCER = "new-producer";
  */
 const PRODUCER_CLOSED = "producer-closed";
 
+/**
+ * 클라이언트가 서버에게 비디오 생산자를 닫으라는 요청을 보낸다.
+ */
+const CLOSE_VIDEO_PRODUCER = "close-video-producer";
+
+/**
+ * 클라이언트가 서버에게 오디오 생산자를 닫으라는 요청을 보낸다.
+ */
+const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
+
+/**
+ * 다른 피어가 연결을 끊었을 때 서버에서 클라이언트들에게 브로드캐스트한다.
+ */
+const OTHER_PEER_DISCONNECTED = "other-peer-disconnected";
+
+/**
+ * 채팅을 보내는 프로토콜이다.
+ *
+ * 클라이언트가 서버에 전송하면 모든 클라이언트에게 브로드캐스트된다.
+ */
+const SEND_CHAT = "send-chat";
+
+/**
+ * 뽀모도로 타이머를 시작하라고 클라이언트가 서버에게 요청하고 서버가 방의 모든
+ * 클라이언트에게 브로드캐스트한다.
+ */
+const START_TIMER = "start-timer";
+const START_SHORT_BREAK = "start-short-break";
+const START_LONG_BREAK = "start-long-break";
+
+/**
+ * 타이머 정보를 수정하는 프로토콜이다. 클라이언트가 서버에 요청한다.
+ */
+const EDIT_AND_STOP_TIMER = "edit-and-stop-timer";
+
 export {
-    IP_ADDRESS,
-    NAME_SPACE,
-    CONNECTION,
-    CONNECTION_SUCCESS,
-    DISCONNECT,
-    JOIN_ROOM,
-    CREATE_WEB_RTC_TRANSPORT,
-    TRANSPORT_PRODUCER,
-    TRANSPORT_PRODUCER_CONNECT,
-    TRANSPORT_RECEIVER_CONNECT,
-    CONSUME,
-    CONSUME_RESUME,
-    GET_PRODUCER_IDS,
-    NEW_PRODUCER,
-    PRODUCER_CLOSED,
+  IP_ADDRESS,
+  PORT,
+  NAME_SPACE,
+  CONNECTION,
+  CONNECTION_SUCCESS,
+  DISCONNECT,
+  JOIN_ROOM,
+  CREATE_WEB_RTC_TRANSPORT,
+  TRANSPORT_PRODUCER,
+  TRANSPORT_PRODUCER_CONNECT,
+  TRANSPORT_RECEIVER_CONNECT,
+  CONSUME,
+  CONSUME_RESUME,
+  GET_PRODUCER_IDS,
+  NEW_PRODUCER,
+  PRODUCER_CLOSED,
+  CLOSE_VIDEO_PRODUCER,
+  CLOSE_AUDIO_PRODUCER,
+  OTHER_PEER_DISCONNECTED,
+  SEND_CHAT,
+  START_TIMER,
+  START_SHORT_BREAK,
+  START_LONG_BREAK,
+  EDIT_AND_STOP_TIMER,
 };

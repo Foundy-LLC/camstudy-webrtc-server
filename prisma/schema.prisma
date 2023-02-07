@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model belong {
+  user_id          String       @db.VarChar(100)
+  organization_id  String       @db.VarChar(100)
+  email            String       @db.VarChar(255)
+  is_authenticated Boolean
+  organization     organization @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_organization_to_belong_1")
+  user_account     user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_belong_1")
+
+  @@id([user_id, organization_id], map: "pk_belong")
+}
+
+model block {
+  room_id      String       @db.VarChar(100)
+  user_id      String       @db.VarChar(100)
+  room         room         @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_to_block_1")
+  user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_block_1")
+
+  @@id([room_id, user_id], map: "pk_block")
+}
+
+model crops {
+  id           String       @db.VarChar(100)
+  user_id      String       @db.VarChar(100)
+  type         crops_type
+  planted_at   DateTime     @db.Timestamp(6)
+  user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_crops_1")
+
+  @@id([id, user_id], map: "pk_crops")
+}
+
+model friend {
+  id           String   @id(map: "pk_friend") @db.VarChar(100)
+  requester_id String   @db.VarChar(100)
+  acceptor_id  String   @db.VarChar(100)
+  accepted     Boolean
+  requested_at DateTime @db.Timestamp(6)
+}
+
+model harvested_crops {
+  id           String       @db.VarChar(100)
+  user_id      String       @db.VarChar(100)
+  type         crops_type
+  harvested_at DateTime     @db.Timestamp(6)
+  grade        crops_type
+  user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_harvested_crops_1")
+
+  @@id([id, user_id], map: "pk_harvested_crops")
+}
+
+model organization {
+  id     String   @id(map: "pk_organization") @db.VarChar(100)
+  name   String   @db.VarChar(30)
+  belong belong[]
+}
+
+model report {
+  id           String          @id(map: "pk_report") @db.VarChar(100)
+  suspecter_id String          @db.VarChar(100)
+  reporter_id  String          @db.VarChar(100)
+  category     report_category
+  content      String          @db.VarChar(500)
+  reported_at  DateTime        @db.Timestamp(6)
+}
+
+model room {
+  id                  String          @id(map: "pk_room") @db.VarChar(100)
+  master_id           String          @db.VarChar(100)
+  title               String          @db.VarChar(50)
+  thumbnail           String?         @db.VarChar(255)
+  password            String?         @db.VarChar(255)
+  timer               Int
+  short_break         Int
+  long_break          Int
+  long_break_interval Int
+  expired_at          DateTime        @db.Timestamp(6)
+  block               block[]
+  room_tag            room_tag[]
+  study_history       study_history[]
+}
+
+model room_tag {
+  tag_id  String @db.VarChar(100)
+  room_id String @db.VarChar(100)
+  room    room   @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_to_room_tag_1")
+  tag     tag    @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tag_to_room_tag_1")
+
+  @@id([tag_id, room_id], map: "pk_room_tag")
+}
+
+model study_history {
+  user_id      String       @db.VarChar(100)
+  room_id      String       @db.VarChar(100)
+  join_at      DateTime     @db.Timestamp(6)
+  exit_at      DateTime?    @db.Timestamp(6)
+  id           String       @db.VarChar(100)
+  room         room         @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_room_to_study_history_1")
+  user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_study_history_1")
+
+  @@id([id, user_id, room_id], map: "pk_study_history")
+}
+
+model tag {
+  id       String     @id(map: "pk_tag") @db.VarChar(100)
+  name     String     @unique(map: "unique_tag") @db.VarChar(20)
+  room_tag room_tag[]
+  user_tag user_tag[]
+}
+
+model user_account {
+  id              String            @id(map: "pk_user_account") @db.VarChar(100)
+  name            String            @db.VarChar(20)
+  introduce       String?           @db.VarChar(100)
+  score           BigInt
+  profile_image   String?           @db.VarChar(255)
+  status          user_status
+  belong          belong[]
+  block           block[]
+  crops           crops[]
+  harvested_crops harvested_crops[]
+  study_history   study_history[]
+  user_tag        user_tag[]
+}
+
+model user_tag {
+  tag_id       String       @db.VarChar(100)
+  user_id      String       @db.VarChar(100)
+  tag          tag          @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tag_to_user_tag_1")
+  user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_user_tag_1")
+
+  @@id([tag_id, user_id], map: "pk_user_tag")
+}
+
+enum crops_type {
+  strawberry
+  tomato
+  carrot
+  pumkin
+  cabbage
+}
+
+enum fruit_grade {
+  not_fresh
+  fresh
+  silver
+  gold
+  diamond
+}
+
+enum report_category {
+  obscene
+  fraud
+  meandering
+  hate
+  hindrance
+}
+
+enum user_status {
+  login
+  logout
+}

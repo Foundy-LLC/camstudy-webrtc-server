@@ -1,9 +1,6 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  verbose: true,
-  preset: "ts-jest",
-  extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
@@ -22,7 +19,10 @@ const config: Config = {
   ],
   roots: ["<rootDir>", "<rootDir>/test/"],
   testEnvironment: "node",
-  testMatch: ["**/test/*.test.ts"]
+  testMatch: ["**/test/*.test.ts"],
+  clearMocks: true,
+  preset: 'ts-jest',
+  setupFilesAfterEnv: ['<rootDir>/test/mockPrisma.ts'],
 };
 
 export default config;

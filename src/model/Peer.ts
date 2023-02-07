@@ -5,34 +5,32 @@ import { Consumer } from "mediasoup/node/lib/Consumer";
 
 export class Peer {
 
-  private readonly _socket: Socket;
-  private readonly _name: string;
-  private readonly _isAdmin: boolean;
-  private _producerTransport: Transport | undefined;
-  private _consumerTransports: Transport[];
-  private _producers: Producer[];
-  private _consumers: Consumer[];
+  private _producerTransport: Transport | undefined = undefined;
+  private _consumerTransports: Transport[] = [];
+  private _producers: Producer[] = [];
+  private _consumers: Consumer[] = [];
 
   public constructor(
-    socket: Socket,
-    name: string,
-    isAdmin: boolean
+    private readonly _uid: string,
+    private readonly _socket: Socket,
+    private readonly _name: string,
   ) {
-    this._socket = socket;
-    this._name = name;
-    this._isAdmin = isAdmin;
-    this._producerTransport = undefined;
-    this._consumerTransports = [];
-    this._producers = [];
-    this._consumers = [];
+  }
+
+  public get uid(): string {
+    return this._uid;
   }
 
   public get socketId(): string {
     return this._socket.id;
   }
 
-  public emit = (protocol: string, args: any) => {
-    this._socket.emit(protocol, args);
+  public get name(): string {
+    return this._name;
+  }
+
+  public emit = (protocol: string, args: any, callback: any = undefined) => {
+    this._socket.emit(protocol, args, callback);
   };
 
   public get producerTransport(): Transport | undefined {
@@ -82,6 +80,24 @@ export class Peer {
 
   public removeConsumer = (consumer: Consumer) => {
     this._consumers = this._consumers.filter((e) => e.id !== consumer.id);
+  };
+
+  public closeAndRemoveVideoProducer = () => {
+    const videoProducer = this._producers.find((producer) => producer.kind === "video");
+    if (videoProducer === undefined) {
+      return;
+    }
+    videoProducer.close();
+    this._producers = this._producers.filter((producer) => producer !== videoProducer);
+  };
+
+  public closeAndRemoveAudioProducer = () => {
+    const audioProducer = this._producers.find((producer) => producer.kind === "audio");
+    if (audioProducer === undefined) {
+      return;
+    }
+    audioProducer.close();
+    this._producers = this._producers.filter((producer) => producer !== audioProducer);
   };
 
   public dispose = () => {
