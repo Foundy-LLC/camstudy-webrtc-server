@@ -1,7 +1,6 @@
 import { RoomRepository } from "../src/repository/room_repository";
 import { fakeRoom, fakeRoomEntity } from "./fake_room";
 import { instance, mock, when } from "ts-mockito";
-import { Room } from "../src/model/Room";
 import { Socket } from "socket.io";
 import { Peer } from "../src/model/Peer";
 import { mockPrisma } from "./mockPrisma";
