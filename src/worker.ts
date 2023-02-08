@@ -60,7 +60,7 @@ export const handleConnect = async (socket: Socket) => {
     async (roomId: string, callback: (waitingRoomData: WaitingRoomData) => void) => {
       console.log("CONNECT TO WAITING ROOM:", roomId);
       roomIdToJoin = roomId;
-      const waitingRoomData = await roomService.getWaitingRoomData(roomId);
+      const waitingRoomData = await roomService.joinWaitingRoom(roomId, socket);
       callback(waitingRoomData);
     }
   );

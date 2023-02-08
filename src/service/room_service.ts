@@ -19,18 +19,23 @@ import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from
 import { Room } from "../model/Room";
 import { MAX_ROOM_CAPACITY } from "../constant/room_constant.js";
 import { WaitingRoomData } from "../model/WaitingRoomData.js";
+import { WaitingRoomRepository } from "../repository/waiting_room_repository";
 
 export class RoomService {
 
   constructor(
-    private readonly _roomRepository: RoomRepository = new RoomRepository()
+    private readonly _roomRepository = new RoomRepository(),
+    private readonly _waitingRoomRepository = new WaitingRoomRepository()
   ) {
   }
 
-  getWaitingRoomData = async (roomId: string): Promise<WaitingRoomData> => {
+  joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData> => {
     const joinerList = this._roomRepository.getJoinerList(roomId);
     const capacity = MAX_ROOM_CAPACITY;
     const masterId = await this._roomRepository.getMasterId(roomId);
+
+    this._waitingRoomRepository.join(roomId, socket);
+
     return {
       joinerList,
       capacity,
@@ -52,6 +57,7 @@ export class RoomService {
     socket: Socket
   ): Promise<Room | undefined> => {
     const newPeer: Peer = new Peer(userId, socket, userName);
+    this._waitingRoomRepository.remove(socket.id);
     const room = this._roomRepository.join(roomId, newPeer, socket.id);
     if (room === undefined) {
       return undefined;
@@ -69,6 +75,7 @@ export class RoomService {
   ): Promise<Room> => {
     const router = await worker.createRouter({ mediaCodecs });
     const newPeer = new Peer(userId, socket, userName);
+    this._waitingRoomRepository.remove(socket.id);
     const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
     await createStudyHistory(roomId, newPeer.uid);
     return room;
@@ -93,6 +100,8 @@ export class RoomService {
       room.dispose();
       this._roomRepository.deleteRoom(room);
     }
+
+    this._waitingRoomRepository.remove(socketId);
 
     await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
   };

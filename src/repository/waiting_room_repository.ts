@@ -19,13 +19,13 @@ export class WaitingRoomRepository {
     return this._socketsByRoomId.get(roomId) ?? [];
   };
 
-  public remove = (socket: Socket) => {
-    const roomId = this._roomIdBySocketId.get(socket.id);
+  public remove = (socketId: string) => {
+    const roomId = this._roomIdBySocketId.get(socketId);
     if (roomId !== undefined) {
-      this._roomIdBySocketId.delete(socket.id);
+      this._roomIdBySocketId.delete(socketId);
       const sockets = this._socketsByRoomId.get(roomId);
       if (sockets !== undefined) {
-        const newSockets = sockets.filter((e) => e.id !== socket.id);
+        const newSockets = sockets.filter((e) => e.id !== socketId);
         if (newSockets.length === 0) {
           this._socketsByRoomId.delete(roomId);
         } else {

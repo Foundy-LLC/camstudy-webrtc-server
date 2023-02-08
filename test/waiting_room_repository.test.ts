@@ -40,7 +40,7 @@ describe("WaitingRoomRepository", () => {
 
     // when
     repository.join(roomId, socket);
-    repository.remove(socket);
+    repository.remove(socket.id);
 
     // then
     const result = repository.getSocketsBy(roomId);
@@ -63,7 +63,7 @@ describe("WaitingRoomRepository", () => {
     // when
     repository.join(roomId, socket1);
     repository.join(roomId, socket2);
-    repository.remove(socket1);
+    repository.remove(socket1.id);
 
     // then
     const result = repository.getSocketsBy(roomId);
