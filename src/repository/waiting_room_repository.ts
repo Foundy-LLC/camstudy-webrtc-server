@@ -15,8 +15,19 @@ export class WaitingRoomRepository {
     this._socketsByRoomId.set(roomId, [...previousSockets, socket]);
   };
 
-  public getSocketsBy = (roomId: string): Socket[] => {
+  private _getSocketsBy = (roomId: string): Socket[] => {
     return this._socketsByRoomId.get(roomId) ?? [];
+  };
+
+  public notifyOthers = (
+    roomId: string,
+    protocol: string,
+    args: any
+  ) => {
+    const roomSockets = this._getSocketsBy(roomId);
+    for (const socket of roomSockets) {
+      socket.emit(protocol, args);
+    }
   };
 
   public remove = (socketId: string) => {
