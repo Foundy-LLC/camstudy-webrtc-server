@@ -2,72 +2,45 @@ import { WaitingRoomRepository } from "../src/repository/waiting_room_repository
 import { Socket } from "socket.io";
 import { instance, mock, when } from "ts-mockito";
 
+const protocol = "PROTOCOL";
+
 describe("WaitingRoomRepository", () => {
-  it("should have empty sockets when there is nothing", () => {
-    // given
-    const repository = new WaitingRoomRepository();
-
-    // then
-    const result = repository.getSocketsBy("roomId");
-    expect(result.length).toBe(0);
-  });
-
-  it("should contain socket when added", () => {
+  it("should notify peers that is in waiting room", () => {
     // given
     const repository = new WaitingRoomRepository();
     const roomId = "room1";
-    const socketId = "id";
     const mockSocket = mock<Socket>();
-    when(mockSocket.id).thenReturn(socketId);
-
-    // when
-    repository.join(roomId, instance(mockSocket));
-
-    // then
-    const result = repository.getSocketsBy(roomId);
-    expect(result.length).toBe(1);
-    expect(result[0].id).toBe(socketId);
-  });
-
-  it("should remove socket appropriately", () => {
-    // given
-    const repository = new WaitingRoomRepository();
-    const roomId = "room1";
-    const socketId = "id";
-    const mockSocket = mock<Socket>();
-    when(mockSocket.id).thenReturn(socketId);
+    let notifiedCount = 0;
+    when(mockSocket.id).thenReturn("socketId");
+    when(mockSocket.emit(protocol, undefined)).thenCall(() => {
+      notifiedCount++;
+    });
     const socket = instance(mockSocket);
 
     // when
     repository.join(roomId, socket);
-    repository.remove(socket.id);
+    repository.notifyOthers(roomId, protocol, undefined);
 
     // then
-    const result = repository.getSocketsBy(roomId);
-    expect(result.length).toBe(0);
+    expect(notifiedCount).toBe(1);
   });
 
-  it("should remove socket appropriately when there is many sockets", () => {
+  it("should not notify peers that is in other waiting room", () => {
     // given
     const repository = new WaitingRoomRepository();
-    const roomId = "room1";
-    const socketId1 = "id1";
-    const socketId2 = "id2";
-    const mockSocket1 = mock<Socket>();
-    const mockSocket2 = mock<Socket>();
-    when(mockSocket1.id).thenReturn(socketId1);
-    when(mockSocket2.id).thenReturn(socketId2);
-    const socket1 = instance(mockSocket1);
-    const socket2 = instance(mockSocket2);
+    const mockSocket = mock<Socket>();
+    let notifiedCount = 0;
+    when(mockSocket.id).thenReturn("socketId");
+    when(mockSocket.emit(protocol, undefined)).thenCall(() => {
+      notifiedCount++;
+    });
+    const socket = instance(mockSocket);
 
     // when
-    repository.join(roomId, socket1);
-    repository.join(roomId, socket2);
-    repository.remove(socket1.id);
+    repository.join("roomId", socket);
+    repository.notifyOthers("other", protocol, undefined);
 
     // then
-    const result = repository.getSocketsBy(roomId);
-    expect(result.length).toBe(1);
-    expect(result[0]).toBe(socket2);
+    expect(notifiedCount).toBe(0);
   });
 });
