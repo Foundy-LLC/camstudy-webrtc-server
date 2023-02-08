@@ -8,6 +8,7 @@ import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/
 import { roomService } from "./service/room_service.js";
 import { UserProducerIdSet } from "./model/UserProducerIdSet";
 import { PomodoroTimerProperty, PomodoroTimerState } from "./model/PomodoroTimer";
+import { WaitingRoomData } from "./model/WaitingRoomData";
 
 /**
  * Worker
@@ -41,6 +42,8 @@ createWorker().then((value) => {
 });
 
 export const handleConnect = async (socket: Socket) => {
+  let roomIdToJoin: string;
+
   console.log(socket.id);
 
   socket.emit(protocol.CONNECTION_SUCCESS, {
@@ -53,9 +56,19 @@ export const handleConnect = async (socket: Socket) => {
   });
 
   socket.on(
+    protocol.CONNECT_WAITING_ROOM,
+    async (roomId: string, callback: (waitingRoomData: WaitingRoomData) => void) => {
+      console.log("CONNECT TO WAITING ROOM:", roomId);
+      roomIdToJoin = roomId;
+      const waitingRoomData = await roomService.getWaitingRoomData(roomId);
+      callback(waitingRoomData);
+    }
+  );
+
+  socket.on(
     protocol.JOIN_ROOM,
     async (
-      { roomId, userId, userName }: { roomId: string, userId: string, userName: string },
+      { userId, userName }: { userId: string, userName: string },
       callback: (
         data: {
           rtpCapabilities: RtpCapabilities;
@@ -65,10 +78,13 @@ export const handleConnect = async (socket: Socket) => {
         }
       ) => void
     ) => {
-      console.log("JOIN ROOM:", roomId);
-      let room = await roomService.joinRoom(roomId, userId, userName, socket);
+      if (roomIdToJoin === undefined) {
+        throw Error("방 입장 준비과정이 생략되어 참여할 방의 ID가 존재하지 않습니다.");
+      }
+      console.log("JOIN ROOM:", roomIdToJoin);
+      let room = await roomService.joinRoom(roomIdToJoin, userId, userName, socket);
       if (room === undefined) {
-        room = await roomService.createAndJoinRoom(roomId, userId, userName, socket, worker);
+        room = await roomService.createAndJoinRoom(roomIdToJoin, userId, userName, socket, worker);
       }
 
       const rtpCapabilities = room.router.rtpCapabilities;

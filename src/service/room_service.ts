@@ -17,6 +17,8 @@ import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
 import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from "../model/PomodoroTimer.js";
 import { Room } from "../model/Room";
+import { MAX_ROOM_CAPACITY } from "../constant/room_constant.js";
+import { WaitingRoomData } from "../model/WaitingRoomData.js";
 
 export class RoomService {
 
@@ -24,6 +26,17 @@ export class RoomService {
     private readonly _roomRepository: RoomRepository = new RoomRepository()
   ) {
   }
+
+  getWaitingRoomData = async (roomId: string): Promise<WaitingRoomData> => {
+    const joinerList = this._roomRepository.getJoinerList(roomId);
+    const capacity = MAX_ROOM_CAPACITY;
+    const masterId = await this._roomRepository.getMasterId(roomId);
+    return {
+      joinerList,
+      capacity,
+      masterId
+    };
+  };
 
   /**
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.

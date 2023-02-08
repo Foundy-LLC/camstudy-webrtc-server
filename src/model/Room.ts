@@ -4,6 +4,7 @@ import { UserProducerIdSet } from "./UserProducerIdSet";
 import { PomodoroTimer, PomodoroTimerObserver, PomodoroTimerProperty, PomodoroTimerState } from "./PomodoroTimer.js";
 import { EDIT_AND_STOP_TIMER, START_TIMER } from "../constant/protocol.js";
 import { updatePomodoroTimerInRoom } from "../repository/room_repository.js";
+import { RoomJoiner } from "./RoomJoiner";
 
 export class Room {
 
@@ -71,6 +72,10 @@ export class Room {
     return this._pomodoroTimer.property;
   }
 
+  public get masterId(): string {
+    return this._masterPeerId;
+  };
+
   public hasProducer = (): boolean => {
     return this._peers.some(peer => peer.hasProducer);
   };
@@ -98,6 +103,15 @@ export class Room {
       }
     });
     return result;
+  };
+
+  public getJoiners = (): RoomJoiner[] => {
+    return this._peers.map((peer) => {
+      return {
+        id: peer.uid,
+        name: peer.name
+      };
+    });
   };
 
   public broadcastProtocol = (

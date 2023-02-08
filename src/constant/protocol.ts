@@ -34,6 +34,11 @@ const CONNECTION_SUCCESS = "connection-success";
 const DISCONNECT = "disconnect";
 
 /**
+ * 방 접속 준비화면에 초기정보를 전달하기 위한 프로토콜이다.
+ */
+const CONNECT_WAITING_ROOM = "ready-to-join-room";
+
+/**
  * 방 참여를 요청하는 프로토콜이다.
  *
  * 클라이언트에서 서버로 전송된다.
@@ -135,6 +140,7 @@ export {
   CONNECTION,
   CONNECTION_SUCCESS,
   DISCONNECT,
+  CONNECT_WAITING_ROOM,
   JOIN_ROOM,
   CREATE_WEB_RTC_TRANSPORT,
   TRANSPORT_PRODUCER,
