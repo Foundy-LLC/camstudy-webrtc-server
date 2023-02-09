@@ -5,6 +5,7 @@ import { room } from "@prisma/client";
 import { uuid } from "uuidv4";
 import { PomodoroTimerProperty } from "../model/PomodoroTimer";
 import prisma from "../../prisma/client.js";
+import { RoomJoiner } from "../model/RoomJoiner";
 
 export const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   return prisma.room.findUnique({
@@ -12,6 +13,18 @@ export const findRoomFromDB = async (roomId: string): Promise<room | null> => {
       id: roomId
     }
   });
+};
+
+export const findMasterIdFromDB = async (roomId: string): Promise<string | undefined> => {
+  const result = await prisma.room.findUnique({
+    where: {
+      id: roomId
+    },
+    select: {
+      master_id: true
+    }
+  });
+  return result?.master_id;
 };
 
 export const createStudyHistory = async (
@@ -142,6 +155,26 @@ export class RoomRepository {
       return;
     }
     return room.findPeerBy(socketId);
+  };
+
+  public getJoinerList = (roomId: string): RoomJoiner[] => {
+    const room = this.findRoomById(roomId);
+    if (room === undefined) {
+      return [];
+    }
+    return room.getJoiners();
+  };
+
+  public getMasterId = async (roomId: string): Promise<string> => {
+    const room = this.findRoomById(roomId);
+    if (room === undefined) {
+      const masterId = await findMasterIdFromDB(roomId);
+      if (masterId === undefined) {
+        throw Error("해당 방이 존재하지 않습니다.");
+      }
+      return masterId;
+    }
+    return room.masterId;
   };
 
   public deleteSocketId = (socketId: string) => {

@@ -5,7 +5,13 @@ import { Consumer } from "mediasoup/node/lib/Consumer.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
-import { START_LONG_BREAK, START_SHORT_BREAK, START_TIMER } from "../constant/protocol.js";
+import {
+  OTHER_PEER_EXITED_ROOM,
+  OTHER_PEER_JOINED_ROOM,
+  START_LONG_BREAK,
+  START_SHORT_BREAK,
+  START_TIMER
+} from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
 import { createStudyHistory, RoomRepository, updateExitAtOfStudyHistory } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
@@ -17,13 +23,32 @@ import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
 import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from "../model/PomodoroTimer.js";
 import { Room } from "../model/Room";
+import { MAX_ROOM_CAPACITY } from "../constant/room_constant.js";
+import { WaitingRoomData } from "../model/WaitingRoomData.js";
+import { WaitingRoomRepository } from "../repository/waiting_room_repository.js";
+import { RoomJoiner } from "../model/RoomJoiner.js";
 
 export class RoomService {
 
   constructor(
-    private readonly _roomRepository: RoomRepository = new RoomRepository()
+    private readonly _roomRepository = new RoomRepository(),
+    private readonly _waitingRoomRepository = new WaitingRoomRepository()
   ) {
   }
+
+  joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData> => {
+    const joinerList = this._roomRepository.getJoinerList(roomId);
+    const capacity = MAX_ROOM_CAPACITY;
+    const masterId = await this._roomRepository.getMasterId(roomId);
+
+    this._waitingRoomRepository.join(roomId, socket);
+
+    return {
+      joinerList,
+      capacity,
+      masterId
+    };
+  };
 
   /**
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.
@@ -43,6 +68,12 @@ export class RoomService {
     if (room === undefined) {
       return undefined;
     }
+    this._waitingRoomRepository.remove(socket.id);
+    this._waitingRoomRepository.notifyOthers(
+      roomId,
+      OTHER_PEER_JOINED_ROOM,
+      { id: userId, name: userName } as RoomJoiner
+    );
     await createStudyHistory(room.id, newPeer.uid);
     return room;
   };
@@ -56,12 +87,19 @@ export class RoomService {
   ): Promise<Room> => {
     const router = await worker.createRouter({ mediaCodecs });
     const newPeer = new Peer(userId, socket, userName);
+    this._waitingRoomRepository.remove(socket.id);
+    this._waitingRoomRepository.notifyOthers(
+      roomId,
+      OTHER_PEER_JOINED_ROOM,
+      { id: userId, name: userName } as RoomJoiner
+    );
     const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
     await createStudyHistory(roomId, newPeer.uid);
     return room;
   };
 
   disconnect = async (socketId: string) => {
+    this._waitingRoomRepository.remove(socketId);
     const room = this._roomRepository.findRoomBySocketId(socketId);
     if (room === undefined) {
       // TODO: 아마 예외처리가 필요할수도?
@@ -80,6 +118,12 @@ export class RoomService {
       room.dispose();
       this._roomRepository.deleteRoom(room);
     }
+
+    this._waitingRoomRepository.notifyOthers(
+      room.id,
+      OTHER_PEER_EXITED_ROOM,
+      disposedPeer.uid
+    );
 
     await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
   };

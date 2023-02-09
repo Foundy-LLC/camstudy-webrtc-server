@@ -34,6 +34,21 @@ const CONNECTION_SUCCESS = "connection-success";
 const DISCONNECT = "disconnect";
 
 /**
+ * 방 접속 준비화면에 초기정보를 전달하기 위한 프로토콜이다.
+ */
+const CONNECT_WAITING_ROOM = "ready-to-join-room";
+
+/**
+ * 다른 회원이 공부방에 접속했을 때 대기실에 있는 회원들에게 알리기 위한 프로토콜이다.
+ */
+const OTHER_PEER_JOINED_ROOM = "other-peer-joined-room";
+
+/**
+ * 다른 회원이 공부방에서 나갔을 때 대기실에 있는 회원들에게 알리기 위한 프로토콜이다.
+ */
+const OTHER_PEER_EXITED_ROOM = "other-peer-exited-room";
+
+/**
  * 방 참여를 요청하는 프로토콜이다.
  *
  * 클라이언트에서 서버로 전송된다.
@@ -135,6 +150,9 @@ export {
   CONNECTION,
   CONNECTION_SUCCESS,
   DISCONNECT,
+  CONNECT_WAITING_ROOM,
+  OTHER_PEER_JOINED_ROOM,
+  OTHER_PEER_EXITED_ROOM,
   JOIN_ROOM,
   CREATE_WEB_RTC_TRANSPORT,
   TRANSPORT_PRODUCER,
@@ -152,5 +170,5 @@ export {
   START_TIMER,
   START_SHORT_BREAK,
   START_LONG_BREAK,
-  EDIT_AND_STOP_TIMER,
+  EDIT_AND_STOP_TIMER
 };
