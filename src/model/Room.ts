@@ -14,6 +14,7 @@ export class Room {
 
   private readonly _masterPeerId: string;
   private readonly _pomodoroTimer: PomodoroTimer;
+  private readonly _blacklist: string[];
 
   public constructor(
     {
@@ -24,7 +25,8 @@ export class Room {
       timerLengthMinutes,
       shortBreakMinutes,
       longBreakMinutes,
-      longBreakInterval
+      longBreakInterval,
+      blacklist
     }: {
       router: Router,
       id: string,
@@ -33,7 +35,8 @@ export class Room {
       timerLengthMinutes: number,
       shortBreakMinutes: number,
       longBreakMinutes: number,
-      longBreakInterval: number
+      longBreakInterval: number,
+      blacklist: string[]
     }
   ) {
     this._router = router;
@@ -46,6 +49,7 @@ export class Room {
       longBreakMinutes,
       longBreakInterval
     });
+    this._blacklist = blacklist;
   }
 
   public get router(): Router {
@@ -75,6 +79,10 @@ export class Room {
   public get masterId(): string {
     return this._masterPeerId;
   };
+
+  public get blacklist(): string[] {
+    return this._blacklist;
+  }
 
   public hasProducer = (): boolean => {
     return this._peers.some(peer => peer.hasProducer);

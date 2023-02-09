@@ -23,7 +23,8 @@ export const fakeRoom: Room = new Room({
   timerLengthMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
-  longBreakInterval: 4
+  longBreakInterval: 4,
+  blacklist: []
 });
 
 export const fakeRoomEntity: room = {
@@ -37,4 +38,4 @@ export const fakeRoomEntity: room = {
   thumbnail: "undefined",
   timer: 25,
   title: "444"
-}
+};
