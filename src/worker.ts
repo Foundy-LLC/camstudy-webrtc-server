@@ -56,7 +56,7 @@ export const handleConnect = async (socket: Socket) => {
   });
 
   socket.on(
-    protocol.CONNECT_WAITING_ROOM,
+    protocol.JOIN_WAITING_ROOM,
     async (roomId: string, callback: (waitingRoomData: WaitingRoomData) => void) => {
       console.log("CONNECT TO WAITING ROOM:", roomId);
       roomIdToJoin = roomId;
