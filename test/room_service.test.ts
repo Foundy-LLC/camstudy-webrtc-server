@@ -20,6 +20,7 @@ describe("joinRoom", () => {
   it("should return router when room exists", async () => {
     // given
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    mockPrisma.block.findMany.mockResolvedValue([]);
     const mockSocket: Socket = mock();
     const room = fakeRoom;
     const roomRepository = new RoomRepository();

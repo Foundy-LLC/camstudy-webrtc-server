@@ -11,6 +11,7 @@ describe("findRoomBySocketId", () => {
     const socketId = "id";
     const repository = new RoomRepository();
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    mockPrisma.block.findMany.mockResolvedValue([]);
     await repository.createAndJoin(socketId, mock(), fakeRoom.id, mock());
 
     // when
@@ -38,6 +39,7 @@ describe("findRoomById", () => {
     // given
     const repository = new RoomRepository();
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    mockPrisma.block.findMany.mockResolvedValue([]);
     await repository.createAndJoin("socketId", mock(), fakeRoom.id, mock());
 
     // when
@@ -69,6 +71,7 @@ describe("findPeerBy", () => {
     const peer = new Peer("uid", instance(mockSocket), "name");
     const repository = new RoomRepository();
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    mockPrisma.block.findMany.mockResolvedValue([]);
     await repository.createAndJoin(socketId, mock(), "room.id", peer);
 
     // when
@@ -96,6 +99,7 @@ describe("deleteSocketId", () => {
     const socketId = "id";
     const repository = new RoomRepository();
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    mockPrisma.block.findMany.mockResolvedValue([]);
     await repository.createAndJoin(socketId, mock(), fakeRoom.id, mock());
 
     // when
@@ -112,6 +116,7 @@ describe("deleteRoom", () => {
     // given
     const repository = new RoomRepository();
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
+    mockPrisma.block.findMany.mockResolvedValue([]);
     await repository.createAndJoin("socketId", mock(), fakeRoom.id, mock());
 
     // when

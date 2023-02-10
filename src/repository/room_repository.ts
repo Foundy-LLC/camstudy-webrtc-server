@@ -15,6 +15,15 @@ export const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   });
 };
 
+export const findBlacklistFromDB = async (roomId: string): Promise<string[]> => {
+  const blocks = await prisma.block.findMany({
+    where: {
+      room_id: roomId
+    }
+  });
+  return blocks.map((block) => block.user_id);
+};
+
 export const findMasterIdFromDB = async (roomId: string): Promise<string | undefined> => {
   const result = await prisma.room.findUnique({
     where: {
@@ -108,6 +117,8 @@ export class RoomRepository {
     if (roomFromDB == null) {
       throw Error("방이 DB에 존재하지 않습니다. 방이 DB에 존재할 때만 소켓에서 방을 생성할 수 있습니다.");
     }
+    const blacklist = await findBlacklistFromDB(roomId);
+
     const newRoom: Room = new Room({
       router: router,
       id: roomId,
@@ -116,7 +127,8 @@ export class RoomRepository {
       timerLengthMinutes: roomFromDB.timer,
       shortBreakMinutes: roomFromDB.short_break,
       longBreakMinutes: roomFromDB.long_break,
-      longBreakInterval: roomFromDB.long_break_interval
+      longBreakInterval: roomFromDB.long_break_interval,
+      blacklist: blacklist
     });
     this._setRoom(newRoom, socketId);
     console.log("New room created!: ", newRoom.id);
@@ -175,6 +187,14 @@ export class RoomRepository {
       return masterId;
     }
     return room.masterId;
+  };
+
+  public getBlacklist = async (roomId: string): Promise<string[]> => {
+    const room = this.findRoomById(roomId);
+    if (room === undefined) {
+      return findBlacklistFromDB(roomId);
+    }
+    return room.blacklist;
   };
 
   public deleteSocketId = (socketId: string) => {

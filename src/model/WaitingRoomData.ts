@@ -16,4 +16,9 @@ export interface WaitingRoomData {
    * 공부방의 방장 ID이다.
    */
   readonly masterId: string;
+
+  /**
+   * 공부방의 차단 인원의 ID 목록이다.
+   */
+  readonly blacklist: string[];
 }

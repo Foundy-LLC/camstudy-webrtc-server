@@ -40,13 +40,15 @@ export class RoomService {
     const joinerList = this._roomRepository.getJoinerList(roomId);
     const capacity = MAX_ROOM_CAPACITY;
     const masterId = await this._roomRepository.getMasterId(roomId);
+    const blacklist = await this._roomRepository.getBlacklist(roomId);
 
     this._waitingRoomRepository.join(roomId, socket);
 
     return {
       joinerList,
       capacity,
-      masterId
+      masterId,
+      blacklist
     };
   };
 
