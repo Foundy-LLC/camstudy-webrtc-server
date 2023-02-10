@@ -7,8 +7,10 @@ import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/Rt
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
 import { UserProducerIdSet } from "./model/UserProducerIdSet";
-import { PomodoroTimerProperty, PomodoroTimerState } from "./model/PomodoroTimer";
+import { PomodoroTimerProperty } from "./model/PomodoroTimer";
 import { WaitingRoomData } from "./model/WaitingRoomData";
+import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallbackProperty.js";
+import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
 
 /**
  * Worker
@@ -56,7 +58,7 @@ export const handleConnect = async (socket: Socket) => {
   });
 
   socket.on(
-    protocol.CONNECT_WAITING_ROOM,
+    protocol.JOIN_WAITING_ROOM,
     async (roomId: string, callback: (waitingRoomData: WaitingRoomData) => void) => {
       console.log("CONNECT TO WAITING ROOM:", roomId);
       roomIdToJoin = roomId;
@@ -68,19 +70,21 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { userId, userName }: { userId: string, userName: string },
+      { userId, userName, roomPasswordInput }: { userId: string, userName: string, roomPasswordInput: string },
       callback: (
-        data: {
-          rtpCapabilities: RtpCapabilities;
-          timerStartedDate?: string;
-          timerState: PomodoroTimerState,
-          timerProperty: PomodoroTimerProperty,
-        }
+        data: JoinRoomSuccessCallbackProperty | JoinRoomFailureCallbackProperty
       ) => void
     ) => {
       if (roomIdToJoin === undefined) {
         throw Error("방 입장 준비과정이 생략되어 참여할 방의 ID가 존재하지 않습니다.");
       }
+
+      const canJoinRoomResult = await roomService.canJoinRoom(userId, roomIdToJoin, roomPasswordInput);
+      if (!canJoinRoomResult.canJoin) {
+        callback({ message: canJoinRoomResult.message, type: "failure" });
+        return;
+      }
+
       console.log("JOIN ROOM:", roomIdToJoin);
       let room = await roomService.joinRoom(roomIdToJoin, userId, userName, socket);
       if (room === undefined) {
@@ -89,6 +93,7 @@ export const handleConnect = async (socket: Socket) => {
 
       const rtpCapabilities = room.router.rtpCapabilities;
       callback({
+        type: "success",
         rtpCapabilities,
         // ex: 2023-02-05T11:48:59.636Z
         timerStartedDate: room.timerStartedDate?.toISOString(),

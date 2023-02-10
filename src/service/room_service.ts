@@ -41,6 +41,7 @@ export class RoomService {
     const capacity = MAX_ROOM_CAPACITY;
     const masterId = await this._roomRepository.getMasterId(roomId);
     const blacklist = await this._roomRepository.getBlacklist(roomId);
+    const hasPassword = await this._roomRepository.getPassword(roomId) != null;
 
     this._waitingRoomRepository.join(roomId, socket);
 
@@ -48,7 +49,42 @@ export class RoomService {
       joinerList,
       capacity,
       masterId,
-      blacklist
+      blacklist,
+      hasPassword
+    };
+  };
+
+  canJoinRoom = async (
+    userId: string,
+    roomId: string,
+    roomPasswordInput: string
+  ): Promise<{ canJoin: boolean, message: string }> => {
+    const joinerList = this._roomRepository.getJoinerList(roomId);
+    const capacity = MAX_ROOM_CAPACITY;
+    const masterId = await this._roomRepository.getMasterId(roomId);
+    if (masterId !== userId && capacity <= joinerList.length) {
+      return {
+        canJoin: false,
+        message: "방 인원이 가득 차서 입장할 수 없습니다."
+      };
+    }
+    const blacklist = await this._roomRepository.getBlacklist(roomId);
+    if (blacklist.some((id) => id === userId)) {
+      return {
+        canJoin: false,
+        message: "방 접근이 차단되에 입장할 수 없습니다."
+      };
+    }
+    const password = await this._roomRepository.getPassword(roomId);
+    if (password !== roomPasswordInput) {
+      return {
+        canJoin: false,
+        message: "방 비밀번호가 일치하지 않습니다."
+      };
+    }
+    return {
+      canJoin: true,
+      message: ""
     };
   };
 

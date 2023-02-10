@@ -36,7 +36,7 @@ const DISCONNECT = "disconnect";
 /**
  * 방 접속 준비화면에 초기정보를 전달하기 위한 프로토콜이다.
  */
-const CONNECT_WAITING_ROOM = "ready-to-join-room";
+const JOIN_WAITING_ROOM = "join-waiting-room";
 
 /**
  * 다른 회원이 공부방에 접속했을 때 대기실에 있는 회원들에게 알리기 위한 프로토콜이다.
@@ -150,7 +150,7 @@ export {
   CONNECTION,
   CONNECTION_SUCCESS,
   DISCONNECT,
-  CONNECT_WAITING_ROOM,
+  JOIN_WAITING_ROOM,
   OTHER_PEER_JOINED_ROOM,
   OTHER_PEER_EXITED_ROOM,
   JOIN_ROOM,
