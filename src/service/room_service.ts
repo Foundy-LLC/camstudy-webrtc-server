@@ -41,6 +41,7 @@ export class RoomService {
     const capacity = MAX_ROOM_CAPACITY;
     const masterId = await this._roomRepository.getMasterId(roomId);
     const blacklist = await this._roomRepository.getBlacklist(roomId);
+    const hasPassword = await this._roomRepository.getPassword(roomId) != null;
 
     this._waitingRoomRepository.join(roomId, socket);
 
@@ -48,7 +49,8 @@ export class RoomService {
       joinerList,
       capacity,
       masterId,
-      blacklist
+      blacklist,
+      hasPassword
     };
   };
 

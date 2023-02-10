@@ -197,6 +197,11 @@ export class RoomRepository {
     return room.blacklist;
   };
 
+  public getPassword = async (roomId: string): Promise<string | undefined> => {
+    const roomFromDB = await findRoomFromDB(roomId);
+    return roomFromDB?.password ?? undefined;
+  };
+
   public deleteSocketId = (socketId: string) => {
     this._roomIdBySocketId.delete(socketId);
   };

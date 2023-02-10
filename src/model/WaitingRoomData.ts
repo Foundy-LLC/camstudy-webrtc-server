@@ -21,4 +21,9 @@ export interface WaitingRoomData {
    * 공부방의 차단 인원의 ID 목록이다.
    */
   readonly blacklist: string[];
+
+  /**
+   * 공부방이 비밀번호를 가지고 있는 경우 `true`이다.
+   */
+  readonly hasPassword: boolean;
 }
