@@ -296,14 +296,14 @@ export class RoomService {
   ): Promise<Consumer | undefined> => {
     const router = roomService.findRoomRouterBy(socketId);
     if (router === undefined) {
-      return undefined;
+      throw Error("router를 찾을 수 없습니다.")
     }
     const receiveTransport = roomService.findReceiveTransportBy(
       socketId,
       receiveTransportId
     );
     if (receiveTransport === undefined) {
-      return undefined;
+      throw Error("receiveTransport가 없어 consumer를 만들 수 없습니다.")
     }
     const canConsume = router.canConsume({
       producerId: producerId,
@@ -326,16 +326,14 @@ export class RoomService {
     return undefined;
   };
 
-  removeConsumerAndNotify = (
+  removeConsumer = (
     socketId: string,
     consumer: Consumer,
-    remoteProducerId: string
   ) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       return;
     }
-    peer.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
     peer.removeConsumer(consumer);
   };
 
@@ -438,16 +436,6 @@ const createWebRtcTransport = async (
         webRtcTransport_options
       );
       console.log(`transport id: ${transport.id}`);
-
-      transport.on("dtlsstatechange", (dtlsState) => {
-        if (dtlsState === "closed") {
-          transport.close();
-        }
-      });
-
-      transport.on("@close", () => {
-        console.log("transport closed");
-      });
 
       resolve(transport);
     } catch (error) {

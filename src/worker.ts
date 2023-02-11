@@ -232,7 +232,8 @@ export const handleConnect = async (socket: Socket) => {
         });
         consumer.on("producerclose", () => {
           console.log("producer of consumer closed");
-          roomService.removeConsumerAndNotify(socket.id, consumer, remoteProducerId);
+          roomService.removeConsumer(socket.id, consumer);
+          socket.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
         });
       } catch (error: any) {
         console.log(error.message);
