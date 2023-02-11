@@ -39,7 +39,10 @@ export class Peer {
 
   public addTransport = (transport: Transport, isConsumer: boolean) => {
     if (isConsumer) {
-      this._receiveTransports = [...this._receiveTransports, transport];
+      console.log("Added:",this._receiveTransports.length)
+      transport.observer.on("close", () => {
+        this._receiveTransports = this._receiveTransports.filter((t) => t.id !== transport.id);
+      });
     } else {
       this._sendTransport = transport;
     }
