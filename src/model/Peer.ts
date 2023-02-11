@@ -5,15 +5,15 @@ import { Consumer } from "mediasoup/node/lib/Consumer";
 
 export class Peer {
 
-  private _producerTransport: Transport | undefined = undefined;
-  private _consumerTransports: Transport[] = [];
+  private _sendTransport: Transport | undefined = undefined;
+  private _receiveTransports: Transport[] = [];
   private _producers: Producer[] = [];
   private _consumers: Consumer[] = [];
 
   public constructor(
     private readonly _uid: string,
     private readonly _socket: Socket,
-    private readonly _name: string,
+    private readonly _name: string
   ) {
   }
 
@@ -33,20 +33,20 @@ export class Peer {
     this._socket.emit(protocol, args, callback);
   };
 
-  public get producerTransport(): Transport | undefined {
-    return this._producerTransport;
+  public get sendTransport(): Transport | undefined {
+    return this._sendTransport;
   }
 
   public addTransport = (transport: Transport, isConsumer: boolean) => {
     if (isConsumer) {
-      this._consumerTransports = [...this._consumerTransports, transport];
+      this._receiveTransports = [...this._receiveTransports, transport];
     } else {
-      this._producerTransport = transport;
+      this._sendTransport = transport;
     }
   };
 
-  public findConsumerTransportBy = (id: string): Transport | undefined => {
-    return this._consumerTransports.find((transport) => {
+  public findReceiveTransportBy = (id: string): Transport | undefined => {
+    return this._receiveTransports.find((transport) => {
       return transport.id === id;
     });
   };
@@ -103,7 +103,7 @@ export class Peer {
   public dispose = () => {
     this._consumers.forEach((consumer: Consumer) => consumer.close());
     this._producers.forEach((producer: Producer) => producer.close());
-    this._consumerTransports.forEach((transport: Transport) => transport.close());
-    this._producerTransport?.close();
+    this._receiveTransports.forEach((transport: Transport) => transport.close());
+    this._sendTransport?.close();
   };
 }

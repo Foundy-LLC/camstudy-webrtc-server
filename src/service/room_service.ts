@@ -54,6 +54,7 @@ export class RoomService {
     };
   };
 
+  // TODO: 이미 방에 접속한 경우도 체크하기
   canJoinRoom = async (
     userId: string,
     roomId: string,
@@ -183,24 +184,24 @@ export class RoomService {
     return transport;
   };
 
-  connectProducerTransport = (
+  connectSendTransport = (
     socketId: string,
     dtlsParameters: DtlsParameters
   ) => {
-    const producerTransport = this.findProducerTransportBy(socketId);
-    producerTransport?.connect({ dtlsParameters });
+    const sendTransport = this.findSendTransportBy(socketId);
+    sendTransport?.connect({ dtlsParameters });
   };
 
-  connectConsumerTransport = (
+  connectReceiveTransport = (
     socketId: string,
-    consumerTransportId: string,
+    receiveTransportId: string,
     dtlsParameters: DtlsParameters
   ) => {
-    const consumerTransport = this.findConsumerTransportBy(
+    const receiveTransport = this.findReceiveTransportBy(
       socketId,
-      consumerTransportId
+      receiveTransportId
     );
-    consumerTransport?.connect({ dtlsParameters });
+    receiveTransport?.connect({ dtlsParameters });
   };
 
   closeVideoProducer = (socketId: string) => {
@@ -228,20 +229,20 @@ export class RoomService {
     return room?.findOthersProducerIds(requesterSocketId) ?? [];
   };
 
-  findProducerTransportBy = (socketId: string): Transport | undefined => {
+  findSendTransportBy = (socketId: string): Transport | undefined => {
     const peer = this._roomRepository.findPeerBy(socketId);
-    return peer?.producerTransport;
+    return peer?.sendTransport;
   };
 
-  findConsumerTransportBy = (
+  findReceiveTransportBy = (
     socketId: string,
-    consumerTransportId: string
+    receiveTransportId: string
   ): Transport | undefined => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       return;
     }
-    return peer.findConsumerTransportBy(consumerTransportId);
+    return peer.findReceiveTransportBy(receiveTransportId);
   };
 
   resumeConsumer = async (socketId: string, consumerId: string) => {
@@ -264,11 +265,11 @@ export class RoomService {
     socketId: string,
     options: ProducerOptions
   ): Promise<Producer | undefined> => {
-    const producerTransport = roomService.findProducerTransportBy(socketId);
-    if (producerTransport === undefined) {
+    const sendTransport = this.findSendTransportBy(socketId);
+    if (sendTransport === undefined) {
       return undefined;
     }
-    const producer = await producerTransport.produce(options);
+    const producer = await sendTransport.produce(options);
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       producer.close();
@@ -290,18 +291,18 @@ export class RoomService {
   createConsumer = async (
     socketId: string,
     producerId: string,
-    consumerTransportId: string,
+    receiveTransportId: string,
     rtpCapabilities: RtpCapabilities
   ): Promise<Consumer | undefined> => {
     const router = roomService.findRoomRouterBy(socketId);
     if (router === undefined) {
       return undefined;
     }
-    const consumerTransport = roomService.findConsumerTransportBy(
+    const receiveTransport = roomService.findReceiveTransportBy(
       socketId,
-      consumerTransportId
+      receiveTransportId
     );
-    if (consumerTransport === undefined) {
+    if (receiveTransport === undefined) {
       return undefined;
     }
     const canConsume = router.canConsume({
@@ -309,7 +310,7 @@ export class RoomService {
       rtpCapabilities
     });
     if (canConsume) {
-      const consumer = await consumerTransport.consume({
+      const consumer = await receiveTransport.consume({
         producerId: producerId,
         rtpCapabilities,
         paused: true
