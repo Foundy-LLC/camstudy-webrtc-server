@@ -282,6 +282,13 @@ export const handleConnect = async (socket: Socket) => {
   );
 
   socket.on(
+    protocol.CLOSE_AUDIO_CONSUMERS,
+    () => {
+      roomService.closeAudioConsumers(socket.id)
+    }
+  )
+
+  socket.on(
     protocol.SEND_CHAT,
     (message: string) => {
       roomService.broadcastChat(message, socket.id);

@@ -9,6 +9,7 @@ export class Peer {
   private _receiveTransports: Transport[] = [];
   private _producers: Producer[] = [];
   private _consumers: Consumer[] = [];
+  private _mutedHeadset: boolean = false;
 
   public constructor(
     private readonly _uid: string,
@@ -29,6 +30,10 @@ export class Peer {
     return this._name;
   }
 
+  public get mutedHeadset(): boolean {
+    return this._mutedHeadset;
+  }
+
   public emit = (protocol: string, args: any, callback: any = undefined) => {
     this._socket.emit(protocol, args, callback);
   };
@@ -39,7 +44,6 @@ export class Peer {
 
   public addTransport = (transport: Transport, isConsumer: boolean) => {
     if (isConsumer) {
-      console.log("Added:",this._receiveTransports.length)
       transport.observer.on("close", () => {
         this._receiveTransports = this._receiveTransports.filter((t) => t.id !== transport.id);
       });
@@ -102,6 +106,17 @@ export class Peer {
     }
     audioProducer.close();
     this._producers = this._producers.filter((producer) => producer !== audioProducer);
+  };
+
+  public muteHeadset = () => {
+    this._mutedHeadset = true;
+    this._consumers = this._consumers.filter((consumer) => {
+      if (consumer.kind === "audio") {
+        consumer.close();
+        return false;
+      }
+      return true;
+    });
   };
 
   public dispose = () => {

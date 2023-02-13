@@ -123,13 +123,19 @@ export class Room {
   };
 
   public broadcastProtocol = (
-    excludeSocketId: string | undefined,
-    protocol: string,
-    args: any = undefined,
-    callback: any = undefined
-  ) => {
+    {
+      protocol,
+      args = undefined,
+      callback = undefined,
+      where
+    }: {
+      protocol: string,
+      args?: any,
+      callback?: any,
+      where?: (peer: Peer) => boolean
+    }) => {
     this._peers.forEach((peer) => {
-      if (excludeSocketId === undefined || excludeSocketId !== peer.socketId) {
+      if (where?.(peer) ?? true) {
         peer.emit(protocol, args, callback);
       }
     });
@@ -138,13 +144,13 @@ export class Room {
   public startTimer = (observer: PomodoroTimerObserver) => {
     this._pomodoroTimer.start();
     this._pomodoroTimer.addObserver(observer);
-    this.broadcastProtocol(undefined, START_TIMER);
+    this.broadcastProtocol({ protocol: START_TIMER });
   };
 
   public editAndStopTimer = async (property: PomodoroTimerProperty) => {
     await updatePomodoroTimerInRoom(this._id, property);
     this._pomodoroTimer.editAndStop(property);
-    this.broadcastProtocol(undefined, EDIT_AND_STOP_TIMER, property);
+    this.broadcastProtocol({ protocol: EDIT_AND_STOP_TIMER, args: property });
   };
 
   public disposePeer = (socketId: string): Peer => {
