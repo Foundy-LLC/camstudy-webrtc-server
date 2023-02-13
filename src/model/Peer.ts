@@ -43,6 +43,7 @@ export class Peer {
       transport.observer.on("close", () => {
         this._receiveTransports = this._receiveTransports.filter((t) => t.id !== transport.id);
       });
+      this._receiveTransports.push(transport);
     } else {
       this._sendTransport = transport;
     }
