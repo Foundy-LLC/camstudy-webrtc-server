@@ -119,6 +119,13 @@ const CLOSE_VIDEO_PRODUCER = "close-video-producer";
 const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
 
 /**
+ * 오디오를 수신하지 않기 위해 모든 오디오 생산자를 끊는 프로토콜이다.
+ *
+ * 클라이언트가 서버에게 전달한다.
+ */
+const CLOSE_AUDIO_CONSUMERS = "close-audio-consumers";
+
+/**
  * 다른 피어가 연결을 끊었을 때 서버에서 클라이언트들에게 브로드캐스트한다.
  */
 const OTHER_PEER_DISCONNECTED = "other-peer-disconnected";
@@ -165,6 +172,7 @@ export {
   PRODUCER_CLOSED,
   CLOSE_VIDEO_PRODUCER,
   CLOSE_AUDIO_PRODUCER,
+  CLOSE_AUDIO_CONSUMERS,
   OTHER_PEER_DISCONNECTED,
   SEND_CHAT,
   START_TIMER,
