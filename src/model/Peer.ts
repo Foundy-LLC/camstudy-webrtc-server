@@ -63,6 +63,10 @@ export class Peer {
     return this._producers.map((producer) => producer.id);
   }
 
+  public getAudioProducerIds(): string[] {
+    return this._producers.filter(p => p.kind === "audio").map((producer) => producer.id);
+  }
+
   public resumeConsumer = async (consumerId: string) => {
     const consumer = this._consumers.find((consumer) => {
       return consumer.id === consumerId;
@@ -83,6 +87,9 @@ export class Peer {
   };
 
   public addConsumer = (consumer: Consumer) => {
+    if (consumer.kind === "audio") {
+      this._mutedHeadset = false;
+    }
     this._consumers = [...this._consumers, consumer];
   };
 

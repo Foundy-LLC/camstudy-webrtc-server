@@ -97,6 +97,11 @@ const CONSUME_RESUME = "consumer-resume";
 const GET_PRODUCER_IDS = "getProducers";
 
 /**
+ * 클라이언트가 헤드셋을 킬 때 서버에 요청하는 프로토콜이다.
+ */
+const GET_AUDIO_PRODUCER_IDS = "get-audio-producer-ids";
+
+/**
  * 새로운 생성자가 등장했다고 서버가 클라이언트에게 전송한다.
  */
 const NEW_PRODUCER = "new-producer";
@@ -168,6 +173,7 @@ export {
   CONSUME,
   CONSUME_RESUME,
   GET_PRODUCER_IDS,
+  GET_AUDIO_PRODUCER_IDS,
   NEW_PRODUCER,
   PRODUCER_CLOSED,
   CLOSE_VIDEO_PRODUCER,

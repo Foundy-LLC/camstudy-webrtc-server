@@ -1,4 +1,4 @@
-export interface UserProducerIdSet {
+export interface UserAndProducerId {
   readonly userId: string;
   readonly producerId: string;
 }
