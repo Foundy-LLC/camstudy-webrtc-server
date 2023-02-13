@@ -180,7 +180,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.TRANSPORT_PRODUCER_CONNECT,
     ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
       console.log("DTLS PARAMS... ", { dtlsParameters });
-      roomService.connectProducerTransport(socket.id, dtlsParameters);
+      roomService.connectSendTransport(socket.id, dtlsParameters);
     }
   );
 
@@ -190,11 +190,11 @@ export const handleConnect = async (socket: Socket) => {
       {
         rtpCapabilities,
         remoteProducerId,
-        serverConsumerTransportId
+        serverReceiveTransportId
       }: {
         rtpCapabilities: RtpCapabilities;
         remoteProducerId: string;
-        serverConsumerTransportId: string;
+        serverReceiveTransportId: string;
       },
       callback: (data: {
         // TODO: media-soup에 존자해는 타입으로 변환하기
@@ -211,7 +211,7 @@ export const handleConnect = async (socket: Socket) => {
         const consumer = await roomService.createConsumer(
           socket.id,
           remoteProducerId,
-          serverConsumerTransportId,
+          serverReceiveTransportId,
           rtpCapabilities
         );
         if (consumer === undefined) {
@@ -232,7 +232,8 @@ export const handleConnect = async (socket: Socket) => {
         });
         consumer.on("producerclose", () => {
           console.log("producer of consumer closed");
-          roomService.removeConsumerAndNotify(socket.id, consumer, remoteProducerId);
+          roomService.removeConsumer(socket.id, consumer);
+          socket.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
         });
       } catch (error: any) {
         console.log(error.message);
@@ -247,12 +248,12 @@ export const handleConnect = async (socket: Socket) => {
     protocol.TRANSPORT_RECEIVER_CONNECT,
     async ({
              dtlsParameters,
-             serverConsumerTransportId
+             serverReceiveTransportId
            }: {
       dtlsParameters: DtlsParameters;
-      serverConsumerTransportId: string;
+      serverReceiveTransportId: string;
     }) => {
-      roomService.connectConsumerTransport(socket.id, serverConsumerTransportId, dtlsParameters);
+      roomService.connectReceiveTransport(socket.id, serverReceiveTransportId, dtlsParameters);
     }
   );
 
