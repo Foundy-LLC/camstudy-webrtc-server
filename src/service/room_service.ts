@@ -18,7 +18,7 @@ import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransp
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
-import { UserProducerIdSet } from "../model/UserProducerIdSet";
+import { UserAndProducerId } from "../model/UserAndProducerId";
 import { ChatMessage } from "../model/ChatMessage";
 import { uuid } from "uuidv4";
 import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from "../model/PomodoroTimer.js";
@@ -148,11 +148,11 @@ export class RoomService {
     const disposedPeer = room.disposePeer(socketId);
     this._roomRepository.deleteSocketId(socketId);
     if (room.hasPeer) {
-      room.broadcastProtocol(
-        socketId,
-        protocol.OTHER_PEER_DISCONNECTED,
-        { disposedPeerId: disposedPeer.uid }
-      );
+      room.broadcastProtocol({
+        protocol: protocol.OTHER_PEER_DISCONNECTED,
+        args: { disposedPeerId: disposedPeer.uid },
+        where: (peer) => peer.socketId !== socketId
+      });
     } else {
       room.dispose();
       this._roomRepository.deleteRoom(room);
@@ -220,13 +220,26 @@ export class RoomService {
     peer.closeAndRemoveAudioProducer();
   };
 
+  closeAudioConsumers(socketId: string) {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.muteHeadset();
+  }
+
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
   };
 
-  findOthersProducerIdsInRoom = (requesterSocketId: string): UserProducerIdSet[] => {
+  findOthersProducerIdsInRoom = (requesterSocketId: string): UserAndProducerId[] => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
     return room?.findOthersProducerIds(requesterSocketId) ?? [];
+  };
+
+  findOthersAudioProducerIdsInRoom = (requesterSocketId: string): UserAndProducerId[] => {
+    const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
+    return room?.findOthersAudioProducerIds(requesterSocketId) ?? [];
   };
 
   findSendTransportBy = (socketId: string): Transport | undefined => {
@@ -296,14 +309,14 @@ export class RoomService {
   ): Promise<Consumer | undefined> => {
     const router = roomService.findRoomRouterBy(socketId);
     if (router === undefined) {
-      throw Error("router를 찾을 수 없습니다.")
+      throw Error("router를 찾을 수 없습니다.");
     }
     const receiveTransport = roomService.findReceiveTransportBy(
       socketId,
       receiveTransportId
     );
     if (receiveTransport === undefined) {
-      throw Error("receiveTransport가 없어 consumer를 만들 수 없습니다.")
+      throw Error(`receiveTransport가 없어 consumer를 만들 수 없습니다. ID: ${receiveTransportId}`);
     }
     const canConsume = router.canConsume({
       producerId: producerId,
@@ -328,7 +341,7 @@ export class RoomService {
 
   removeConsumer = (
     socketId: string,
-    consumer: Consumer,
+    consumer: Consumer
   ) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
@@ -349,11 +362,14 @@ export class RoomService {
     if (peer === undefined) {
       throw Error("There is no peer!");
     }
-    room.broadcastProtocol(
-      socketId,
-      protocol.NEW_PRODUCER,
-      { producerId: producerId, userId: peer.uid }
-    );
+    room.broadcastProtocol({
+      protocol: protocol.NEW_PRODUCER,
+      args: {
+        producerId: producerId,
+        userId: peer.uid
+      },
+      where: (peer) => peer.socketId !== socketId
+    });
   };
 
   broadcastChat = (message: string, socketId: string) => {
@@ -372,11 +388,10 @@ export class RoomService {
       content: message,
       sentAt: new Date().toISOString()
     };
-    room.broadcastProtocol(
-      undefined,
-      protocol.SEND_CHAT,
-      chatMessage
-    );
+    room.broadcastProtocol({
+      protocol: protocol.SEND_CHAT,
+      args: chatMessage
+    });
   };
 
   startTimer = (socketId: string) => {
@@ -398,7 +413,7 @@ export class RoomService {
             protocolMessage = START_LONG_BREAK;
             break;
         }
-        room.broadcastProtocol(undefined, protocolMessage);
+        room.broadcastProtocol({ protocol: protocolMessage });
       }
     };
     room.startTimer(observer);

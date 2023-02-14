@@ -1,6 +1,6 @@
 import { Peer } from "./Peer";
 import { Router } from "mediasoup/node/lib/Router.js";
-import { UserProducerIdSet } from "./UserProducerIdSet";
+import { UserAndProducerId } from "./UserAndProducerId";
 import { PomodoroTimer, PomodoroTimerObserver, PomodoroTimerProperty, PomodoroTimerState } from "./PomodoroTimer.js";
 import { EDIT_AND_STOP_TIMER, START_TIMER } from "../constant/protocol.js";
 import { updatePomodoroTimerInRoom } from "../repository/room_repository.js";
@@ -96,12 +96,29 @@ export class Room {
     this._peers = [...this._peers, peer];
   };
 
-  public findOthersProducerIds = (requesterSocketId: string): UserProducerIdSet[] => {
-    let result: UserProducerIdSet[] = [];
+  public findOthersProducerIds = (requesterSocketId: string): UserAndProducerId[] => {
+    let result: UserAndProducerId[] = [];
     this._peers.forEach((peer) => {
       if (peer.socketId !== requesterSocketId) {
         const producerIds = peer.getProducerIds();
-        const userProducerIdSets = producerIds.map<UserProducerIdSet>((producerId) => {
+        const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
+          return { producerId, userId: peer.uid };
+        });
+        result = [
+          ...result,
+          ...userProducerIdSets
+        ];
+      }
+    });
+    return result;
+  };
+
+  public findOthersAudioProducerIds = (requesterSocketId: string): UserAndProducerId[] => {
+    let result: UserAndProducerId[] = [];
+    this._peers.forEach((peer) => {
+      if (peer.socketId !== requesterSocketId) {
+        const producerIds = peer.getAudioProducerIds();
+        const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
           return { producerId, userId: peer.uid };
         });
         result = [
@@ -123,13 +140,19 @@ export class Room {
   };
 
   public broadcastProtocol = (
-    excludeSocketId: string | undefined,
-    protocol: string,
-    args: any = undefined,
-    callback: any = undefined
-  ) => {
+    {
+      protocol,
+      args = undefined,
+      callback = undefined,
+      where
+    }: {
+      protocol: string,
+      args?: any,
+      callback?: any,
+      where?: (peer: Peer) => boolean
+    }) => {
     this._peers.forEach((peer) => {
-      if (excludeSocketId === undefined || excludeSocketId !== peer.socketId) {
+      if (where?.(peer) ?? true) {
         peer.emit(protocol, args, callback);
       }
     });
@@ -138,13 +161,13 @@ export class Room {
   public startTimer = (observer: PomodoroTimerObserver) => {
     this._pomodoroTimer.start();
     this._pomodoroTimer.addObserver(observer);
-    this.broadcastProtocol(undefined, START_TIMER);
+    this.broadcastProtocol({ protocol: START_TIMER });
   };
 
   public editAndStopTimer = async (property: PomodoroTimerProperty) => {
     await updatePomodoroTimerInRoom(this._id, property);
     this._pomodoroTimer.editAndStop(property);
-    this.broadcastProtocol(undefined, EDIT_AND_STOP_TIMER, property);
+    this.broadcastProtocol({ protocol: EDIT_AND_STOP_TIMER, args: property });
   };
 
   public disposePeer = (socketId: string): Peer => {

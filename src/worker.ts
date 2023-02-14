@@ -6,7 +6,7 @@ import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
 import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
 import { roomService } from "./service/room_service.js";
-import { UserProducerIdSet } from "./model/UserProducerIdSet";
+import { UserAndProducerId } from "./model/UserAndProducerId";
 import { PomodoroTimerProperty } from "./model/PomodoroTimer";
 import { WaitingRoomData } from "./model/WaitingRoomData";
 import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallbackProperty.js";
@@ -141,12 +141,23 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(
     protocol.GET_PRODUCER_IDS,
-    (callback: (ids: UserProducerIdSet[]) => void
+    (callback: (ids: UserAndProducerId[]) => void
     ) => {
       const ids = roomService.findOthersProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);
       callback(ids);
-    });
+    }
+  );
+
+  socket.on(
+    protocol.GET_AUDIO_PRODUCER_IDS,
+    (callback: (ids: UserAndProducerId[]) => void
+    ) => {
+      const ids = roomService.findOthersAudioProducerIdsInRoom(socket.id);
+      console.log("getProducers: callback with ", ids);
+      callback(ids);
+    }
+  );
 
   // see client's socket.emit('transport-produce', ...)
   socket.on(
@@ -278,6 +289,13 @@ export const handleConnect = async (socket: Socket) => {
     () => {
       console.log("Close audio producer: ", socket.id);
       roomService.closeAudioProducer(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.CLOSE_AUDIO_CONSUMERS,
+    () => {
+      roomService.closeAudioConsumers(socket.id);
     }
   );
 
