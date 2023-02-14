@@ -95,6 +95,7 @@ export const handleConnect = async (socket: Socket) => {
       callback({
         type: "success",
         rtpCapabilities,
+        peerStates: room.getPeerStates(),
         // ex: 2023-02-05T11:48:59.636Z
         timerStartedDate: room.timerStartedDate?.toISOString(),
         timerState: room.timerState,
@@ -144,16 +145,6 @@ export const handleConnect = async (socket: Socket) => {
     (callback: (ids: UserAndProducerId[]) => void
     ) => {
       const ids = roomService.findOthersProducerIdsInRoom(socket.id);
-      console.log("getProducers: callback with ", ids);
-      callback(ids);
-    }
-  );
-
-  socket.on(
-    protocol.GET_AUDIO_PRODUCER_IDS,
-    (callback: (ids: UserAndProducerId[]) => void
-    ) => {
-      const ids = roomService.findOthersAudioProducerIdsInRoom(socket.id);
       console.log("getProducers: callback with ", ids);
       callback(ids);
     }
@@ -293,9 +284,19 @@ export const handleConnect = async (socket: Socket) => {
   );
 
   socket.on(
-    protocol.CLOSE_AUDIO_CONSUMERS,
+    protocol.MUTE_HEADSET,
     () => {
-      roomService.closeAudioConsumers(socket.id);
+      roomService.muteHeadset(socket.id);
+    }
+  );
+
+  socket.on(
+    protocol.UNMUTE_HEADSET,
+    (callback: (ids: UserAndProducerId[]) => void) => {
+      roomService.unmuteHeadset(socket.id);
+      const ids = roomService.findOthersAudioProducerIdsInRoom(socket.id);
+      console.log("getProducers: callback with ", ids);
+      callback(ids);
     }
   );
 

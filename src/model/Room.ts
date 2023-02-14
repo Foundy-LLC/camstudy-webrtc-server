@@ -5,6 +5,7 @@ import { PomodoroTimer, PomodoroTimerObserver, PomodoroTimerProperty, PomodoroTi
 import { EDIT_AND_STOP_TIMER, START_TIMER } from "../constant/protocol.js";
 import { updatePomodoroTimerInRoom } from "../repository/room_repository.js";
 import { RoomJoiner } from "./RoomJoiner";
+import { PeerState } from "./PeerState";
 
 export class Room {
 
@@ -94,6 +95,10 @@ export class Room {
 
   public join = (peer: Peer) => {
     this._peers = [...this._peers, peer];
+  };
+
+  public getPeerStates = (): PeerState[] => {
+    return this._peers.map((peer) => peer.state);
   };
 
   public findOthersProducerIds = (requesterSocketId: string): UserAndProducerId[] => {

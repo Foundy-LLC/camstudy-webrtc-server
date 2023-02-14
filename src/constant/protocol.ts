@@ -97,11 +97,6 @@ const CONSUME_RESUME = "consumer-resume";
 const GET_PRODUCER_IDS = "getProducers";
 
 /**
- * 클라이언트가 헤드셋을 킬 때 서버에 요청하는 프로토콜이다.
- */
-const GET_AUDIO_PRODUCER_IDS = "get-audio-producer-ids";
-
-/**
  * 새로운 생성자가 등장했다고 서버가 클라이언트에게 전송한다.
  */
 const NEW_PRODUCER = "new-producer";
@@ -128,7 +123,17 @@ const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
  *
  * 클라이언트가 서버에게 전달한다.
  */
-const CLOSE_AUDIO_CONSUMERS = "close-audio-consumers";
+const MUTE_HEADSET = "mute-headset";
+
+/**
+ * 헤드셋 음소거 해제를 위한 프로토콜이다.
+ */
+const UNMUTE_HEADSET = "unmute-headset";
+
+/**
+ * 특정 피어의 상태가 변경되었다고 서버가 클라이언트에게 알린다.
+ */
+const PEER_STATE_CHANGED = "peer-state-changed";
 
 /**
  * 다른 피어가 연결을 끊었을 때 서버에서 클라이언트들에게 브로드캐스트한다.
@@ -173,16 +178,17 @@ export {
   CONSUME,
   CONSUME_RESUME,
   GET_PRODUCER_IDS,
-  GET_AUDIO_PRODUCER_IDS,
   NEW_PRODUCER,
   PRODUCER_CLOSED,
+  PEER_STATE_CHANGED,
   CLOSE_VIDEO_PRODUCER,
   CLOSE_AUDIO_PRODUCER,
-  CLOSE_AUDIO_CONSUMERS,
+  MUTE_HEADSET,
+  UNMUTE_HEADSET,
   OTHER_PEER_DISCONNECTED,
   SEND_CHAT,
   START_TIMER,
   START_SHORT_BREAK,
   START_LONG_BREAK,
-  EDIT_AND_STOP_TIMER
+  EDIT_AND_STOP_TIMER,
 };
