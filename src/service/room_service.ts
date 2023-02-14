@@ -423,7 +423,8 @@ export class RoomService {
     console.log(peer.state);
     room.broadcastProtocol({
       protocol: PEER_STATE_CHANGED,
-      args: peer.state
+      args: peer.state,
+      where: (p) => p.uid !== peer.uid
     });
   };
 
