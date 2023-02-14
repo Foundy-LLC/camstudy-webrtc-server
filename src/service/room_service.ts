@@ -77,7 +77,7 @@ export class RoomService {
       };
     }
     const password = await this._roomRepository.getPassword(roomId);
-    if (password !== roomPasswordInput) {
+    if (password !== undefined && password !== roomPasswordInput) {
       return {
         canJoin: false,
         message: "방 비밀번호가 일치하지 않습니다."
