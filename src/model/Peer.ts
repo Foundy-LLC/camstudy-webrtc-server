@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import { Transport } from "mediasoup/node/lib/Transport";
 import { Producer } from "mediasoup/node/lib/Producer";
 import { Consumer } from "mediasoup/node/lib/Consumer";
+import { PeerState } from "./PeerState";
 
 export class Peer {
 
@@ -30,8 +31,12 @@ export class Peer {
     return this._name;
   }
 
-  public get mutedHeadset(): boolean {
-    return this._mutedHeadset;
+  public get state(): PeerState {
+    return {
+      uid: this._uid,
+      enabledHeadset: !this._mutedHeadset,
+      enabledMicrophone: this._producers.some((p) => p.kind === "audio")
+    };
   }
 
   public emit = (protocol: string, args: any, callback: any = undefined) => {
@@ -125,6 +130,10 @@ export class Peer {
       return true;
     });
   };
+
+  public unmuteHeadset = () => {
+    this._mutedHeadset = false;
+  }
 
   public dispose = () => {
     this._consumers.forEach((consumer: Consumer) => consumer.close());

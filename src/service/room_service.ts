@@ -8,6 +8,7 @@ import * as protocol from "../constant/protocol.js";
 import {
   OTHER_PEER_EXITED_ROOM,
   OTHER_PEER_JOINED_ROOM,
+  PEER_STATE_CHANGED,
   START_LONG_BREAK,
   START_SHORT_BREAK,
   START_TIMER
@@ -204,29 +205,41 @@ export class RoomService {
     receiveTransport?.connect({ dtlsParameters });
   };
 
-  closeVideoProducer = (socketId: string) => {
+  closeVideoProducer = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       throw Error(`There is no peer by ${socketId}`);
     }
     peer.closeAndRemoveVideoProducer();
+    await this.broadcastPeerStateChanged(socketId);
   };
 
-  closeAudioProducer = (socketId: string) => {
+  closeAudioProducer = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       throw Error(`There is no peer by ${socketId}`);
     }
     peer.closeAndRemoveAudioProducer();
+    await this.broadcastPeerStateChanged(socketId);
   };
 
-  closeAudioConsumers(socketId: string) {
+  muteHeadset = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       throw Error(`There is no peer by ${socketId}`);
     }
     peer.muteHeadset();
-  }
+    await this.broadcastPeerStateChanged(socketId);
+  };
+
+  unmuteHeadset = async (socketId: string) => {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.unmuteHeadset();
+    await this.broadcastPeerStateChanged(socketId);
+  };
 
   findRoomRouterBy = (socketId: string): Router | undefined => {
     return this._roomRepository.findRoomBySocketId(socketId)?.router;
@@ -264,6 +277,7 @@ export class RoomService {
       return;
     }
     await peer?.resumeConsumer(consumerId);
+    await this.broadcastPeerStateChanged(socketId);
   };
 
   isProducerExists = (socketId: string): boolean => {
@@ -289,16 +303,18 @@ export class RoomService {
       return;
     }
     peer.addProducer(producer);
+    await this.broadcastPeerStateChanged(socketId);
     return producer;
   };
 
-  removeProducer = (socketId: string, producer: Producer) => {
+  removeProducer = async (socketId: string, producer: Producer) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       // TODO: 예외 처리가 필요할 수도?
       return;
     }
     peer.removeProducer(producer);
+    await this.broadcastPeerStateChanged(socketId);
   };
 
   createConsumer = async (
@@ -318,6 +334,10 @@ export class RoomService {
     if (receiveTransport === undefined) {
       throw Error(`receiveTransport가 없어 consumer를 만들 수 없습니다. ID: ${receiveTransportId}`);
     }
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined || !peer.state.enabledHeadset) {
+      return undefined;
+    }
     const canConsume = router.canConsume({
       producerId: producerId,
       rtpCapabilities
@@ -328,18 +348,14 @@ export class RoomService {
         rtpCapabilities,
         paused: true
       });
-      const peer = this._roomRepository.findPeerBy(socketId);
-      if (peer === undefined) {
-        consumer.close();
-        return undefined;
-      }
       peer.addConsumer(consumer);
+      await this.broadcastPeerStateChanged(socketId);
       return consumer;
     }
     return undefined;
   };
 
-  removeConsumer = (
+  removeConsumer = async (
     socketId: string,
     consumer: Consumer
   ) => {
@@ -348,6 +364,7 @@ export class RoomService {
       return;
     }
     peer.removeConsumer(consumer);
+    await this.broadcastPeerStateChanged(socketId);
   };
 
   informConsumersNewProducerAppeared = (
@@ -391,6 +408,22 @@ export class RoomService {
     room.broadcastProtocol({
       protocol: protocol.SEND_CHAT,
       args: chatMessage
+    });
+  };
+
+  broadcastPeerStateChanged = (peerSocketId: string) => {
+    const room = this._roomRepository.findRoomBySocketId(peerSocketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const peer = room.findPeerBy(peerSocketId);
+    if (peer === undefined) {
+      throw Error("There is no peer!");
+    }
+    console.log(peer.state);
+    room.broadcastProtocol({
+      protocol: PEER_STATE_CHANGED,
+      args: peer.state
     });
   };
 
