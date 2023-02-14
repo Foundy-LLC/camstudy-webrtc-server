@@ -103,21 +103,23 @@ export class Peer {
   };
 
   public closeAndRemoveVideoProducer = () => {
-    const videoProducer = this._producers.find((producer) => producer.kind === "video");
-    if (videoProducer === undefined) {
-      return;
-    }
-    videoProducer.close();
-    this._producers = this._producers.filter((producer) => producer !== videoProducer);
+    this._producers = this._producers.filter((producer) => {
+      if (producer.kind === "video") {
+        producer.close();
+        return false;
+      }
+      return true;
+    });
   };
 
   public closeAndRemoveAudioProducer = () => {
-    const audioProducer = this._producers.find((producer) => producer.kind === "audio");
-    if (audioProducer === undefined) {
-      return;
-    }
-    audioProducer.close();
-    this._producers = this._producers.filter((producer) => producer !== audioProducer);
+    this._producers = this._producers.filter((producer) => {
+      if (producer.kind === "audio") {
+        producer.close();
+        return false;
+      }
+      return true;
+    });
   };
 
   public muteHeadset = () => {
@@ -133,7 +135,7 @@ export class Peer {
 
   public unmuteHeadset = () => {
     this._mutedHeadset = false;
-  }
+  };
 
   public dispose = () => {
     this._consumers.forEach((consumer: Consumer) => consumer.close());

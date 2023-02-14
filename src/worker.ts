@@ -150,16 +150,6 @@ export const handleConnect = async (socket: Socket) => {
     }
   );
 
-  socket.on(
-    protocol.GET_AUDIO_PRODUCER_IDS,
-    (callback: (ids: UserAndProducerId[]) => void
-    ) => {
-      const ids = roomService.findOthersAudioProducerIdsInRoom(socket.id);
-      console.log("getProducers: callback with ", ids);
-      callback(ids);
-    }
-  );
-
   // see client's socket.emit('transport-produce', ...)
   socket.on(
     protocol.TRANSPORT_PRODUCER,
@@ -302,8 +292,11 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(
     protocol.UNMUTE_HEADSET,
-    () => {
+    (callback: (ids: UserAndProducerId[]) => void) => {
       roomService.unmuteHeadset(socket.id);
+      const ids = roomService.findOthersAudioProducerIdsInRoom(socket.id);
+      console.log("getProducers: callback with ", ids);
+      callback(ids);
     }
   );
 
