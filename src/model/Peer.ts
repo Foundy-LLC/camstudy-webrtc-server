@@ -34,6 +34,7 @@ export class Peer {
   public get state(): PeerState {
     return {
       uid: this._uid,
+      name: this._name,
       enabledHeadset: !this._mutedHeadset,
       enabledMicrophone: this._producers.some((p) => p.kind === "audio")
     };
