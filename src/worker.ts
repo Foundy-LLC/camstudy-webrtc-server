@@ -320,4 +320,11 @@ export const handleConnect = async (socket: Socket) => {
       roomService.editAndStopTimer(socket.id, timerProperty);
     }
   );
+
+  socket.on(
+    protocol.KICK_USER,
+    (userId: string) => {
+      roomService.kickUser(socket.id, userId);
+    }
+  )
 };

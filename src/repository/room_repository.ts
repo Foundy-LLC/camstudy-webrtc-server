@@ -166,7 +166,7 @@ export class RoomRepository {
     if (room === undefined) {
       return;
     }
-    return room.findPeerBy(socketId);
+    return room.findPeerBySocketId(socketId);
   };
 
   public getJoinerList = (roomId: string): RoomJoiner[] => {

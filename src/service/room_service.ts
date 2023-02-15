@@ -6,6 +6,7 @@ import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import {
+  KICK_USER,
   OTHER_PEER_EXITED_ROOM,
   OTHER_PEER_JOINED_ROOM,
   PEER_STATE_CHANGED,
@@ -375,7 +376,7 @@ export class RoomService {
     if (room === undefined) {
       throw Error("There is no room!");
     }
-    const peer = room.findPeerBy(socketId);
+    const peer = room.findPeerBySocketId(socketId);
     if (peer === undefined) {
       throw Error("There is no peer!");
     }
@@ -394,7 +395,7 @@ export class RoomService {
     if (room === undefined) {
       throw Error("There is no room!");
     }
-    const peer = room.findPeerBy(socketId);
+    const peer = room.findPeerBySocketId(socketId);
     if (peer === undefined) {
       throw Error("There is no peer in the room!");
     }
@@ -416,7 +417,7 @@ export class RoomService {
     if (room === undefined) {
       throw Error("There is no room!");
     }
-    const peer = room.findPeerBy(peerSocketId);
+    const peer = room.findPeerBySocketId(peerSocketId);
     if (peer === undefined) {
       throw Error("There is no peer!");
     }
@@ -460,6 +461,26 @@ export class RoomService {
     }
     room.editAndStopTimer(property);
   };
+
+  kickUser(socketId: string, userIdToKick: string) {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const masterPeer = room.findPeerBySocketId(socketId);
+    if (masterPeer === undefined) {
+      throw Error("There is no peer!");
+    }
+    if (masterPeer.uid !== room.masterId) {
+      throw Error("방장이 아닌 회원이 강퇴를 시도했습니다.");
+    }
+    const userToKick = room.findPeerById(userIdToKick);
+    if (userToKick === undefined) {
+      throw Error("강퇴할 해당 회원이 존재하지 않습니다.");
+    }
+    room.broadcastProtocol({ protocol: KICK_USER, args: userIdToKick });
+    room.disposePeer(userToKick.socketId);
+  }
 }
 
 const createWebRtcTransport = async (

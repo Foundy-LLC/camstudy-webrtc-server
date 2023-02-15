@@ -89,7 +89,11 @@ export class Room {
     return this._peers.some(peer => peer.hasProducer);
   };
 
-  public findPeerBy = (socketId: string): Peer | undefined => {
+  public findPeerById = (peerId: string): Peer | undefined => {
+    return this._peers.find((peer) => peer.uid === peerId);
+  };
+
+  public findPeerBySocketId = (socketId: string): Peer | undefined => {
     return this._peers.find((peer: Peer) => peer.socketId === socketId);
   };
 
@@ -176,7 +180,7 @@ export class Room {
   };
 
   public disposePeer = (socketId: string): Peer => {
-    const peer = this.findPeerBy(socketId);
+    const peer = this.findPeerBySocketId(socketId);
     if (peer === undefined) {
       throw Error("There is no peer to dispose!");
     }
