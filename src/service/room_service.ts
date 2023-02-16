@@ -6,6 +6,7 @@ import { Worker } from "mediasoup/node/lib/Worker.js";
 import { mediaCodecs } from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import {
+  BLOCK_USER,
   KICK_USER,
   OTHER_PEER_EXITED_ROOM,
   OTHER_PEER_JOINED_ROOM,
@@ -15,7 +16,12 @@ import {
   START_TIMER
 } from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
-import { createStudyHistory, RoomRepository, updateExitAtOfStudyHistory } from "../repository/room_repository.js";
+import {
+  blockUser,
+  createStudyHistory,
+  RoomRepository,
+  updateExitAtOfStudyHistory
+} from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
@@ -479,7 +485,28 @@ export class RoomService {
       throw Error("강퇴할 해당 회원이 존재하지 않습니다.");
     }
     room.broadcastProtocol({ protocol: KICK_USER, args: userIdToKick });
-    room.disposePeer(userToKick.socketId);
+    userToKick.disconnectSocket();
+  }
+
+  async blockUser(socketId: string, userIdToBlock: string) {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const masterPeer = room.findPeerBySocketId(socketId);
+    if (masterPeer === undefined) {
+      throw Error("There is no peer!");
+    }
+    if (masterPeer.uid !== room.masterId) {
+      throw Error("방장이 아닌 회원이 차단을 시도했습니다.");
+    }
+    const userToBlock = room.findPeerById(userIdToBlock);
+    if (userToBlock === undefined) {
+      throw Error("차단할 해당 회원이 존재하지 않습니다.");
+    }
+    await blockUser(userToBlock.uid, room.id);
+    room.broadcastProtocol({ protocol: BLOCK_USER, args: userIdToBlock });
+    userToBlock.disconnectSocket();
   }
 }
 

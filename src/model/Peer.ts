@@ -144,4 +144,8 @@ export class Peer {
     this._receiveTransports.forEach((transport: Transport) => transport.close());
     this._sendTransport?.close();
   };
+
+  public disconnectSocket = () => {
+    this._socket.disconnect();
+  };
 }
