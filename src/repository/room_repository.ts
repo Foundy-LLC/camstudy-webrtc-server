@@ -6,6 +6,7 @@ import { uuid } from "uuidv4";
 import { PomodoroTimerProperty } from "../model/PomodoroTimer";
 import prisma from "../../prisma/client.js";
 import { RoomJoiner } from "../model/RoomJoiner";
+import { BlockedUser } from "../model/BlockedUser";
 
 export const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   return prisma.room.findUnique({
@@ -15,13 +16,25 @@ export const findRoomFromDB = async (roomId: string): Promise<room | null> => {
   });
 };
 
-export const findBlacklistFromDB = async (roomId: string): Promise<string[]> => {
+export const findBlacklistFromDB = async (roomId: string): Promise<BlockedUser[]> => {
   const blocks = await prisma.block.findMany({
     where: {
       room_id: roomId
+    },
+    include: {
+      user_account: {
+        select: {
+          name: true
+        }
+      }
     }
   });
-  return blocks.map((block) => block.user_id);
+  return blocks.map((block) => {
+    return {
+      id: block.user_id,
+      name: block.user_account.name
+    };
+  });
 };
 
 export const findMasterIdFromDB = async (roomId: string): Promise<string | undefined> => {
@@ -105,6 +118,20 @@ export const blockUser = async (
     data: {
       room_id: roomId,
       user_id: userId
+    }
+  });
+};
+
+export const unblockUser = async (
+  userId: string,
+  roomId: string
+) => {
+  await prisma.block.delete({
+    where: {
+      room_id_user_id: {
+        room_id: roomId,
+        user_id: userId
+      }
     }
   });
 };
@@ -201,7 +228,7 @@ export class RoomRepository {
     return room.masterId;
   };
 
-  public getBlacklist = async (roomId: string): Promise<string[]> => {
+  public getBlacklist = async (roomId: string): Promise<BlockedUser[]> => {
     const room = this.findRoomById(roomId);
     if (room === undefined) {
       return findBlacklistFromDB(roomId);
