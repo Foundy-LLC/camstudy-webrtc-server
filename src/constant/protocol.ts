@@ -160,6 +160,11 @@ const START_LONG_BREAK = "start-long-break";
  */
 const EDIT_AND_STOP_TIMER = "edit-and-stop-timer";
 
+/**
+ * 방장이 회원을 강퇴할 때 서버에 전송하는 프로토콜이다.
+ */
+const KICK_USER = "kick-user";
+
 export {
   IP_ADDRESS,
   PORT,
@@ -191,4 +196,5 @@ export {
   START_SHORT_BREAK,
   START_LONG_BREAK,
   EDIT_AND_STOP_TIMER,
+  KICK_USER
 };
