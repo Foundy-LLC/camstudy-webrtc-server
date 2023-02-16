@@ -326,5 +326,12 @@ export const handleConnect = async (socket: Socket) => {
     (userId: string) => {
       roomService.kickUser(socket.id, userId);
     }
-  )
+  );
+
+  socket.on(
+    protocol.BLOCK_USER,
+    (userId: string) => {
+      roomService.blockUser(socket.id, userId);
+    }
+  );
 };

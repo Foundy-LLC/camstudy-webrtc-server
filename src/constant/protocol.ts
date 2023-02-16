@@ -165,6 +165,11 @@ const EDIT_AND_STOP_TIMER = "edit-and-stop-timer";
  */
 const KICK_USER = "kick-user";
 
+/**
+ * 방장이 회원을 차단할 때 서버에 전송하는 프로토콜이다.
+ */
+const BLOCK_USER = "block-user";
+
 export {
   IP_ADDRESS,
   PORT,
@@ -196,5 +201,6 @@ export {
   START_SHORT_BREAK,
   START_LONG_BREAK,
   EDIT_AND_STOP_TIMER,
-  KICK_USER
+  KICK_USER,
+  BLOCK_USER
 };

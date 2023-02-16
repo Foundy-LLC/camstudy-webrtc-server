@@ -97,6 +97,18 @@ export const updatePomodoroTimerInRoom = async (
   });
 };
 
+export const blockUser = async (
+  userId: string,
+  roomId: string
+) => {
+  await prisma.block.create({
+    data: {
+      room_id: roomId,
+      user_id: userId
+    }
+  });
+};
+
 export class RoomRepository {
 
   private readonly _roomById = new Map<string, Room>();
