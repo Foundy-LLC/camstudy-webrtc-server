@@ -6,6 +6,7 @@ import { fakeRoom, fakeRoomEntity } from "./fake_room.js";
 import { mockPrisma } from "./mockPrisma.js";
 import { MAX_ROOM_CAPACITY } from "../src/constant/room_constant";
 import { RoomJoiner } from "../src/model/RoomJoiner";
+import { BlockedUser } from "../src/model/BlockedUser";
 
 describe("RoomService.joinRoom", () => {
   it("should return undefined when there is no room", async () => {
@@ -46,7 +47,7 @@ describe("RoomService.canJoinRoom", () => {
     [[], "otherId", [], roomPasswordInput],
     [[...new Array(MAX_ROOM_CAPACITY)], userId, [], roomPasswordInput],
     [[...new Array(MAX_ROOM_CAPACITY - 1)], "otherId", [], roomPasswordInput]
-  ])("success", async (joiners: RoomJoiner[], masterId: string, blacklist: string[], password: string) => {
+  ])("success", async (joiners: RoomJoiner[], masterId: string, blacklist: BlockedUser[], password: string) => {
     // given
     const mockRoomRepository = mock<RoomRepository>();
     when(mockRoomRepository.getJoinerList(roomId)).thenReturn(joiners);
@@ -83,7 +84,7 @@ describe("RoomService.canJoinRoom", () => {
     const mockRoomRepository = mock<RoomRepository>();
     when(mockRoomRepository.getJoinerList(roomId)).thenReturn([]);
     when(mockRoomRepository.getMasterId(roomId)).thenResolve("others");
-    when(mockRoomRepository.getBlacklist(roomId)).thenResolve([userId]);
+    when(mockRoomRepository.getBlacklist(roomId)).thenResolve([{ id: userId, name: "name" }]);
     when(mockRoomRepository.getPassword(roomId)).thenResolve(roomPasswordInput);
     const service = new RoomService(instance(mockRoomRepository), mock());
 
