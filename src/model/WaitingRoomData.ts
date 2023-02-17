@@ -1,4 +1,5 @@
 import { RoomJoiner } from "./RoomJoiner";
+import { BlockedUser } from "./BlockedUser";
 
 // TODO: API server와 중복되는 인터페이스라 한군데서 관리할 수 있도록 해야함
 export interface WaitingRoomData {
@@ -20,7 +21,7 @@ export interface WaitingRoomData {
   /**
    * 공부방의 차단 인원의 ID 목록이다.
    */
-  readonly blacklist: string[];
+  readonly blacklist: BlockedUser[];
 
   /**
    * 공부방이 비밀번호를 가지고 있는 경우 `true`이다.

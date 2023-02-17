@@ -6,6 +6,7 @@ import { EDIT_AND_STOP_TIMER, START_TIMER } from "../constant/protocol.js";
 import { updatePomodoroTimerInRoom } from "../repository/room_repository.js";
 import { RoomJoiner } from "./RoomJoiner";
 import { PeerState } from "./PeerState";
+import { BlockedUser } from "./BlockedUser";
 
 export class Room {
 
@@ -15,7 +16,7 @@ export class Room {
 
   private readonly _masterPeerId: string;
   private readonly _pomodoroTimer: PomodoroTimer;
-  private readonly _blacklist: string[];
+  private _blacklist: BlockedUser[];
 
   public constructor(
     {
@@ -37,7 +38,7 @@ export class Room {
       shortBreakMinutes: number,
       longBreakMinutes: number,
       longBreakInterval: number,
-      blacklist: string[]
+      blacklist: BlockedUser[]
     }
   ) {
     this._router = router;
@@ -81,7 +82,7 @@ export class Room {
     return this._masterPeerId;
   };
 
-  public get blacklist(): string[] {
+  public get blacklist(): BlockedUser[] {
     return this._blacklist;
   }
 
@@ -177,6 +178,14 @@ export class Room {
     await updatePomodoroTimerInRoom(this._id, property);
     this._pomodoroTimer.editAndStop(property);
     this.broadcastProtocol({ protocol: EDIT_AND_STOP_TIMER, args: property });
+  };
+
+  public blockUser = (id: string, name: string) => {
+    this._blacklist = [...this._blacklist, { id, name }];
+  };
+
+  public unblockUser = (userId: string) => {
+    this._blacklist = this._blacklist.filter((user) => user.id !== userId);
   };
 
   public disposePeer = (socketId: string): Peer => {

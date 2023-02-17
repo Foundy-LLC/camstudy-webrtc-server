@@ -19,7 +19,7 @@ import { Peer } from "../model/Peer.js";
 import {
   blockUser,
   createStudyHistory,
-  RoomRepository,
+  RoomRepository, unblockUser,
   updateExitAtOfStudyHistory
 } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
@@ -78,7 +78,7 @@ export class RoomService {
       };
     }
     const blacklist = await this._roomRepository.getBlacklist(roomId);
-    if (blacklist.some((id) => id === userId)) {
+    if (blacklist.some((user) => user.id === userId)) {
       return {
         canJoin: false,
         message: "방 접근이 차단되에 입장할 수 없습니다."
@@ -506,7 +506,24 @@ export class RoomService {
     }
     await blockUser(userToBlock.uid, room.id);
     room.broadcastProtocol({ protocol: BLOCK_USER, args: userIdToBlock });
+    room.blockUser(userToBlock.uid, userToBlock.name);
     userToBlock.disconnectSocket();
+  }
+
+  async unblockUser(socketId: string, userIdToUnblock: string) {
+    const room = this._roomRepository.findRoomBySocketId(socketId);
+    if (room === undefined) {
+      throw Error("There is no room!");
+    }
+    const masterPeer = room.findPeerBySocketId(socketId);
+    if (masterPeer === undefined) {
+      throw Error("There is no peer!");
+    }
+    if (masterPeer.uid !== room.masterId) {
+      throw Error("방장이 아닌 회원이 차단 해제를 시도했습니다.");
+    }
+    await unblockUser(userIdToUnblock, room.id);
+    room.unblockUser(userIdToUnblock);
   }
 }
 

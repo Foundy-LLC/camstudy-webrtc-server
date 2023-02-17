@@ -334,4 +334,20 @@ export const handleConnect = async (socket: Socket) => {
       roomService.blockUser(socket.id, userId);
     }
   );
+
+  socket.on(
+    protocol.UNBLOCK_USER,
+    async (userId: string, callback: (isSuccess: boolean, message: string) => void) => {
+      try {
+        await roomService.unblockUser(socket.id, userId);
+        callback(true, "회원 차단을 해제했습니다.");
+      } catch (e) {
+        let message = "회원 차단 해제를 실패했습니다.";
+        if (typeof e === "string") {
+          message = e;
+        }
+        callback(false, message);
+      }
+    }
+  );
 };
