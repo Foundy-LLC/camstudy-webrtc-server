@@ -1,12 +1,12 @@
-import {Peer} from "./Peer";
-import {Router} from "mediasoup/node/lib/Router.js";
-import {UserAndProducerId} from "./UserAndProducerId";
-import {PomodoroTimer, PomodoroTimerObserver, PomodoroTimerProperty, PomodoroTimerState} from "./PomodoroTimer.js";
-import {EDIT_AND_STOP_TIMER, START_TIMER} from "../constant/protocol.js";
-import {updatePomodoroTimerInRoom} from "../repository/room_repository.js";
-import {RoomJoiner} from "./RoomJoiner";
-import {PeerState} from "./PeerState";
-import {BlockedUser} from "./BlockedUser";
+import { Peer } from "./Peer";
+import { Router } from "mediasoup/node/lib/Router.js";
+import { UserAndProducerId } from "./UserAndProducerId";
+import { PomodoroTimer, PomodoroTimerObserver, PomodoroTimerProperty, PomodoroTimerState } from "./PomodoroTimer.js";
+import { EDIT_AND_STOP_TIMER, START_TIMER } from "../constant/protocol.js";
+import { updatePomodoroTimerInRoom } from "../repository/room_repository.js";
+import { RoomJoiner } from "./RoomJoiner";
+import { PeerState } from "./PeerState";
+import { BlockedUser } from "./BlockedUser";
 
 export class Room {
 
@@ -112,7 +112,7 @@ export class Room {
       if (peer.socketId !== requesterSocketId) {
         const producerIds = peer.getProducerIds();
         const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
-          return {producerId, userId: peer.uid};
+          return { producerId, userId: peer.uid };
         });
         result = [
           ...result,
@@ -129,7 +129,7 @@ export class Room {
       if (peer.socketId !== requesterSocketId) {
         const producerIds = peer.getAudioProducerIds();
         const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
-          return {producerId, userId: peer.uid};
+          return { producerId, userId: peer.uid };
         });
         result = [
           ...result,
@@ -146,7 +146,7 @@ export class Room {
       if (peer.socketId !== requesterSocketId) {
         const producerIds = peer.getVideoProducerIds();
         const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
-          return {producerId, userId: peer.uid};
+          return { producerId, userId: peer.uid };
         });
         result = [
           ...result,
@@ -188,17 +188,17 @@ export class Room {
   public startTimer = (observer: PomodoroTimerObserver) => {
     this._pomodoroTimer.start();
     this._pomodoroTimer.addObserver(observer);
-    this.broadcastProtocol({protocol: START_TIMER});
+    this.broadcastProtocol({ protocol: START_TIMER });
   };
 
   public editAndStopTimer = async (property: PomodoroTimerProperty) => {
     await updatePomodoroTimerInRoom(this._id, property);
     this._pomodoroTimer.editAndStop(property);
-    this.broadcastProtocol({protocol: EDIT_AND_STOP_TIMER, args: property});
+    this.broadcastProtocol({ protocol: EDIT_AND_STOP_TIMER, args: property });
   };
 
   public blockUser = (id: string, name: string) => {
-    this._blacklist = [...this._blacklist, {id, name}];
+    this._blacklist = [...this._blacklist, { id, name }];
   };
 
   public unblockUser = (userId: string) => {
