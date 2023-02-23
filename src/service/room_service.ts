@@ -1,9 +1,9 @@
-import { Router } from "mediasoup/node/lib/Router.js";
-import { Socket } from "socket.io";
-import { Producer } from "mediasoup/node/lib/Producer.js";
-import { Consumer } from "mediasoup/node/lib/Consumer.js";
-import { Worker } from "mediasoup/node/lib/Worker.js";
-import { mediaCodecs } from "../constant/config.js";
+import {Router} from "mediasoup/node/lib/Router.js";
+import {Socket} from "socket.io";
+import {Producer} from "mediasoup/node/lib/Producer.js";
+import {Consumer} from "mediasoup/node/lib/Consumer.js";
+import {Worker} from "mediasoup/node/lib/Worker.js";
+import {mediaCodecs} from "../constant/config.js";
 import * as protocol from "../constant/protocol.js";
 import {
   BLOCK_USER,
@@ -15,26 +15,27 @@ import {
   START_SHORT_BREAK,
   START_TIMER
 } from "../constant/protocol.js";
-import { Peer } from "../model/Peer.js";
+import {Peer} from "../model/Peer.js";
 import {
   blockUser,
   createStudyHistory,
-  RoomRepository, unblockUser,
+  RoomRepository,
+  unblockUser,
   updateExitAtOfStudyHistory
 } from "../repository/room_repository.js";
-import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
-import { ProducerOptions } from "mediasoup/node/lib/Producer";
-import { Transport } from "mediasoup/node/lib/Transport";
-import { RtpCapabilities } from "mediasoup/node/lib/RtpParameters";
-import { UserAndProducerId } from "../model/UserAndProducerId";
-import { ChatMessage } from "../model/ChatMessage";
-import { uuid } from "uuidv4";
-import { PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty } from "../model/PomodoroTimer.js";
-import { Room } from "../model/Room";
-import { MAX_ROOM_CAPACITY } from "../constant/room_constant.js";
-import { WaitingRoomData } from "../model/WaitingRoomData.js";
-import { WaitingRoomRepository } from "../repository/waiting_room_repository.js";
-import { RoomJoiner } from "../model/RoomJoiner.js";
+import {DtlsParameters, WebRtcTransport} from "mediasoup/node/lib/WebRtcTransport";
+import {ProducerOptions} from "mediasoup/node/lib/Producer";
+import {Transport} from "mediasoup/node/lib/Transport";
+import {RtpCapabilities} from "mediasoup/node/lib/RtpParameters";
+import {UserAndProducerId} from "../model/UserAndProducerId";
+import {ChatMessage} from "../model/ChatMessage";
+import {uuid} from "uuidv4";
+import {PomodoroTimerEvent, PomodoroTimerObserver, PomodoroTimerProperty} from "../model/PomodoroTimer.js";
+import {Room} from "../model/Room";
+import {MAX_ROOM_CAPACITY} from "../constant/room_constant.js";
+import {WaitingRoomData} from "../model/WaitingRoomData.js";
+import {WaitingRoomRepository} from "../repository/waiting_room_repository.js";
+import {RoomJoiner} from "../model/RoomJoiner.js";
 
 export class RoomService {
 
@@ -119,7 +120,7 @@ export class RoomService {
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
-      { id: userId, name: userName } as RoomJoiner
+      {id: userId, name: userName} as RoomJoiner
     );
     await createStudyHistory(room.id, newPeer.uid);
     return room;
@@ -132,13 +133,13 @@ export class RoomService {
     socket: Socket,
     worker: Worker
   ): Promise<Room> => {
-    const router = await worker.createRouter({ mediaCodecs });
+    const router = await worker.createRouter({mediaCodecs});
     const newPeer = new Peer(userId, socket, userName);
     this._waitingRoomRepository.remove(socket.id);
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
-      { id: userId, name: userName } as RoomJoiner
+      {id: userId, name: userName} as RoomJoiner
     );
     const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
     await createStudyHistory(roomId, newPeer.uid);
@@ -158,7 +159,7 @@ export class RoomService {
     if (room.hasPeer) {
       room.broadcastProtocol({
         protocol: protocol.OTHER_PEER_DISCONNECTED,
-        args: { disposedPeerId: disposedPeer.uid },
+        args: {disposedPeerId: disposedPeer.uid},
         where: (peer) => peer.socketId !== socketId
       });
     } else {
@@ -197,7 +198,7 @@ export class RoomService {
     dtlsParameters: DtlsParameters
   ) => {
     const sendTransport = this.findSendTransportBy(socketId);
-    sendTransport?.connect({ dtlsParameters });
+    sendTransport?.connect({dtlsParameters});
   };
 
   connectReceiveTransport = (
@@ -209,7 +210,7 @@ export class RoomService {
       socketId,
       receiveTransportId
     );
-    receiveTransport?.connect({ dtlsParameters });
+    receiveTransport?.connect({dtlsParameters});
   };
 
   closeVideoProducer = async (socketId: string) => {
@@ -230,7 +231,7 @@ export class RoomService {
     await this.broadcastPeerStateChanged(socketId);
   };
 
-  hideRemoteVideo = async (socketId:string, producerId:string)=> {
+  hideRemoteVideo = async (socketId: string, producerId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
       throw Error(`There is no peer by ${socketId}`);
@@ -271,12 +272,12 @@ export class RoomService {
     return room?.findOthersAudioProducerIds(requesterSocketId) ?? [];
   };
 
-  findVideoProducerIdInRoom = (requesterSocketId: string, userId:string): UserAndProducerId => {
+  findVideoProducerIdInRoom = (requesterSocketId: string, userId: string): UserAndProducerId => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
     const videoProducers = room?.findVideoProducerId(requesterSocketId) ?? [];
-    return videoProducers.find((videoProducer)=>{
+    return videoProducers.find((videoProducer) => {
       return videoProducer.userId === userId
-    }) ||{userId:"",producerId:""}
+    }) || {userId: "", producerId: ""}
   };
 
   findSendTransportBy = (socketId: string): Transport | undefined => {
@@ -471,7 +472,7 @@ export class RoomService {
             protocolMessage = START_LONG_BREAK;
             break;
         }
-        room.broadcastProtocol({ protocol: protocolMessage });
+        room.broadcastProtocol({protocol: protocolMessage});
       }
     };
     room.startTimer(observer);
@@ -501,7 +502,7 @@ export class RoomService {
     if (userToKick === undefined) {
       throw Error("강퇴할 해당 회원이 존재하지 않습니다.");
     }
-    room.broadcastProtocol({ protocol: KICK_USER, args: userIdToKick });
+    room.broadcastProtocol({protocol: KICK_USER, args: userIdToKick});
     userToKick.disconnectSocket();
   }
 
@@ -522,7 +523,7 @@ export class RoomService {
       throw Error("차단할 해당 회원이 존재하지 않습니다.");
     }
     await blockUser(userToBlock.uid, room.id);
-    room.broadcastProtocol({ protocol: BLOCK_USER, args: userIdToBlock });
+    room.broadcastProtocol({protocol: BLOCK_USER, args: userIdToBlock});
     room.blockUser(userToBlock.uid, userToBlock.name);
     userToBlock.disconnectSocket();
   }

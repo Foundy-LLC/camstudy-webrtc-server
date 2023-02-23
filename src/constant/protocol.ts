@@ -1,7 +1,7 @@
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
-const IP_ADDRESS = "192.168.35.113";
+const IP_ADDRESS = "192.168.219.102";
 
 const PORT = 2000;
 
@@ -88,11 +88,6 @@ const CONSUME = "consume";
  * 클라이언트가 소비를 다시 재개할 때 요청을 서버에 보낸다.
  */
 const CONSUME_RESUME = "consumer-resume";
-
-/**
- * 클라이언트가 소비를 멈출 때 요청을 서버에 보낸다.
- */
-const CONSUME_PAUSE = "consumer-pause";
 
 /**
  * 요청을 보낸 클라이언트의 생성자는 제외한 모든 생성자를 요청한다.
@@ -211,7 +206,6 @@ export {
     TRANSPORT_RECEIVER_CONNECT,
     CONSUME,
     CONSUME_RESUME,
-    CONSUME_PAUSE,
     GET_PRODUCER_IDS,
     NEW_PRODUCER,
     PRODUCER_CLOSED,
