@@ -272,12 +272,9 @@ export class RoomService {
     return room?.findOthersAudioProducerIds(requesterSocketId) ?? [];
   };
 
-  findVideoProducerIdInRoom = (requesterSocketId: string, userId: string): UserAndProducerId => {
+  findVideoProducerIdInRoom = (requesterSocketId: string, userId: string): UserAndProducerId | undefined => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
-    const videoProducers = room?.findVideoProducerId(requesterSocketId) ?? [];
-    return videoProducers.find((videoProducer) => {
-      return videoProducer.userId === userId
-    }) || { userId: "", producerId: "" }
+    return room?.findVideoProducerId(requesterSocketId, userId) ?? undefined;
   };
 
   findSendTransportBy = (socketId: string): Transport | undefined => {

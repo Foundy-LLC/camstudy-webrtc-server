@@ -294,8 +294,10 @@ export const handleConnect = async (socket: Socket) => {
     protocol.SHOW_REMOTE_VIDEO,
     (userId: string, callback: (id: UserAndProducerId) => void) => {
       const id = roomService.findVideoProducerIdInRoom(socket.id, userId);
-      console.log("getProducer: callback with ", id);
-      callback(id);
+      if(id != null) {
+        console.log("getProducer: callback with ", id);
+        callback(id);
+      }
     }
   )
 

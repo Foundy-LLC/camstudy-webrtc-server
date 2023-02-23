@@ -140,21 +140,22 @@ export class Room {
     return result;
   };
 
-  public findVideoProducerId = (requesterSocketId: string): UserAndProducerId[] => {
-    let result: UserAndProducerId[] = []
-    this._peers.forEach((peer) => {
-      if (peer.socketId !== requesterSocketId) {
-        const producerIds = peer.getVideoProducerIds();
-        const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
-          return { producerId, userId: peer.uid };
-        });
-        result = [
-          ...result,
-          ...userProducerIdSets
-        ];
-      }
-    });
-    return result;
+  public findVideoProducerId = (requesterSocketId: string, userId:string): UserAndProducerId => {
+    let result: UserAndProducerId[]=[];
+    const peer = this._peers.find((peer) => {
+      return (peer.socketId !== requesterSocketId && peer.uid === userId);
+    })
+    if(peer!=null) {
+      const producerIds = peer.getVideoProducerIds();
+      const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
+        return { producerId, userId: peer.uid };
+      });
+      result = [
+        ...result,
+        ...userProducerIdSets
+      ];
+    }
+    return result[0];
   };
 
   public getJoiners = (): RoomJoiner[] => {

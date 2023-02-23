@@ -84,19 +84,6 @@ export class Peer {
     await consumer?.resume();
   };
 
-  public pauseConsumer = async (consumerId: string) => {
-    console.log("consumerId", consumerId)
-    this._consumers.map((consumer) => {
-      console.log(consumer.id)
-    })
-    const consumer = this._consumers.find(consumer => consumer.id === consumerId);
-    console.log(consumer)
-    if (consumer != undefined) {
-      await consumer.pause();
-      console.log("consumer pause success")
-    }
-  };
-
   public get hasProducer(): boolean {
     return this._producers.length > 0;
   }
