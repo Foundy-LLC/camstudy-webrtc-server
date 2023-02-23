@@ -140,22 +140,20 @@ export class Room {
     return result;
   };
 
-  public findVideoProducerId = (requesterSocketId: string, userId:string): UserAndProducerId => {
-    let result: UserAndProducerId[]=[];
+  public findVideoProducerId = (userId: string): UserAndProducerId | undefined => {
     const peer = this._peers.find((peer) => {
-      return (peer.socketId !== requesterSocketId && peer.uid === userId);
+      return (peer.uid === userId);
     })
-    if(peer!=null) {
-      const producerIds = peer.getVideoProducerIds();
-      const userProducerIdSets = producerIds.map<UserAndProducerId>((producerId) => {
-        return { producerId, userId: peer.uid };
-      });
-      result = [
-        ...result,
-        ...userProducerIdSets
-      ];
+    if (peer == null) {
+      throw Error("peer 없음")
     }
-    return result[0];
+    const producerIds = peer.getVideoProducerIds();
+    const userProducerId = producerIds[0];
+    if (userProducerId.length != 0) {
+      return { producerId: userProducerId, userId: peer.uid };
+    } else {
+      return undefined;
+    }
   };
 
   public getJoiners = (): RoomJoiner[] => {

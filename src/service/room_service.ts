@@ -274,7 +274,7 @@ export class RoomService {
 
   findVideoProducerIdInRoom = (requesterSocketId: string, userId: string): UserAndProducerId | undefined => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
-    return room?.findVideoProducerId(requesterSocketId, userId) ?? undefined;
+    return room?.findVideoProducerId(userId) ?? undefined;
   };
 
   findSendTransportBy = (socketId: string): Transport | undefined => {
