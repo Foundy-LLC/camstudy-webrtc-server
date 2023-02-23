@@ -1,16 +1,16 @@
 import mediasoup from "mediasoup";
 import * as protocol from "./constant/protocol.js";
-import {Worker} from "mediasoup/node/lib/Worker.js";
-import {Socket} from "socket.io";
-import {ProducerOptions} from "mediasoup/node/lib/Producer.js";
-import {MediaKind, RtpCapabilities, RtpParameters} from "mediasoup/node/lib/RtpParameters.js";
-import {DtlsParameters, IceCandidate, IceParameters} from "mediasoup/node/lib/WebRtcTransport.js";
-import {roomService} from "./service/room_service.js";
-import {UserAndProducerId} from "./model/UserAndProducerId";
-import {PomodoroTimerProperty} from "./model/PomodoroTimer";
-import {WaitingRoomData} from "./model/WaitingRoomData";
-import {JoinRoomSuccessCallbackProperty} from "./model/JoinRoomSuccessCallbackProperty.js";
-import {JoinRoomFailureCallbackProperty} from "./model/JoinRoomFailureCallbackProperty.js";
+import { Worker } from "mediasoup/node/lib/Worker.js";
+import { Socket } from "socket.io";
+import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
+import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/RtpParameters.js";
+import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransport.js";
+import { roomService } from "./service/room_service.js";
+import { UserAndProducerId } from "./model/UserAndProducerId";
+import { PomodoroTimerProperty } from "./model/PomodoroTimer";
+import { WaitingRoomData } from "./model/WaitingRoomData";
+import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallbackProperty.js";
+import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
 
 /**
  * Worker
@@ -70,7 +70,7 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      {userId, userName, roomPasswordInput}: { userId: string, userName: string, roomPasswordInput: string },
+      { userId, userName, roomPasswordInput }: { userId: string, userName: string, roomPasswordInput: string },
       callback: (
         data: JoinRoomSuccessCallbackProperty | JoinRoomFailureCallbackProperty
       ) => void
@@ -81,7 +81,7 @@ export const handleConnect = async (socket: Socket) => {
 
       const canJoinRoomResult = await roomService.canJoinRoom(userId, roomIdToJoin, roomPasswordInput);
       if (!canJoinRoomResult.canJoin) {
-        callback({message: canJoinRoomResult.message, type: "failure"});
+        callback({ message: canJoinRoomResult.message, type: "failure" });
         return;
       }
 
@@ -109,7 +109,7 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.CREATE_WEB_RTC_TRANSPORT,
     async (
-      {isConsumer}: { isConsumer: boolean },
+      { isConsumer }: { isConsumer: boolean },
       callback: (data: {
         params: {
           id: string;
@@ -180,8 +180,8 @@ export const handleConnect = async (socket: Socket) => {
   // see client's socket.emit('transport-producer-connect', ...)
   socket.on(
     protocol.TRANSPORT_PRODUCER_CONNECT,
-    ({dtlsParameters}: { dtlsParameters: DtlsParameters }) => {
-      console.log("DTLS PARAMS... ", {dtlsParameters});
+    ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
+      console.log("DTLS PARAMS... ", { dtlsParameters });
       roomService.connectSendTransport(socket.id, dtlsParameters);
     }
   );
@@ -226,7 +226,7 @@ export const handleConnect = async (socket: Socket) => {
           rtpParameters: consumer.rtpParameters,
           serverConsumerId: consumer.id
         };
-        callback({params});
+        callback({ params });
 
         consumer.on("transportclose", () => {
           // TODO: what should I do at here?
@@ -235,12 +235,12 @@ export const handleConnect = async (socket: Socket) => {
         consumer.on("producerclose", () => {
           console.log("producer of consumer closed");
           roomService.removeConsumer(socket.id, consumer);
-          socket.emit(protocol.PRODUCER_CLOSED, {remoteProducerId});
+          socket.emit(protocol.PRODUCER_CLOSED, { remoteProducerId });
         });
       } catch (error: any) {
         console.log(error.message);
         callback({
-          params: {error: error}
+          params: { error: error }
         });
       }
     }
@@ -261,7 +261,7 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(
     protocol.CONSUME_RESUME,
-    async ({serverConsumerId}: { serverConsumerId: string }) => {
+    async ({ serverConsumerId }: { serverConsumerId: string }) => {
       console.log("consumer resume");
       await roomService.resumeConsumer(socket.id, serverConsumerId);
     }
