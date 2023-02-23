@@ -304,18 +304,6 @@ export class RoomService {
     await this.broadcastPeerStateChanged(socketId);
   };
 
-  pauseConsumer = async (socketId: string, consumerId: string) => {
-    const peer = this._roomRepository.findPeerBy(socketId);
-    console.log("peer",peer);
-    if(peer === undefined){
-      return;
-    }
-    console.log("1",socketId)
-    console.log("2",consumerId)
-    await peer.pauseConsumer(consumerId);
-    // await this.broadcastPeerStateChanged(socketId);
-  }
-
   isProducerExists = (socketId: string): boolean => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
     if (room === undefined) {

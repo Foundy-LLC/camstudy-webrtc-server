@@ -268,14 +268,6 @@ export const handleConnect = async (socket: Socket) => {
     );
 
     socket.on(
-        protocol.CONSUME_PAUSE,
-        async ({consumerId}: { consumerId: string }) => {
-            console.log("consumer pause");
-            await roomService.pauseConsumer(socket.id, consumerId);
-        }
-    );
-
-    socket.on(
         protocol.CLOSE_VIDEO_PRODUCER,
         () => {
             console.log("Close video producer: ", socket.id);
