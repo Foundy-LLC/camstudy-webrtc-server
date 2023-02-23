@@ -230,6 +230,15 @@ export class RoomService {
     await this.broadcastPeerStateChanged(socketId);
   };
 
+  hideRemoteVideo = async (socketId:string, producerId:string)=> {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.hideRemoteVideo(producerId);
+    await this.broadcastPeerStateChanged(socketId);
+  }
+
   muteHeadset = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
@@ -262,6 +271,14 @@ export class RoomService {
     return room?.findOthersAudioProducerIds(requesterSocketId) ?? [];
   };
 
+  findVideoProducerIdInRoom = (requesterSocketId: string, userId:string): UserAndProducerId => {
+    const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
+    const videoProducers = room?.findVideoProducerId(requesterSocketId) ?? [];
+    return videoProducers.find((videoProducer)=>{
+      return videoProducer.userId === userId
+    }) ||{userId:"",producerId:""}
+  };
+
   findSendTransportBy = (socketId: string): Transport | undefined => {
     const peer = this._roomRepository.findPeerBy(socketId);
     return peer?.sendTransport;
@@ -286,6 +303,18 @@ export class RoomService {
     await peer?.resumeConsumer(consumerId);
     await this.broadcastPeerStateChanged(socketId);
   };
+
+  pauseConsumer = async (socketId: string, consumerId: string) => {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    console.log("peer",peer);
+    if(peer === undefined){
+      return;
+    }
+    console.log("1",socketId)
+    console.log("2",consumerId)
+    await peer.pauseConsumer(consumerId);
+    // await this.broadcastPeerStateChanged(socketId);
+  }
 
   isProducerExists = (socketId: string): boolean => {
     const room = this._roomRepository.findRoomBySocketId(socketId);

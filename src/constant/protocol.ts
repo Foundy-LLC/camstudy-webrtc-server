@@ -90,6 +90,11 @@ const CONSUME = "consume";
 const CONSUME_RESUME = "consumer-resume";
 
 /**
+ * 클라이언트가 소비를 멈출 때 요청을 서버에 보낸다.
+ */
+const CONSUME_PAUSE = "consumer-pause";
+
+/**
  * 요청을 보낸 클라이언트의 생성자는 제외한 모든 생성자를 요청한다.
  *
  * 클라이언트에서 서버로 전송된다.
@@ -117,6 +122,20 @@ const CLOSE_VIDEO_PRODUCER = "close-video-producer";
  * 클라이언트가 서버에게 오디오 생산자를 닫으라는 요청을 보낸다.
  */
 const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
+
+/**
+ * 특정 비디오를 수신하지 않기 위해 특정 비디오 생산자를 끊는 프로토콜이다.
+ *
+ * 클라이언트가 서버에게 전달한다.
+ */
+const HIDE_REMOTE_VIDEO = "close-video";
+
+/**
+ * 특정 비디오를 수신하기 위해 특정 비디오 생산자를 생성하는 프로토콜이다.
+ *
+ * 클라이언트가 서버에게 전달한다.
+ */
+const SHOW_REMOTE_VIDEO = "show-video"
 
 /**
  * 오디오를 수신하지 않기 위해 모든 오디오 생산자를 끊는 프로토콜이다.
@@ -176,37 +195,40 @@ const BLOCK_USER = "block-user";
 const UNBLOCK_USER = "unblock-user";
 
 export {
-  IP_ADDRESS,
-  PORT,
-  NAME_SPACE,
-  CONNECTION,
-  CONNECTION_SUCCESS,
-  DISCONNECT,
-  JOIN_WAITING_ROOM,
-  OTHER_PEER_JOINED_ROOM,
-  OTHER_PEER_EXITED_ROOM,
-  JOIN_ROOM,
-  CREATE_WEB_RTC_TRANSPORT,
-  TRANSPORT_PRODUCER,
-  TRANSPORT_PRODUCER_CONNECT,
-  TRANSPORT_RECEIVER_CONNECT,
-  CONSUME,
-  CONSUME_RESUME,
-  GET_PRODUCER_IDS,
-  NEW_PRODUCER,
-  PRODUCER_CLOSED,
-  PEER_STATE_CHANGED,
-  CLOSE_VIDEO_PRODUCER,
-  CLOSE_AUDIO_PRODUCER,
-  MUTE_HEADSET,
-  UNMUTE_HEADSET,
-  OTHER_PEER_DISCONNECTED,
-  SEND_CHAT,
-  START_TIMER,
-  START_SHORT_BREAK,
-  START_LONG_BREAK,
-  EDIT_AND_STOP_TIMER,
-  KICK_USER,
-  BLOCK_USER,
-  UNBLOCK_USER
+    IP_ADDRESS,
+    PORT,
+    NAME_SPACE,
+    CONNECTION,
+    CONNECTION_SUCCESS,
+    DISCONNECT,
+    JOIN_WAITING_ROOM,
+    OTHER_PEER_JOINED_ROOM,
+    OTHER_PEER_EXITED_ROOM,
+    JOIN_ROOM,
+    CREATE_WEB_RTC_TRANSPORT,
+    TRANSPORT_PRODUCER,
+    TRANSPORT_PRODUCER_CONNECT,
+    TRANSPORT_RECEIVER_CONNECT,
+    CONSUME,
+    CONSUME_RESUME,
+    CONSUME_PAUSE,
+    GET_PRODUCER_IDS,
+    NEW_PRODUCER,
+    PRODUCER_CLOSED,
+    PEER_STATE_CHANGED,
+    CLOSE_VIDEO_PRODUCER,
+    CLOSE_AUDIO_PRODUCER,
+    MUTE_HEADSET,
+    UNMUTE_HEADSET,
+    OTHER_PEER_DISCONNECTED,
+    SEND_CHAT,
+    START_TIMER,
+    START_SHORT_BREAK,
+    START_LONG_BREAK,
+    EDIT_AND_STOP_TIMER,
+    KICK_USER,
+    BLOCK_USER,
+    UNBLOCK_USER,
+    HIDE_REMOTE_VIDEO,
+    SHOW_REMOTE_VIDEO
 };

@@ -38,11 +38,13 @@ model crops {
 }
 
 model friend {
-  id           String   @id(map: "pk_friend") @db.VarChar(100)
-  requester_id String   @db.VarChar(100)
-  acceptor_id  String   @db.VarChar(100)
-  accepted     Boolean
-  requested_at DateTime @db.Timestamp(6)
+  id                                             String       @id(map: "pk_friend") @db.VarChar(100)
+  requester_id                                   String       @db.VarChar(100)
+  acceptor_id                                    String       @db.VarChar(100)
+  accepted                                       Boolean
+  requested_at                                   DateTime     @db.Timestamp(6)
+  user_account_friend_acceptor_idTouser_account  user_account @relation("friend_acceptor_idTouser_account", fields: [acceptor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_user_account_1")
+  user_account_friend_requester_idTouser_account user_account @relation("friend_requester_idTouser_account", fields: [requester_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_user_account_2")
 }
 
 model harvested_crops {
@@ -57,18 +59,22 @@ model harvested_crops {
 }
 
 model organization {
-  id     String   @id(map: "pk_organization") @db.VarChar(100)
-  name   String   @db.VarChar(30)
-  belong belong[]
+  id      String   @id(map: "pk_organization") @default(dbgenerated("nextval('organization_id_seq'::regclass)")) @db.VarChar(100)
+  name    String   @db.VarChar(30)
+  address String   @db.VarChar(100)
+  belong  belong[]
 }
 
 model report {
-  id           String          @id(map: "pk_report") @db.VarChar(100)
-  suspecter_id String          @db.VarChar(100)
-  reporter_id  String          @db.VarChar(100)
-  category     report_category
-  content      String          @db.VarChar(500)
-  reported_at  DateTime        @db.Timestamp(6)
+  id                                            String          @id(map: "pk_report") @db.VarChar(100)
+  suspect_id                                    String          @db.VarChar(100)
+  reporter_id                                   String          @db.VarChar(100)
+  category                                      report_category
+  content                                       String          @db.VarChar(500)
+  reported_at                                   DateTime        @db.Timestamp(6)
+  screenshot                                    String?         @db.VarChar(500)
+  user_account_report_reporter_idTouser_account user_account    @relation("report_reporter_idTouser_account", fields: [reporter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "report_reporter_id__fk")
+  user_account_report_suspect_idTouser_account  user_account    @relation("report_suspect_idTouser_account", fields: [suspect_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "report_suspect_id__fk")
 }
 
 model room {
@@ -82,7 +88,9 @@ model room {
   long_break          Int
   long_break_interval Int
   expired_at          DateTime        @db.Timestamp(6)
+  deleted_at          DateTime?       @db.Timestamp(6)
   block               block[]
+  user_account        user_account    @relation(fields: [master_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_master_id__fk")
   room_tag            room_tag[]
   study_history       study_history[]
 }
@@ -116,18 +124,23 @@ model tag {
 }
 
 model user_account {
-  id              String            @id(map: "pk_user_account") @db.VarChar(100)
-  name            String            @db.VarChar(20)
-  introduce       String?           @db.VarChar(100)
-  score           BigInt
-  profile_image   String?           @db.VarChar(255)
-  status          user_status
-  belong          belong[]
-  block           block[]
-  crops           crops[]
-  harvested_crops harvested_crops[]
-  study_history   study_history[]
-  user_tag        user_tag[]
+  id                                       String            @id(map: "pk_user_account") @db.VarChar(100)
+  name                                     String            @db.VarChar(20)
+  introduce                                String?           @db.VarChar(100)
+  score                                    BigInt
+  profile_image                            String?           @db.VarChar(255)
+  status                                   user_status
+  belong                                   belong[]
+  block                                    block[]
+  crops                                    crops[]
+  friend_friend_acceptor_idTouser_account  friend[]          @relation("friend_acceptor_idTouser_account")
+  friend_friend_requester_idTouser_account friend[]          @relation("friend_requester_idTouser_account")
+  harvested_crops                          harvested_crops[]
+  report_report_reporter_idTouser_account  report[]          @relation("report_reporter_idTouser_account")
+  report_report_suspect_idTouser_account   report[]          @relation("report_suspect_idTouser_account")
+  room                                     room[]
+  study_history                            study_history[]
+  user_tag                                 user_tag[]
 }
 
 model user_tag {
