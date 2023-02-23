@@ -37,5 +37,6 @@ export const fakeRoomEntity: room = {
   short_break: 5,
   thumbnail: "undefined",
   timer: 25,
-  title: "444"
+  title: "444",
+  deleted_at: new Date()
 };
