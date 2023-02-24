@@ -284,6 +284,24 @@ export const handleConnect = async (socket: Socket) => {
   );
 
   socket.on(
+    protocol.HIDE_REMOTE_VIDEO,
+    (producerId: string) => {
+      roomService.hideRemoteVideo(socket.id, producerId)
+    }
+  )
+
+  socket.on(
+    protocol.SHOW_REMOTE_VIDEO,
+    (userId: string, callback: (id: UserAndProducerId) => void) => {
+      const id = roomService.findVideoProducerIdInRoom(socket.id, userId);
+      if(id != null) {
+        console.log("getProducer: callback with ", id);
+        callback(id);
+      }
+    }
+  )
+
+  socket.on(
     protocol.MUTE_HEADSET,
     () => {
       roomService.muteHeadset(socket.id);

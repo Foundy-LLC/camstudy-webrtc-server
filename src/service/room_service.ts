@@ -19,7 +19,8 @@ import { Peer } from "../model/Peer.js";
 import {
   blockUser,
   createStudyHistory,
-  RoomRepository, unblockUser,
+  RoomRepository,
+  unblockUser,
   updateExitAtOfStudyHistory
 } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
@@ -230,6 +231,15 @@ export class RoomService {
     await this.broadcastPeerStateChanged(socketId);
   };
 
+  hideRemoteVideo = async (socketId: string, producerId: string) => {
+    const peer = this._roomRepository.findPeerBy(socketId);
+    if (peer === undefined) {
+      throw Error(`There is no peer by ${socketId}`);
+    }
+    peer.hideRemoteVideo(producerId);
+    await this.broadcastPeerStateChanged(socketId);
+  }
+
   muteHeadset = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
@@ -260,6 +270,11 @@ export class RoomService {
   findOthersAudioProducerIdsInRoom = (requesterSocketId: string): UserAndProducerId[] => {
     const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
     return room?.findOthersAudioProducerIds(requesterSocketId) ?? [];
+  };
+
+  findVideoProducerIdInRoom = (requesterSocketId: string, userId: string): UserAndProducerId | undefined => {
+    const room = this._roomRepository.findRoomBySocketId(requesterSocketId);
+    return room?.findVideoProducerId(userId) ?? undefined;
   };
 
   findSendTransportBy = (socketId: string): Transport | undefined => {

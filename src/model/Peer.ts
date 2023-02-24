@@ -69,6 +69,10 @@ export class Peer {
     return this._producers.map((producer) => producer.id);
   }
 
+  public getVideoProducerIds(): string[] {
+    return this._producers.filter(p => p.kind === "video").map((producer) => producer.id);
+  }
+
   public getAudioProducerIds(): string[] {
     return this._producers.filter(p => p.kind === "audio").map((producer) => producer.id);
   }
@@ -122,6 +126,16 @@ export class Peer {
       return true;
     });
   };
+
+  public hideRemoteVideo = (producerId: string) => {
+    this._consumers = this._consumers.filter((consumer) => {
+      if (consumer.kind === "video" && consumer.producerId === producerId) {
+        consumer.close()
+        return false;
+      }
+      return true
+    })
+  }
 
   public muteHeadset = () => {
     this._mutedHeadset = true;

@@ -1,7 +1,7 @@
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
-const IP_ADDRESS = "192.168.35.113";
+const IP_ADDRESS = "192.168.219.102";
 
 const PORT = 2000;
 
@@ -119,6 +119,20 @@ const CLOSE_VIDEO_PRODUCER = "close-video-producer";
 const CLOSE_AUDIO_PRODUCER = "close-audio-producer";
 
 /**
+ * 특정 비디오를 수신하지 않기 위해 특정 비디오 생산자를 끊는 프로토콜이다.
+ *
+ * 클라이언트가 서버에게 전달한다.
+ */
+const HIDE_REMOTE_VIDEO = "close-video";
+
+/**
+ * 특정 비디오를 수신하기 위해 특정 비디오 생산자를 생성하는 프로토콜이다.
+ *
+ * 클라이언트가 서버에게 전달한다.
+ */
+const SHOW_REMOTE_VIDEO = "show-video"
+
+/**
  * 오디오를 수신하지 않기 위해 모든 오디오 생산자를 끊는 프로토콜이다.
  *
  * 클라이언트가 서버에게 전달한다.
@@ -208,5 +222,7 @@ export {
   EDIT_AND_STOP_TIMER,
   KICK_USER,
   BLOCK_USER,
-  UNBLOCK_USER
+  UNBLOCK_USER,
+  HIDE_REMOTE_VIDEO,
+  SHOW_REMOTE_VIDEO
 };

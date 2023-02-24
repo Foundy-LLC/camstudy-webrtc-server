@@ -140,6 +140,22 @@ export class Room {
     return result;
   };
 
+  public findVideoProducerId = (userId: string): UserAndProducerId | undefined => {
+    const peer = this._peers.find((peer) => {
+      return (peer.uid === userId);
+    })
+    if (peer == null) {
+      throw Error("peer 없음")
+    }
+    const producerIds = peer.getVideoProducerIds();
+    const userProducerId = producerIds[0];
+    if (userProducerId.length != 0) {
+      return { producerId: userProducerId, userId: peer.uid };
+    } else {
+      return undefined;
+    }
+  };
+
   public getJoiners = (): RoomJoiner[] => {
     return this._peers.map((peer) => {
       return {
