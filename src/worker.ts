@@ -11,6 +11,7 @@ import { PomodoroTimerProperty } from "./model/PomodoroTimer";
 import { WaitingRoomData } from "./model/WaitingRoomData";
 import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallbackProperty.js";
 import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
+import { getUserBy } from "./repository/user_repository.js";
 
 /**
  * Worker
@@ -70,7 +71,7 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { userId, userName, roomPasswordInput }: { userId: string, userName: string, roomPasswordInput: string },
+      { userId, roomPasswordInput }: { userId: string, roomPasswordInput: string },
       callback: (
         data: JoinRoomSuccessCallbackProperty | JoinRoomFailureCallbackProperty
       ) => void
@@ -84,11 +85,14 @@ export const handleConnect = async (socket: Socket) => {
         callback({ message: canJoinRoomResult.message, type: "failure" });
         return;
       }
-
+      const user = await getUserBy(userId);
+      if (user == null) {
+        throw Error("DB에서 회원 정보를 찾지 못했습니다.");
+      }
       console.log("JOIN ROOM:", roomIdToJoin);
-      let room = await roomService.joinRoom(roomIdToJoin, userId, userName, socket);
+      let room = await roomService.joinRoom(roomIdToJoin, userId, user.name, socket);
       if (room === undefined) {
-        room = await roomService.createAndJoinRoom(roomIdToJoin, userId, userName, socket, worker);
+        room = await roomService.createAndJoinRoom(roomIdToJoin, userId, user.name, socket, worker);
       }
 
       const rtpCapabilities = room.router.rtpCapabilities;
@@ -286,20 +290,20 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.HIDE_REMOTE_VIDEO,
     (producerId: string) => {
-      roomService.hideRemoteVideo(socket.id, producerId)
+      roomService.hideRemoteVideo(socket.id, producerId);
     }
-  )
+  );
 
   socket.on(
     protocol.SHOW_REMOTE_VIDEO,
     (userId: string, callback: (id: UserAndProducerId) => void) => {
       const id = roomService.findVideoProducerIdInRoom(socket.id, userId);
-      if(id != null) {
+      if (id != null) {
         console.log("getProducer: callback with ", id);
         callback(id);
       }
     }
-  )
+  );
 
   socket.on(
     protocol.MUTE_HEADSET,
