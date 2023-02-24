@@ -115,12 +115,10 @@ export const handleConnect = async (socket: Socket) => {
     async (
       { isConsumer }: { isConsumer: boolean },
       callback: (data: {
-        params: {
-          id: string;
-          iceParameters: IceParameters;
-          iceCandidates: IceCandidate[];
-          dtlsParameters: DtlsParameters;
-        };
+        id: string;
+        iceParameters: IceParameters;
+        iceCandidates: IceCandidate[];
+        dtlsParameters: DtlsParameters;
       }) => void
     ) => {
       try {
@@ -130,12 +128,10 @@ export const handleConnect = async (socket: Socket) => {
           return;
         }
         callback({
-          params: {
-            id: transport.id,
-            iceParameters: transport.iceParameters,
-            iceCandidates: transport.iceCandidates,
-            dtlsParameters: transport.dtlsParameters
-          }
+          id: transport.id,
+          iceParameters: transport.iceParameters,
+          iceCandidates: transport.iceCandidates,
+          dtlsParameters: transport.dtlsParameters
         });
       } catch (e) {
         // TODO: 클라이언트에 에러 전달하기
@@ -159,7 +155,7 @@ export const handleConnect = async (socket: Socket) => {
     protocol.TRANSPORT_PRODUCER,
     async (
       options: ProducerOptions,
-      callback: (data: { id: string; producersExist: boolean; }) => void
+      callback: (id: string, producersExists: boolean) => void
     ) => {
       const producer = await roomService.createProducer(socket.id, options);
       if (producer === undefined) {
@@ -169,10 +165,10 @@ export const handleConnect = async (socket: Socket) => {
 
       console.log("Producer ID: ", producer.id, producer.kind);
       // Send back to the client the Producer's id
-      callback({
-        id: producer.id,
-        producersExist: roomService.isProducerExists(socket.id)
-      });
+      callback(
+        producer.id,
+        roomService.isProducerExists(socket.id)
+      );
 
       producer.on("transportclose", () => {
         console.log("transport for this producer closed ");
@@ -184,7 +180,7 @@ export const handleConnect = async (socket: Socket) => {
   // see client's socket.emit('transport-producer-connect', ...)
   socket.on(
     protocol.TRANSPORT_PRODUCER_CONNECT,
-    ({ dtlsParameters }: { dtlsParameters: DtlsParameters }) => {
+    (dtlsParameters: DtlsParameters) => {
       console.log("DTLS PARAMS... ", { dtlsParameters });
       roomService.connectSendTransport(socket.id, dtlsParameters);
     }
@@ -202,16 +198,16 @@ export const handleConnect = async (socket: Socket) => {
         remoteProducerId: string;
         serverReceiveTransportId: string;
       },
-      callback: (data: {
-        // TODO: media-soup에 존자해는 타입으로 변환하기
-        params: {
+      // TODO: media-soup에 존자해는 타입으로 변환하기
+      callback: (
+        data: {
           id: string;
           producerId: string;
           kind: MediaKind;
           rtpParameters: RtpParameters;
           serverConsumerId: string;
-        } | { error: any };
-      }) => void
+        } | { error: any }
+      ) => void
     ) => {
       try {
         const consumer = await roomService.createConsumer(
@@ -230,7 +226,7 @@ export const handleConnect = async (socket: Socket) => {
           rtpParameters: consumer.rtpParameters,
           serverConsumerId: consumer.id
         };
-        callback({ params });
+        callback(params);
 
         consumer.on("transportclose", () => {
           // TODO: what should I do at here?
@@ -243,9 +239,7 @@ export const handleConnect = async (socket: Socket) => {
         });
       } catch (error: any) {
         console.log(error.message);
-        callback({
-          params: { error: error }
-        });
+        callback({ error: error });
       }
     }
   );
@@ -265,7 +259,7 @@ export const handleConnect = async (socket: Socket) => {
 
   socket.on(
     protocol.CONSUME_RESUME,
-    async ({ serverConsumerId }: { serverConsumerId: string }) => {
+    async (serverConsumerId: string) => {
       console.log("consumer resume");
       await roomService.resumeConsumer(socket.id, serverConsumerId);
     }
