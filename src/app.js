@@ -1,12 +1,10 @@
 import express from "express";
 import https from "httpolyglot";
-import path from "path";
 import { Server } from "socket.io";
 import { handleConnect } from "./worker.js";
 import { tlsconfig } from "./constant/config.js";
 import * as protocol from "./constant/protocol.js";
 
-const __dirname = path.resolve();
 const app = express();
 
 app.get("*", (req, res, next) => {
@@ -19,8 +17,6 @@ app.get("*", (req, res, next) => {
     `You need to specify a room name in the path e.g. 'https://127.0.0.1/rooms/:roomId'`
   );
 });
-
-app.use("/rooms/:roomId", express.static(path.join(__dirname, "src/public")));
 
 const httpsServer = https.createServer(tlsconfig, app);
 httpsServer.listen(protocol.PORT, () => {
