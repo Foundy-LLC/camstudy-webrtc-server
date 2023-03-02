@@ -96,7 +96,7 @@ export const handleConnect = async (socket: Socket) => {
       }
       console.log("JOIN ROOM:", roomIdToJoin);
       const peer = new Peer(userId, socket, user.name, mutedHeadset);
-      let room = await roomService.joinRoom(roomIdToJoin, peer, socket);
+      let room = await roomService.joinRoom(roomIdToJoin, peer);
       if (room === undefined) {
         room = await roomService.createAndJoinRoom(roomIdToJoin, peer, socket, worker);
       }

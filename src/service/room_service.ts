@@ -102,18 +102,16 @@ export class RoomService {
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.
    * @param roomId 접속할 방의 아이디
    * @param peer 접속하는 유저
-   * @param socket 접속하는 피어의 소켓
    */
   joinRoom = async (
     roomId: string,
     peer: Peer,
-    socket: Socket
   ): Promise<Room | undefined> => {
-    const room = this._roomRepository.join(roomId, peer, socket.id);
+    const room = this._roomRepository.join(roomId, peer);
     if (room === undefined) {
       return undefined;
     }
-    this._waitingRoomRepository.remove(socket.id);
+    this._waitingRoomRepository.remove(peer.socketId);
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
