@@ -243,7 +243,7 @@ export class RoomService {
   muteHeadset = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
-      throw Error(`There is no peer by ${socketId}`);
+      return;
     }
     peer.muteHeadset();
     await this.broadcastPeerStateChanged(socketId);
@@ -252,7 +252,7 @@ export class RoomService {
   unmuteHeadset = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
     if (peer === undefined) {
-      throw Error(`There is no peer by ${socketId}`);
+      return;
     }
     peer.unmuteHeadset();
     await this.broadcastPeerStateChanged(socketId);
