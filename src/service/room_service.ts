@@ -101,48 +101,41 @@ export class RoomService {
   /**
    * 방에 접속한다. 만약 방이 없다면 `undefined`를 반환한다.
    * @param roomId 접속할 방의 아이디
-   * @param userId 접속하는 유저의 아이디
-   * @param userName 접속하는 유저의 이름
-   * @param socket 접속하는 피어의 소켓
+   * @param peer 접속하는 유저
    */
   joinRoom = async (
     roomId: string,
-    userId: string,
-    userName: string,
-    socket: Socket
+    peer: Peer,
   ): Promise<Room | undefined> => {
-    const newPeer: Peer = new Peer(userId, socket, userName);
-    const room = this._roomRepository.join(roomId, newPeer, socket.id);
+    const room = this._roomRepository.join(roomId, peer);
     if (room === undefined) {
       return undefined;
     }
-    this._waitingRoomRepository.remove(socket.id);
+    this._waitingRoomRepository.remove(peer.socketId);
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
-      { id: userId, name: userName } as RoomJoiner
+      { id: peer.uid, name: peer.name } as RoomJoiner
     );
-    await createStudyHistory(room.id, newPeer.uid);
+    await createStudyHistory(room.id, peer.uid);
     return room;
   };
 
   createAndJoinRoom = async (
     roomId: string,
-    userId: string,
-    userName: string,
+    peer: Peer,
     socket: Socket,
     worker: Worker
   ): Promise<Room> => {
     const router = await worker.createRouter({ mediaCodecs });
-    const newPeer = new Peer(userId, socket, userName);
     this._waitingRoomRepository.remove(socket.id);
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
-      { id: userId, name: userName } as RoomJoiner
+      { id: peer.uid, name: peer.name } as RoomJoiner
     );
-    const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, newPeer);
-    await createStudyHistory(roomId, newPeer.uid);
+    const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, peer);
+    await createStudyHistory(roomId, peer.uid);
     return room;
   };
 
@@ -238,7 +231,7 @@ export class RoomService {
     }
     peer.hideRemoteVideo(producerId);
     await this.broadcastPeerStateChanged(socketId);
-  }
+  };
 
   muteHeadset = async (socketId: string) => {
     const peer = this._roomRepository.findPeerBy(socketId);
@@ -357,7 +350,7 @@ export class RoomService {
       throw Error(`receiveTransport가 없어 consumer를 만들 수 없습니다. ID: ${receiveTransportId}`);
     }
     const peer = this._roomRepository.findPeerBy(socketId);
-    if (peer === undefined || !peer.state.enabledHeadset) {
+    if (peer === undefined) {
       return undefined;
     }
     const canConsume = router.canConsume({
@@ -370,6 +363,10 @@ export class RoomService {
         rtpCapabilities,
         paused: true
       });
+      if (!peer.state.enabledHeadset && consumer.kind === "audio") {
+        consumer.close();
+        return undefined;
+      }
       peer.addConsumer(consumer);
       await this.broadcastPeerStateChanged(socketId);
       return consumer;

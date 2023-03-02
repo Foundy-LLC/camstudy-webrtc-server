@@ -10,12 +10,12 @@ export class Peer {
   private _receiveTransports: Transport[] = [];
   private _producers: Producer[] = [];
   private _consumers: Consumer[] = [];
-  private _mutedHeadset: boolean = false;
 
   public constructor(
     private readonly _uid: string,
     private readonly _socket: Socket,
-    private readonly _name: string
+    private readonly _name: string,
+    private _mutedHeadset: boolean
   ) {
   }
 
@@ -130,12 +130,12 @@ export class Peer {
   public hideRemoteVideo = (producerId: string) => {
     this._consumers = this._consumers.filter((consumer) => {
       if (consumer.kind === "video" && consumer.producerId === producerId) {
-        consumer.close()
+        consumer.close();
         return false;
       }
-      return true
-    })
-  }
+      return true;
+    });
+  };
 
   public muteHeadset = () => {
     this._mutedHeadset = true;

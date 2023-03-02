@@ -176,15 +176,14 @@ export class RoomRepository {
 
   public join = (
     roomId: string,
-    peer: Peer,
-    socketId: string
+    peer: Peer
   ): Room | undefined => {
     const room = this.findRoomById(roomId);
     if (room === undefined) {
       return undefined;
     }
     room.join(peer);
-    this._setRoom(room, socketId);
+    this._setRoom(room, peer.socketId);
     return room;
   };
 

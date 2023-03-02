@@ -7,14 +7,16 @@ import { mockPrisma } from "./mockPrisma.js";
 import { MAX_ROOM_CAPACITY } from "../src/constant/room_constant";
 import { RoomJoiner } from "../src/model/RoomJoiner";
 import { BlockedUser } from "../src/model/BlockedUser";
+import { Peer } from "../src/model/Peer";
 
 describe("RoomService.joinRoom", () => {
   it("should return undefined when there is no room", async () => {
     // given
     const mockSocket: Socket = mock();
+    const peer = new Peer("uid", instance(mockSocket), "name", false);
 
     // when
-    const router = await roomService.joinRoom("roomId", "uid", "roomName", instance(mockSocket));
+    const router = await roomService.joinRoom("roomId", peer);
 
     // then
     expect(router).toBeUndefined();
@@ -29,9 +31,10 @@ describe("RoomService.joinRoom", () => {
     const roomRepository = new RoomRepository();
     await roomRepository.createAndJoin("socketId", mock(), room.id, mock());
     const roomService = new RoomService(roomRepository);
+    const peer = new Peer("uid", instance(mockSocket), "name", false);
 
     // when
-    const router = await roomService.joinRoom(room.id, "uid", "roomName", instance(mockSocket));
+    const router = await roomService.joinRoom(room.id, peer);
 
     // then
     expect(router).toBeDefined();
