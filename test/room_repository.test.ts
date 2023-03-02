@@ -68,7 +68,7 @@ describe("findPeerBy", () => {
     const socketId = "id";
     const mockSocket: Socket = mock();
     when(mockSocket.id).thenReturn(socketId);
-    const peer = new Peer("uid", instance(mockSocket), "name");
+    const peer = new Peer("uid", instance(mockSocket), "name", false);
     const repository = new RoomRepository();
     mockPrisma.room.findUnique.mockResolvedValue(fakeRoomEntity);
     mockPrisma.block.findMany.mockResolvedValue([]);

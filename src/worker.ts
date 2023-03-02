@@ -12,6 +12,7 @@ import { WaitingRoomData } from "./model/WaitingRoomData";
 import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallbackProperty.js";
 import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
 import { getUserBy } from "./repository/user_repository.js";
+import { Peer } from "./model/Peer.js";
 
 /**
  * Worker
@@ -71,7 +72,11 @@ export const handleConnect = async (socket: Socket) => {
   socket.on(
     protocol.JOIN_ROOM,
     async (
-      { userId, roomPasswordInput }: { userId: string, roomPasswordInput: string },
+      {
+        userId,
+        mutedHeadset,
+        roomPasswordInput
+      }: { userId: string, mutedHeadset: boolean, roomPasswordInput: string },
       callback: (
         data: JoinRoomSuccessCallbackProperty | JoinRoomFailureCallbackProperty
       ) => void
@@ -90,9 +95,10 @@ export const handleConnect = async (socket: Socket) => {
         throw Error("DB에서 회원 정보를 찾지 못했습니다.");
       }
       console.log("JOIN ROOM:", roomIdToJoin);
-      let room = await roomService.joinRoom(roomIdToJoin, userId, user.name, socket);
+      const peer = new Peer(userId, socket, user.name, mutedHeadset);
+      let room = await roomService.joinRoom(roomIdToJoin, peer, socket);
       if (room === undefined) {
-        room = await roomService.createAndJoinRoom(roomIdToJoin, userId, user.name, socket, worker);
+        room = await roomService.createAndJoinRoom(roomIdToJoin, peer, socket, worker);
       }
 
       const rtpCapabilities = room.router.rtpCapabilities;
