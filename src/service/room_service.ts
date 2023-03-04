@@ -117,6 +117,7 @@ export class RoomService {
       OTHER_PEER_JOINED_ROOM,
       { id: peer.uid, name: peer.name } as RoomJoiner
     );
+    await this.broadcastPeerStateChanged(peer.socketId)
     await createStudyHistory(room.id, peer.uid);
     return room;
   };
@@ -135,6 +136,7 @@ export class RoomService {
       { id: peer.uid, name: peer.name } as RoomJoiner
     );
     const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, peer);
+    await this.broadcastPeerStateChanged(peer.socketId)
     await createStudyHistory(roomId, peer.uid);
     return room;
   };
