@@ -58,7 +58,7 @@ abstract class PomodoroTimerObservable {
 }
 
 export class PomodoroTimer extends PomodoroTimerObservable {
-  private _startedAt?: Date;
+  private _eventDate?: Date;
   private _timeout?: NodeJS.Timeout;
   private _shortBreakCount: number = 0;
   private _state = PomodoroTimerState.STOPPED;
@@ -73,8 +73,8 @@ export class PomodoroTimer extends PomodoroTimerObservable {
     return this._state;
   }
 
-  public get startedDate(): Date | undefined {
-    return this._startedAt;
+  public get eventDate(): Date | undefined {
+    return this._eventDate;
   }
 
   public get property(): PomodoroTimerProperty {
@@ -85,13 +85,17 @@ export class PomodoroTimer extends PomodoroTimerObservable {
     if (this._timeout != null) {
       return false;
     }
-    this._startedAt = convertToKoreaDate(new Date());
     this._startFocusTimer();
     return true;
   };
 
+  private _updateEventDate = () => {
+    this._eventDate = convertToKoreaDate(new Date());
+  }
+
   private _startFocusTimer = () => {
     this._state = PomodoroTimerState.STARTED;
+    this._updateEventDate();
     super.notifyTimerStarted();
     this._timeout = this._setTimeoutInMinutes(this._property.timerLengthMinutes, () => {
       if (this._shortBreakCount === this._property.longBreakInterval - 1) {
@@ -106,6 +110,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
 
   private _startShortBreakTimer = () => {
     this._state = PomodoroTimerState.SHORT_BREAK;
+    this._updateEventDate();
     super.notifyShortBreakStarted();
     this._timeout = this._setTimeoutInMinutes(this._property.shortBreakMinutes, () => {
       this._startFocusTimer();
@@ -114,6 +119,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
 
   private _startLongBreakTimer = () => {
     this._state = PomodoroTimerState.LONG_BREAK;
+    this._updateEventDate();
     super.notifyLongBreakStarted();
     this._timeout = this._setTimeoutInMinutes(this._property.longBreakMinutes, () => {
       this._startFocusTimer();
@@ -152,6 +158,7 @@ export class PomodoroTimer extends PomodoroTimerObservable {
       clearTimeout(this._timeout);
       this._timeout = undefined;
     }
+    this._eventDate = undefined;
     this._state = PomodoroTimerState.STOPPED;
   };
 

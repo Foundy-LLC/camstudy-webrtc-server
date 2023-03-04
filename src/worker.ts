@@ -107,7 +107,7 @@ export const handleConnect = async (socket: Socket) => {
         rtpCapabilities,
         peerStates: room.getPeerStates(),
         // ex: 2023-02-05T11:48:59.636Z
-        timerStartedDate: room.timerStartedDate?.toISOString(),
+        timerStartedDate: room.timerEventDate?.toISOString(),
         timerState: room.timerState,
         timerProperty: room.timerProperty
       });
