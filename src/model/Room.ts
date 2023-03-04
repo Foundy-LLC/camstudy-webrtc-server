@@ -185,7 +185,10 @@ export class Room {
   };
 
   public startTimer = (observer: PomodoroTimerObserver) => {
-    this._pomodoroTimer.start();
+    const didStart = this._pomodoroTimer.start();
+    if (!didStart) {
+      return;
+    }
     this._pomodoroTimer.addObserver(observer);
     this.broadcastProtocol({ protocol: START_TIMER });
   };

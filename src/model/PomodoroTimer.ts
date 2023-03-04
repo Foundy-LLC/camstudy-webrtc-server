@@ -81,12 +81,13 @@ export class PomodoroTimer extends PomodoroTimerObservable {
     return this._property;
   }
 
-  public start = () => {
+  public start = (): boolean => {
     if (this._timeout != null) {
-      return;
+      return false;
     }
     this._startedAt = convertToKoreaDate(new Date());
     this._startFocusTimer();
+    return true;
   };
 
   private _startFocusTimer = () => {
