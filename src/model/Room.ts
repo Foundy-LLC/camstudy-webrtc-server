@@ -70,8 +70,8 @@ export class Room {
     return this._pomodoroTimer.state;
   }
 
-  public get timerStartedDate(): Date | undefined {
-    return this._pomodoroTimer.startedDate;
+  public get timerEventDate(): Date | undefined {
+    return this._pomodoroTimer.eventDate;
   }
 
   public get timerProperty(): PomodoroTimerProperty {
@@ -185,7 +185,10 @@ export class Room {
   };
 
   public startTimer = (observer: PomodoroTimerObserver) => {
-    this._pomodoroTimer.start();
+    const didStart = this._pomodoroTimer.start();
+    if (!didStart) {
+      return;
+    }
     this._pomodoroTimer.addObserver(observer);
     this.broadcastProtocol({ protocol: START_TIMER });
   };
