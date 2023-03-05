@@ -159,10 +159,7 @@ export const handleConnect = async (socket: Socket) => {
   // see client's socket.emit('transport-produce', ...)
   socket.on(
     protocol.TRANSPORT_PRODUCER,
-    async (
-      options: ProducerOptions,
-      callback: (id: string, producersExists: boolean) => void
-    ) => {
+    async (options: ProducerOptions) => {
       const producer = await roomService.createProducer(socket.id, options);
       if (producer === undefined) {
         return;
@@ -170,11 +167,6 @@ export const handleConnect = async (socket: Socket) => {
       roomService.informConsumersNewProducerAppeared(socket.id, producer.id);
 
       console.log("Producer ID: ", producer.id, producer.kind);
-      // Send back to the client the Producer's id
-      callback(
-        producer.id,
-        roomService.isProducerExists(socket.id)
-      );
 
       producer.on("transportclose", () => {
         console.log("transport for this producer closed ");
