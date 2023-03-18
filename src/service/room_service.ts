@@ -19,6 +19,7 @@ import { Peer } from "../model/Peer.js";
 import {
   blockUser,
   createStudyHistory,
+  findRoomFromDB,
   RoomRepository,
   unblockUser,
   updateExitAtOfStudyHistory
@@ -45,7 +46,11 @@ export class RoomService {
   ) {
   }
 
-  joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData> => {
+  joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {
+    const exists = (await findRoomFromDB(roomId)) != null
+    if (!exists) {
+      return undefined;
+    }
     const joinerList = this._roomRepository.getJoinerList(roomId);
     const capacity = MAX_ROOM_CAPACITY;
     const masterId = await this._roomRepository.getMasterId(roomId);
