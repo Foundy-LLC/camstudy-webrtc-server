@@ -16,14 +16,7 @@ import {
   START_TIMER
 } from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
-import {
-  blockUser,
-  createStudyHistory,
-  findRoomFromDB,
-  RoomRepository,
-  unblockUser,
-  updateExitAtOfStudyHistory
-} from "../repository/room_repository.js";
+import { blockUser, RoomRepository, unblockUser, updateExitAtOfStudyHistory } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
@@ -37,6 +30,7 @@ import { MAX_ROOM_CAPACITY } from "../constant/room_constant.js";
 import { WaitingRoomData } from "../model/WaitingRoomData.js";
 import { WaitingRoomRepository } from "../repository/waiting_room_repository.js";
 import { RoomJoiner } from "../model/RoomJoiner.js";
+import { BlockedUser } from "../model/BlockedUser";
 
 export class RoomService {
 
@@ -47,15 +41,11 @@ export class RoomService {
   }
 
   joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {
-    const exists = (await findRoomFromDB(roomId)) != null
-    if (!exists) {
-      return undefined;
-    }
-    const joinerList = this._roomRepository.getJoinerList(roomId);
+    const joinerList: RoomJoiner[] = [];
     const capacity = MAX_ROOM_CAPACITY;
-    const masterId = await this._roomRepository.getMasterId(roomId);
-    const blacklist = await this._roomRepository.getBlacklist(roomId);
-    const hasPassword = await this._roomRepository.getPassword(roomId) != null;
+    const masterId = "1234";
+    const blacklist: BlockedUser[] = [];
+    const hasPassword = false;
 
     this._waitingRoomRepository.join(roomId, socket);
 
@@ -74,29 +64,6 @@ export class RoomService {
     roomId: string,
     roomPasswordInput: string
   ): Promise<{ canJoin: boolean, message: string }> => {
-    const joinerList = this._roomRepository.getJoinerList(roomId);
-    const capacity = MAX_ROOM_CAPACITY;
-    const masterId = await this._roomRepository.getMasterId(roomId);
-    if (masterId !== userId && capacity <= joinerList.length) {
-      return {
-        canJoin: false,
-        message: "방 인원이 가득 차서 입장할 수 없습니다."
-      };
-    }
-    const blacklist = await this._roomRepository.getBlacklist(roomId);
-    if (blacklist.some((user) => user.id === userId)) {
-      return {
-        canJoin: false,
-        message: "방 접근이 차단되에 입장할 수 없습니다."
-      };
-    }
-    const password = await this._roomRepository.getPassword(roomId);
-    if (password !== undefined && password !== roomPasswordInput) {
-      return {
-        canJoin: false,
-        message: "방 비밀번호가 일치하지 않습니다."
-      };
-    }
     return {
       canJoin: true,
       message: ""
@@ -110,7 +77,7 @@ export class RoomService {
    */
   joinRoom = async (
     roomId: string,
-    peer: Peer,
+    peer: Peer
   ): Promise<Room | undefined> => {
     const room = this._roomRepository.join(roomId, peer);
     if (room === undefined) {
@@ -122,7 +89,6 @@ export class RoomService {
       OTHER_PEER_JOINED_ROOM,
       { id: peer.uid, name: peer.name } as RoomJoiner
     );
-    await createStudyHistory(room.id, peer.uid);
     return room;
   };
 
@@ -139,9 +105,7 @@ export class RoomService {
       OTHER_PEER_JOINED_ROOM,
       { id: peer.uid, name: peer.name } as RoomJoiner
     );
-    const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, peer);
-    await createStudyHistory(roomId, peer.uid);
-    return room;
+    return await this._roomRepository.createAndJoin(socket.id, router, roomId, peer);
   };
 
   disconnect = async (socketId: string) => {

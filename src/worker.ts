@@ -13,6 +13,7 @@ import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallback
 import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
 import { getUserBy } from "./repository/user_repository.js";
 import { Peer } from "./model/Peer.js";
+import { User } from "./model/User";
 
 /**
  * Worker
@@ -90,12 +91,8 @@ export const handleConnect = async (socket: Socket) => {
         callback({ message: canJoinRoomResult.message, type: "failure" });
         return;
       }
-      const user = await getUserBy(userId);
-      if (user == null) {
-        throw Error("DB에서 회원 정보를 찾지 못했습니다.");
-      }
       console.log("JOIN ROOM:", roomIdToJoin);
-      const peer = new Peer(userId, socket, user.name, mutedHeadset);
+      const peer = new Peer(userId, socket, userId, mutedHeadset);
       let room = await roomService.joinRoom(roomIdToJoin, peer);
       if (room === undefined) {
         room = await roomService.createAndJoinRoom(roomIdToJoin, peer, socket, worker);
