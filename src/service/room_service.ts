@@ -47,7 +47,7 @@ export class RoomService {
   }
 
   joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {
-    const exists = (await findRoomFromDB(roomId)) != null
+    const exists = (await findRoomFromDB(roomId)) != null;
     if (!exists) {
       return undefined;
     }
@@ -110,7 +110,7 @@ export class RoomService {
    */
   joinRoom = async (
     roomId: string,
-    peer: Peer,
+    peer: Peer
   ): Promise<Room | undefined> => {
     const room = this._roomRepository.join(roomId, peer);
     if (room === undefined) {
@@ -553,7 +553,7 @@ const createWebRtcTransport = async (
       const webRtcTransport_options = {
         listenIps: [
           {
-            ip: protocol.IP_ADDRESS,
+            ip: "0.0.0.0",
             announcedIp: protocol.IP_ADDRESS
           }
         ],
