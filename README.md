@@ -10,14 +10,18 @@
 - IP_ADDRESS
 - PORT
 
-## 2. 의존성 설치
+## 2. 도커 이미지 생성 or 허브에서 받기
 
 ```console
-npm install
+docker build -t camstudy-media-server:{x.y.z} .
 ```
 
-## 3. 실행
+or
+
+도커 허브에서 이미지 받기
+
+## 3. 도커 컨테이너 실행
 
 ```console
-npm run start
+docker run -d -p 2000:2000 camstudy-media-server:0.0.1
 ```
