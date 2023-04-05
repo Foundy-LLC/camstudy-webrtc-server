@@ -2,7 +2,7 @@ name: Docker CI/CD script
 
 on:
 #  TODO: Remove below 3 lines when merge into main!!
-  pull-request:
+  pull_request:
     branches:
       - main
   push:
