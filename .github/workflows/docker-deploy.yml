@@ -41,4 +41,4 @@ jobs:
         with:
           push: true
           file: ./dockerfile
-          tags: foundy/media-server:latest
+          tags: jja08111/camstudy:latest
