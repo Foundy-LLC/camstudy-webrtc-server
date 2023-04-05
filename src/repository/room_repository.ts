@@ -136,6 +136,38 @@ export const unblockUser = async (
   });
 };
 
+export const startRoomIgnition = async (roomId: string) => {
+  await prisma.room_ignition.create({
+    data: {
+      id: roomId,
+      start_datetime: new Date()
+    }
+  });
+};
+
+export const finishRoomIgnition = async (roomId: string) => {
+  await prisma.$transaction(async (tx) => {
+    const ignition = await tx.room_ignition.findFirst({
+      where: {
+        end_datetime: null
+      }
+    });
+    if (ignition != null) {
+      await tx.room_ignition.update({
+        where: {
+          id_start_datetime: {
+            id: ignition.id,
+            start_datetime: ignition.start_datetime
+          }
+        },
+        data: {
+          end_datetime: new Date()
+        }
+      });
+    }
+  });
+};
+
 export class RoomRepository {
 
   private readonly _roomById = new Map<string, Room>();
