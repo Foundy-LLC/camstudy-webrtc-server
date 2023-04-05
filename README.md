@@ -23,5 +23,5 @@ or
 ## 3. 도커 컨테이너 실행
 
 ```console
-docker run -d -p 2000:2000 camstudy-media-server:0.0.1
+docker run -d -p 2000-2020:2000-2020 camstudy-media-server:0.0.1
 ```
