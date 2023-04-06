@@ -3,10 +3,6 @@ RUN apt-get -y update
 RUN apt-get -y install python3
 RUN apt-get -y install python3-pip
 
-ENV DATABASE_URL=$DATABASE_URL \
-    IP_ADDRESS=$IP_ADDRESS \
-    PORT=$PORT
-
 WORKDIR /usr/src/app
 
 COPY ./ ./

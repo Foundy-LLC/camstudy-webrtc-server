@@ -33,15 +33,24 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+#          TODO: REMOVE THIS!!
+      - name: Debugging1
+        run: ls -al
+
+      - name: Access ENV
+        run: echo '${{ secrets.ENV }}' > ./.env
+
+
+          #          TODO: REMOVE THIS!!
+      - name: Debugging2
+        run: ls -al
+
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: true
           file: ./dockerfile
-          build-args: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            IP_ADDRESS=${{ secrets.AWS_SSH_IP_ADDRESS }}
-            PORT=${{ secrets.PORT }}
           tags: jja08111/camstudy-media-server:latest
       - name: Deploy to server
         uses: appleboy/ssh-action@master
