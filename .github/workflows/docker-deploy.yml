@@ -42,6 +42,10 @@ jobs:
           push: true
           file: ./dockerfile
           tags: jja08111/camstudy-media-server:latest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          IP_ADDRESS: ${{ secrets.AWS_SSH_IP_ADDRESS }}
+          PORT: ${{ secrets.PORT }}
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
