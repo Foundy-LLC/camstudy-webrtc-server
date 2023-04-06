@@ -41,4 +41,20 @@ jobs:
         with:
           push: true
           file: ./dockerfile
-          tags: jja08111/camstudy:latest
+          tags: jja08111/camstudy-media-server:latest
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_SSH_IP_ADDRESS }}
+          username: ${{ secrets.AWS_SSH_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          debug: true
+          port: 22
+          script: |
+            cd ~/camstudy-webrtc-server
+            sudo docker login
+            sudo docker pull jja08111/camstudy-media-server:latest
+            sudo docker stop camstudy_media_server
+            sudo docker rm camstudy_media_server
+            sudo docker run -d --name camstudy_media_server -p 2000-2020:2000-2020 jja08111/camstudy-media-server:latest
+            echo "success";
