@@ -4,15 +4,13 @@ ARG DATABASE_URL
 ARG IP_ADDRESS
 ARG PORT
 
-RUN apt-get -y update
-RUN apt-get -y install python3
-RUN apt-get -y install python3-pip
-
 ENV DATABASE_URL=$DATABASE_URL \
     IP_ADDRESS=$IP_ADDRESS \
     PORT=$PORT
 
-RUN echo $PORT
+RUN apt-get -y update
+RUN apt-get -y install python3
+RUN apt-get -y install python3-pip
 
 WORKDIR /usr/src/app
 
