@@ -31,31 +31,23 @@ model crops {
   id           String       @db.VarChar(100)
   user_id      String       @db.VarChar(100)
   type         crops_type
-  planted_at   DateTime     @db.Timestamp(6)
+  planted_at   DateTime     @db.Timestamptz(6)
+  harvested_at DateTime?    @db.Timestamptz(6)
+  grade        fruit_grade?
   user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_crops_1")
 
   @@id([id, user_id], map: "pk_crops")
 }
 
 model friend {
-  id                                             String       @id(map: "pk_friend") @db.VarChar(100)
   requester_id                                   String       @db.VarChar(100)
   acceptor_id                                    String       @db.VarChar(100)
   accepted                                       Boolean
   requested_at                                   DateTime     @db.Timestamp(6)
   user_account_friend_acceptor_idTouser_account  user_account @relation("friend_acceptor_idTouser_account", fields: [acceptor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_user_account_1")
   user_account_friend_requester_idTouser_account user_account @relation("friend_requester_idTouser_account", fields: [requester_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_friend_user_account_2")
-}
 
-model harvested_crops {
-  id           String       @db.VarChar(100)
-  user_id      String       @db.VarChar(100)
-  type         crops_type
-  harvested_at DateTime     @db.Timestamp(6)
-  grade        crops_type
-  user_account user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_account_to_harvested_crops_1")
-
-  @@id([id, user_id], map: "pk_harvested_crops")
+  @@id([requester_id, acceptor_id], map: "pk_friend")
 }
 
 model organization {
@@ -73,7 +65,10 @@ model report {
   content                                       String          @db.VarChar(500)
   reported_at                                   DateTime        @db.Timestamp(6)
   screenshot                                    String?         @db.VarChar(500)
+  accepted                                      Boolean?
+  room_id                                       String          @db.VarChar(100)
   user_account_report_reporter_idTouser_account user_account    @relation("report_reporter_idTouser_account", fields: [reporter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "report_reporter_id__fk")
+  room                                          room            @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "report_room_id__fk")
   user_account_report_suspect_idTouser_account  user_account    @relation("report_suspect_idTouser_account", fields: [suspect_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "report_suspect_id__fk")
 }
 
@@ -90,7 +85,9 @@ model room {
   expired_at          DateTime        @db.Timestamp(6)
   deleted_at          DateTime?       @db.Timestamp(6)
   block               block[]
+  report              report[]
   user_account        user_account    @relation(fields: [master_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_master_id__fk")
+  room_ignition       room_ignition[]
   room_tag            room_tag[]
   study_history       study_history[]
 }
@@ -124,22 +121,22 @@ model tag {
 }
 
 model user_account {
-  id                                       String            @id(map: "pk_user_account") @db.VarChar(100)
-  name                                     String            @db.VarChar(20)
-  introduce                                String?           @db.VarChar(100)
+  id                                       String          @id(map: "pk_user_account") @db.VarChar(100)
+  name                                     String          @db.VarChar(20)
+  introduce                                String?         @db.VarChar(100)
   score                                    BigInt
-  profile_image                            String?           @db.VarChar(255)
+  profile_image                            String?         @db.VarChar(255)
   status                                   user_status
   belong                                   belong[]
   block                                    block[]
   crops                                    crops[]
-  friend_friend_acceptor_idTouser_account  friend[]          @relation("friend_acceptor_idTouser_account")
-  friend_friend_requester_idTouser_account friend[]          @relation("friend_requester_idTouser_account")
-  harvested_crops                          harvested_crops[]
-  report_report_reporter_idTouser_account  report[]          @relation("report_reporter_idTouser_account")
-  report_report_suspect_idTouser_account   report[]          @relation("report_suspect_idTouser_account")
+  friend_friend_acceptor_idTouser_account  friend[]        @relation("friend_acceptor_idTouser_account")
+  friend_friend_requester_idTouser_account friend[]        @relation("friend_requester_idTouser_account")
+  report_report_reporter_idTouser_account  report[]        @relation("report_reporter_idTouser_account")
+  report_report_suspect_idTouser_account   report[]        @relation("report_suspect_idTouser_account")
   room                                     room[]
   study_history                            study_history[]
+  user_ranking                             user_ranking?
   user_tag                                 user_tag[]
 }
 
@@ -152,11 +149,29 @@ model user_tag {
   @@id([tag_id, user_id], map: "pk_user_tag")
 }
 
+model room_ignition {
+  id             String    @db.VarChar(100)
+  start_datetime DateTime  @db.Timestamp(6)
+  end_datetime   DateTime? @db.Timestamp(6)
+  room           room      @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, start_datetime], map: "room_ignition_pk")
+}
+
+model user_ranking {
+  user_id           String       @id(map: "user_ranking_pk") @db.VarChar(100)
+  weekly_study_time BigInt
+  total_study_time  BigInt
+  weekly_score      BigInt
+  total_score       BigInt
+  user_account      user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
 enum crops_type {
   strawberry
   tomato
   carrot
-  pumkin
+  pumpkin
   cabbage
 }
 
