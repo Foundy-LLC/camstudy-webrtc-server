@@ -7,6 +7,8 @@ ENV DATABASE_URL=$DATABASE_URL \
     IP_ADDRESS=$IP_ADDRESS \
     PORT=$PORT
 
+RUN echo $PORT
+
 WORKDIR /usr/src/app
 
 COPY ./ ./
