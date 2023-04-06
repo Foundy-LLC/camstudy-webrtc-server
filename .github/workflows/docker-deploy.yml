@@ -54,8 +54,9 @@ jobs:
           script: |
             cd ~/camstudy-webrtc-server
             sudo docker login
-            sudo docker pull jja08111/camstudy-media-server:latest
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
             sudo docker stop camstudy_media_server
             sudo docker rm camstudy_media_server
-            sudo docker run -d --name camstudy_media_server -p 2000-2020:2000-2020 jja08111/camstudy-media-server:latest
+            sudo docker run -d --name camstudy_media_server -p 2000-2020:2000-2020 ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
+            sudo docker image prune -a -f
             echo "success";
