@@ -2,6 +2,9 @@ name: Build Application
 
 # Controls when the action will run.
 on:
+  push:
+    branches:
+      - dev
   pull_request:
     branches:
       - main
