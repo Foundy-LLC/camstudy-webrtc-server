@@ -27,7 +27,7 @@ let worker: Worker;
 const createWorker = async (): Promise<Worker> => {
   worker = await mediasoup.createWorker({
     rtcMinPort: 2000,
-    rtcMaxPort: 2020
+    rtcMaxPort: 3600
   });
   console.log(`worker pid ${worker.pid}`);
 
