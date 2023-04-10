@@ -25,3 +25,11 @@ or
 ```console
 docker run -d -p 2000-2020:2000-2020 camstudy-media-server:0.0.1
 ```
+
+# Port 번호 바꿀 때
+
+아래의 모든 항목을 수정해주세요.(나중에 환경변수로 한꺼번에 바꿀수 있도록 하겠습니다.)
+
+- `./.github/workflows/docker-deploy.yml`
+- `./src/worker.ts`의 `rtcMaxPort`
+- `./dockerfile`의 EXPOSE
