@@ -16,7 +16,7 @@ import {
   START_TIMER
 } from "../constant/protocol.js";
 import { Peer } from "../model/Peer.js";
-import { blockUser, RoomRepository, unblockUser, updateExitAtOfStudyHistory } from "../repository/room_repository.js";
+import { blockUser, RoomRepository, unblockUser } from "../repository/room_repository.js";
 import { DtlsParameters, WebRtcTransport } from "mediasoup/node/lib/WebRtcTransport";
 import { ProducerOptions } from "mediasoup/node/lib/Producer";
 import { Transport } from "mediasoup/node/lib/Transport";
@@ -134,8 +134,6 @@ export class RoomService {
       OTHER_PEER_EXITED_ROOM,
       disposedPeer.uid
     );
-
-    await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
   };
 
   createTransport = async (
@@ -517,7 +515,7 @@ const createWebRtcTransport = async (
       const webRtcTransport_options = {
         listenIps: [
           {
-            ip: protocol.IP_ADDRESS,
+            ip: "0.0.0.0",
             announcedIp: protocol.IP_ADDRESS
           }
         ],

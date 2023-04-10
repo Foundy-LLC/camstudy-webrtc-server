@@ -66,6 +66,10 @@ export class Room {
     return this._peers.length > 0;
   }
 
+  public get peerCount(): number {
+    return this._peers.length
+  }
+
   public get timerState(): PomodoroTimerState {
     return this._pomodoroTimer.state;
   }

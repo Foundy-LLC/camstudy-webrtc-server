@@ -14,6 +14,7 @@
   "dependencies": {
     "@prisma/client": "^4.9.0",
     "date": "^2.0.2",
+    "dotenv": "^16.0.3",
     "express": "^4.17.1",
     "httpolyglot": "^0.1.2",
     "mediasoup": "^3.8.3",

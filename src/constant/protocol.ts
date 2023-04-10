@@ -1,9 +1,13 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
-const IP_ADDRESS = "192.168.219.102";
+const IP_ADDRESS: string = process.env.IP_ADDRESS!;
 
-const PORT = 2000;
+const PORT: number = parseInt(process.env.PORT!);
 
 /**
  * 소켓의 네임 스페이스이다.
@@ -130,7 +134,7 @@ const HIDE_REMOTE_VIDEO = "close-video";
  *
  * 클라이언트가 서버에게 전달한다.
  */
-const SHOW_REMOTE_VIDEO = "show-video"
+const SHOW_REMOTE_VIDEO = "show-video";
 
 /**
  * 오디오를 수신하지 않기 위해 모든 오디오 생산자를 끊는 프로토콜이다.
