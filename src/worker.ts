@@ -13,6 +13,9 @@ import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallback
 import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
 import { getUserBy } from "./repository/user_repository.js";
 import { Peer } from "./model/Peer.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 /**
  * Worker
@@ -26,8 +29,8 @@ let worker: Worker;
 
 const createWorker = async (): Promise<Worker> => {
   worker = await mediasoup.createWorker({
-    rtcMinPort: 4000,
-    rtcMaxPort: 4128
+    rtcMinPort: parseInt(process.env.RTC_MIN_PORT!),
+    rtcMaxPort: parseInt(process.env.RTC_MAX_PORT!)
   });
   console.log(`worker pid ${worker.pid}`);
 
