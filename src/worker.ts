@@ -11,9 +11,10 @@ import { PomodoroTimerProperty } from "./model/PomodoroTimer";
 import { WaitingRoomData } from "./model/WaitingRoomData";
 import { JoinRoomSuccessCallbackProperty } from "./model/JoinRoomSuccessCallbackProperty.js";
 import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallbackProperty.js";
-import { getUserBy } from "./repository/user_repository.js";
 import { Peer } from "./model/Peer.js";
-import { User } from "./model/User";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 /**
  * Worker
@@ -27,8 +28,8 @@ let worker: Worker;
 
 const createWorker = async (): Promise<Worker> => {
   worker = await mediasoup.createWorker({
-    rtcMinPort: 2000,
-    rtcMaxPort: 3600
+    rtcMinPort: parseInt(process.env.RTC_MIN_PORT!),
+    rtcMaxPort: parseInt(process.env.RTC_MAX_PORT!)
   });
   console.log(`worker pid ${worker.pid}`);
 

@@ -39,6 +39,8 @@ jobs:
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             IP_ADDRESS=${{ secrets.AWS_SSH_IP_ADDRESS }}
             PORT=${{ secrets.PORT }}
+            RTC_MIN_PORT=${{ secrets.RTC_MIN_PORT }}
+            RTC_MAX_PORT=${{ secrets.RTC_MAX_PORT }}
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
@@ -53,7 +55,9 @@ jobs:
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
             sudo docker stop camstudy_media_server
             sudo docker rm camstudy_media_server
-            sudo docker run -d --name camstudy_media_server -p 2000-2020:2000-2020 -p 3000:3000 \
+            sudo docker run -d --name camstudy_media_server \
+              -p ${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }}:${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }} 
+              -p 3000:3000 \
               ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
             sudo docker image prune -a -f
             echo "success";
