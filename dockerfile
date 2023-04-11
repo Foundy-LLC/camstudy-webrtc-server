@@ -19,6 +19,6 @@ COPY ./ ./
 RUN npm install
 
 EXPOSE 3000
-EXPOSE 4000-4080
+EXPOSE 4000-4128
 
 CMD ["npm", "run", "start"]
