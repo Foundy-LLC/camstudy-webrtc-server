@@ -178,6 +178,18 @@ export class RoomRepository {
     this._roomIdBySocketId.set(socketId, room.id);
   };
 
+  public countRooms = (): number => {
+    return [...this._roomById.keys()].length;
+  };
+
+  public countPeers = (): number => {
+    let result = 0;
+    this._roomById.forEach((room) => {
+      result += room.peerCount;
+    });
+    return result;
+  };
+
   public createAndJoin = async (
     socketId: string,
     router: Router,

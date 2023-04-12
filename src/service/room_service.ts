@@ -40,6 +40,14 @@ export class RoomService {
   ) {
   }
 
+  countRooms = (): number => {
+    return this._roomRepository.countRooms()
+  }
+
+  countPeers = (): number => {
+    return this._roomRepository.countPeers()
+  }
+
   joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {
     const joinerList: RoomJoiner[] = [];
     const capacity = MAX_ROOM_CAPACITY;
