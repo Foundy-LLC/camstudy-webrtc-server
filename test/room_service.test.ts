@@ -13,7 +13,7 @@ describe("RoomService.joinRoom", () => {
   it("should return undefined when there is no room", async () => {
     // given
     const mockSocket: Socket = mock();
-    const peer = new Peer("uid", instance(mockSocket), "name", false);
+    const peer = new Peer("uid", instance(mockSocket), "name", null, false);
 
     // when
     const router = await roomService.joinRoom("roomId", peer);
@@ -31,7 +31,7 @@ describe("RoomService.joinRoom", () => {
     const roomRepository = new RoomRepository();
     await roomRepository.createAndJoin("socketId", mock(), room.id, mock());
     const roomService = new RoomService(roomRepository);
-    const peer = new Peer("uid", instance(mockSocket), "name", false);
+    const peer = new Peer("uid", instance(mockSocket), "name", null, false);
 
     // when
     const router = await roomService.joinRoom(room.id, peer);
