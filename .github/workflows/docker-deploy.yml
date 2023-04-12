@@ -56,7 +56,7 @@ jobs:
             sudo docker stop camstudy_media_server
             sudo docker rm camstudy_media_server
             sudo docker run -d --name camstudy_media_server \
-              -p ${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }}:${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }} \ 
+              -p ${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }}:${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }} \
               -p 3000:3000 \
               ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
             sudo docker image prune -a -f
