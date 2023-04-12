@@ -120,7 +120,7 @@ export class RoomService {
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
-      { id: peer.uid, name: peer.name } as RoomJoiner
+      { id: peer.uid, name: peer.name, profileImage: peer.profileImage } as RoomJoiner
     );
     await createStudyHistory(room.id, peer.uid);
     await this._startRoomIgnitionIfPossible(room);
@@ -138,7 +138,7 @@ export class RoomService {
     this._waitingRoomRepository.notifyOthers(
       roomId,
       OTHER_PEER_JOINED_ROOM,
-      { id: peer.uid, name: peer.name } as RoomJoiner
+      { id: peer.uid, name: peer.name, profileImage: peer.profileImage } as RoomJoiner
     );
     const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, peer);
     await createStudyHistory(roomId, peer.uid);

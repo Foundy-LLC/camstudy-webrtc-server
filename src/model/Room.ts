@@ -164,7 +164,8 @@ export class Room {
     return this._peers.map((peer) => {
       return {
         id: peer.uid,
-        name: peer.name
+        name: peer.name,
+        profileImage: peer.profileImage
       };
     });
   };

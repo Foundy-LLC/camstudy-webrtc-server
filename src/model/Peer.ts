@@ -15,6 +15,7 @@ export class Peer {
     private readonly _uid: string,
     private readonly _socket: Socket,
     private readonly _name: string,
+    private readonly _profileImage: string | null,
     private _mutedHeadset: boolean
   ) {
   }
@@ -29,6 +30,10 @@ export class Peer {
 
   public get name(): string {
     return this._name;
+  }
+
+  public get profileImage(): string | null {
+    return this._profileImage;
   }
 
   public get state(): PeerState {

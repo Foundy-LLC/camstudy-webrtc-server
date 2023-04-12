@@ -2,4 +2,5 @@
 export interface RoomJoiner {
   readonly id: string;
   readonly name: string;
+  readonly profileImage: string | null;
 }
