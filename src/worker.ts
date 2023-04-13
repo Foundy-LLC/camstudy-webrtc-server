@@ -52,15 +52,6 @@ export const handleConnect = async (socket: Socket) => {
 
   console.log(socket.id);
 
-  setInterval(() => {
-    console.log(`
-============================================================================
-Room count: ${roomService.countRooms()}
-User count: ${roomService.countPeers()}
-============================================================================
-    `.trim());
-  }, 5000);
-
   socket.emit(protocol.CONNECTION_SUCCESS, {
     socketId: socket.id
   });

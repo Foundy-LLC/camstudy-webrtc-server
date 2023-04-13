@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import { handleConnect } from "./worker.js";
 import { tlsconfig } from "./constant/config.js";
 import * as protocol from "./constant/protocol.js";
+import { roomService } from "./service/room_service.js";
 
 const app = express();
 
@@ -30,6 +31,15 @@ const io = new Server(httpsServer, {
   }
 });
 
+setInterval(() => {
+  console.log(`
+============================================================================
+Server datetime: ${new Date()}
+Room count: ${roomService.countRooms()}
+User count: ${roomService.countPeers()}
+============================================================================
+    `.trim());
+}, 5000);
 
 // socket.io namespace (could represent a room?)
 const connections = io.of(protocol.NAME_SPACE);
