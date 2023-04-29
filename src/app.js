@@ -33,8 +33,13 @@ const server = new Server(httpsServer, {
 });
 
 const routingServerSocket = io(routingServerProtocol.ROUTING_SERVER_URL);
-routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, mediaServerRegisterRequest, () => {
-  console.log("Registered to the Routing server successfully.");
+routingServerSocket.on("connect", () => {
+  routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, mediaServerRegisterRequest, () => {
+    console.log("Registered to the Routing server successfully.");
+  });
+});
+routingServerSocket.on("disconnect", () => {
+  // TODO(민성): 라우팅 서버가 죽는 경우 예외처리를 고민해봐야함
 });
 
 const connections = server.of(protocol.NAME_SPACE);
