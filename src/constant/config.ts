@@ -1,4 +1,7 @@
 import {RtpCodecCapability} from "mediasoup/node/lib/RtpParameters";
+import { MediaServerRegisterRequest } from "../model/MediaServerRegisterRequest.js";
+import * as protocol from "./protocol.js";
+import { MAX_ROOM_CAPACITY } from "./room_constant.js";
 
 // SSL cert for HTTPS access
 export const tlsconfig = {
@@ -27,3 +30,9 @@ export const mediaCodecs: RtpCodecCapability[] = [
         },
     },
 ];
+
+export const mediaServerRegisterRequest: MediaServerRegisterRequest = {
+    ip: protocol.IP_ADDRESS,
+    port: protocol.PORT,
+    maxRoomCapacity: MAX_ROOM_CAPACITY
+}

@@ -1,5 +1,6 @@
 import mediasoup from "mediasoup";
 import * as protocol from "./constant/protocol.js";
+import * as routingServerProtocol from "./constant/routing_server_protocol.js";
 import { Worker } from "mediasoup/node/lib/Worker.js";
 import { Socket } from "socket.io";
 import { ProducerOptions } from "mediasoup/node/lib/Producer.js";
@@ -14,6 +15,7 @@ import { JoinRoomFailureCallbackProperty } from "./model/JoinRoomFailureCallback
 import { getUserBy } from "./repository/user_repository.js";
 import { Peer } from "./model/Peer.js";
 import dotenv from "dotenv";
+import * as socketClient from "socket.io-client";
 
 dotenv.config();
 
@@ -48,7 +50,7 @@ createWorker().then((value) => {
   worker = value;
 });
 
-export const handleConnect = async (socket: Socket) => {
+export const handleConnect = async (socket: Socket, routingServerSocket: socketClient.Socket) => {
   let roomIdToJoin: string;
 
   console.log(socket.id);
@@ -57,9 +59,16 @@ export const handleConnect = async (socket: Socket) => {
     socketId: socket.id
   });
 
-  socket.on(protocol.DISCONNECT, () => {
+  socket.on(protocol.DISCONNECT, async () => {
     console.log("peer disconnected");
-    roomService.disconnect(socket.id);
+    const result = await roomService.disconnect(socket.id);
+    switch (result.type) {
+      case "none":
+        break;
+      case "roomRemoved":
+        routingServerSocket.emit(routingServerProtocol.REMOVED_ROOM, result.roomId);
+        break;
+    }
   });
 
   socket.on(
@@ -102,6 +111,7 @@ export const handleConnect = async (socket: Socket) => {
       let room = await roomService.joinRoom(roomIdToJoin, peer);
       if (room === undefined) {
         room = await roomService.createAndJoinRoom(roomIdToJoin, peer, socket, worker);
+        routingServerSocket.emit(routingServerProtocol.CREATED_ROOM, room.id);
       }
 
       const rtpCapabilities = room.router.rtpCapabilities;
