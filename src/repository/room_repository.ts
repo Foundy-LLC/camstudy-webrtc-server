@@ -63,6 +63,7 @@ export const createStudyHistory = async (
   });
 };
 
+// TODO: 공부 기록이 06시 기준시간 사이에 기록되었다면(ex: 02시작 08종료) 두 개의 기록(2-6, 6-8)으로 쪼개기
 export const updateExitAtOfStudyHistory = async (
   roomId: string,
   userId: string
