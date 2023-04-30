@@ -9,7 +9,7 @@ export const createRoutingServerSocket = (): Socket => {
   routingServerSocket.on("connect", () => {
     const runningRoomIds = roomService.getRoomIds();
     const request = createMediaServerRegisterRequest(runningRoomIds);
-    
+
     routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, request, () => {
       console.log("Registered to the Routing server successfully.");
     });
