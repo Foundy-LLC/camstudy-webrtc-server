@@ -22,7 +22,7 @@ COPY ./ ./
 
 RUN npm install
 
-EXPOSE 3000
+EXPOSE ${PORT}
 EXPOSE ${RTC_MIN_PORT}-${RTC_MAX_PORT}
 
 CMD ["npm", "run", "start"]
