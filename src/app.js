@@ -35,8 +35,8 @@ const server = new Server(httpsServer, {
 
 const routingServerSocket = io(routingServerProtocol.ROUTING_SERVER_URL);
 routingServerSocket.on("connect", () => {
-  const runningRoomCount = roomService.getRoomCount();
-  const request = createMediaServerRegisterRequest(runningRoomCount);
+  const runningRoomIds = roomService.getRoomIds();
+  const request = createMediaServerRegisterRequest(runningRoomIds);
   routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, request, () => {
     console.log("Registered to the Routing server successfully.");
   });

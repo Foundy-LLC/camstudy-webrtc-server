@@ -49,8 +49,8 @@ export class RoomService {
   ) {
   }
 
-  getRoomCount = (): number => {
-    return this._roomRepository.getRoomCount();
+  getRoomIds = (): string[] => {
+    return this._roomRepository.getRoomIds();
   };
 
   joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {

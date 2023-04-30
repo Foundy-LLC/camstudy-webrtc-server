@@ -173,8 +173,8 @@ export class RoomRepository {
   private readonly _roomById = new Map<string, Room>();
   private readonly _roomIdBySocketId = new Map<string, string>();
 
-  public getRoomCount = (): number => {
-    return this._roomById.size;
+  public getRoomIds = (): string[] => {
+    return [...this._roomById.keys()];
   };
 
   private _setRoom = (room: Room, socketId: string) => {

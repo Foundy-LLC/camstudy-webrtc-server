@@ -1,6 +1,6 @@
 export interface MediaServerRegisterRequest {
     readonly ip: string;
     readonly port: number;
-    readonly runningRoomCount: number;
+    readonly runningRooms: string[];
     readonly maxRoomCapacity: number;
 }
