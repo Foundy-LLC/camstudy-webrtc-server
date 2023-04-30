@@ -2,10 +2,11 @@ import express from "express";
 import https from "httpolyglot";
 import { Server } from "socket.io";
 import { handleConnect } from "./worker.js";
-import { mediaServerRegisterRequest, tlsconfig } from "./constant/config.js";
+import { createMediaServerRegisterRequest, tlsconfig } from "./constant/config.js";
 import * as protocol from "./constant/protocol.js";
 import * as routingServerProtocol from "./constant/routing_server_protocol.js";
 import io from "socket.io-client";
+import { roomService } from "./service/room_service.js";
 
 const app = express();
 
@@ -34,12 +35,14 @@ const server = new Server(httpsServer, {
 
 const routingServerSocket = io(routingServerProtocol.ROUTING_SERVER_URL);
 routingServerSocket.on("connect", () => {
-  routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, mediaServerRegisterRequest, () => {
+  const runningRoomCount = roomService.getRoomCount();
+  const request = createMediaServerRegisterRequest(runningRoomCount);
+  routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, request, () => {
     console.log("Registered to the Routing server successfully.");
   });
 });
 routingServerSocket.on("disconnect", () => {
-  // TODO(민성): 라우팅 서버가 죽는 경우 예외처리를 고민해봐야함
+  console.log("Disconnected the Routing server.");
 });
 
 const connections = server.of(protocol.NAME_SPACE);

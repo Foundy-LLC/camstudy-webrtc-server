@@ -31,8 +31,13 @@ export const mediaCodecs: RtpCodecCapability[] = [
     },
 ];
 
-export const mediaServerRegisterRequest: MediaServerRegisterRequest = {
-    ip: protocol.IP_ADDRESS,
-    port: protocol.PORT,
-    maxRoomCapacity: MAX_ROOM_CAPACITY
+export const createMediaServerRegisterRequest = (
+  runningRoomCount: number
+): MediaServerRegisterRequest => {
+    return {
+        ip: protocol.IP_ADDRESS,
+        port: protocol.PORT,
+        runningRoomCount: runningRoomCount,
+        maxRoomCapacity: MAX_ROOM_CAPACITY
+    }
 }

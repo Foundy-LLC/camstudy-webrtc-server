@@ -49,6 +49,10 @@ export class RoomService {
   ) {
   }
 
+  getRoomCount = (): number => {
+    return this._roomRepository.getRoomCount();
+  };
+
   joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {
     const exists = (await findRoomFromDB(roomId)) != null;
     if (!exists) {
