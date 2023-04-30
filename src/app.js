@@ -2,11 +2,9 @@ import express from "express";
 import https from "httpolyglot";
 import { Server } from "socket.io";
 import { handleConnect } from "./worker.js";
-import { createMediaServerRegisterRequest, tlsconfig } from "./constant/config.js";
+import { tlsconfig } from "./constant/config.js";
 import * as protocol from "./constant/protocol.js";
-import * as routingServerProtocol from "./constant/routing_server_protocol.js";
-import io from "socket.io-client";
-import { roomService } from "./service/room_service.js";
+import { createRoutingServerSocket } from "./routing_server_socket.js";
 
 const app = express();
 
@@ -33,17 +31,7 @@ const server = new Server(httpsServer, {
   }
 });
 
-const routingServerSocket = io(routingServerProtocol.ROUTING_SERVER_URL);
-routingServerSocket.on("connect", () => {
-  const runningRoomIds = roomService.getRoomIds();
-  const request = createMediaServerRegisterRequest(runningRoomIds);
-  routingServerSocket.emit(routingServerProtocol.REGISTER_MEDIA_SERVER, request, () => {
-    console.log("Registered to the Routing server successfully.");
-  });
-});
-routingServerSocket.on("disconnect", () => {
-  console.log("Disconnected the Routing server.");
-});
+const routingServerSocket = createRoutingServerSocket();
 
 const connections = server.of(protocol.NAME_SPACE);
 connections.on(protocol.CONNECTION, async (socket) => {
