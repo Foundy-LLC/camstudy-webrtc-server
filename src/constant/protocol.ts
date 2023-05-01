@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { getPublicIpAddress } from "../util/network_util";
+import { getPublicIpAddress } from "../util/network_util.js";
 
 dotenv.config();
 
