@@ -1,11 +1,12 @@
 import dotenv from "dotenv";
+import { getPublicIpAddress } from "../util/network_util.js";
 
 dotenv.config();
 
 /**
  * 서버에서 연결을 수신할 IP 주소이다.
  */
-const IP_ADDRESS: string = process.env.IP_ADDRESS!;
+const IP_ADDRESS: string = getPublicIpAddress();
 
 const PORT: number = parseInt(process.env.PORT!);
 

@@ -19,8 +19,10 @@ import { Peer } from "../model/Peer.js";
 import {
   blockUser,
   createStudyHistory,
-  findRoomFromDB, finishRoomIgnition,
-  RoomRepository, startRoomIgnition,
+  findRoomFromDB,
+  finishRoomIgnition,
+  RoomRepository,
+  startRoomIgnition,
   unblockUser,
   updateExitAtOfStudyHistory
 } from "../repository/room_repository.js";
@@ -37,6 +39,7 @@ import { MAX_ROOM_CAPACITY } from "../constant/room_constant.js";
 import { WaitingRoomData } from "../model/WaitingRoomData.js";
 import { WaitingRoomRepository } from "../repository/waiting_room_repository.js";
 import { RoomJoiner } from "../model/RoomJoiner.js";
+import { PeerDisconnectResult } from "../model/PeerDisconnectResult";
 
 export class RoomService {
 
@@ -45,6 +48,10 @@ export class RoomService {
     private readonly _waitingRoomRepository = new WaitingRoomRepository()
   ) {
   }
+
+  getRoomIds = (): string[] => {
+    return this._roomRepository.getRoomIds();
+  };
 
   joinWaitingRoom = async (roomId: string, socket: Socket): Promise<WaitingRoomData | undefined> => {
     const exists = (await findRoomFromDB(roomId)) != null;
@@ -146,14 +153,16 @@ export class RoomService {
     return room;
   };
 
-  disconnect = async (socketId: string) => {
+  disconnect = async (
+    socketId: string
+  ): Promise<PeerDisconnectResult> => {
     this._waitingRoomRepository.remove(socketId);
     const room = this._roomRepository.findRoomBySocketId(socketId);
+    let result: PeerDisconnectResult = { type: "none" };
     if (room === undefined) {
       // TODO: 아마 예외처리가 필요할수도?
-      return;
+      return result;
     }
-
     const disposedPeer = room.disposePeer(socketId);
     this._roomRepository.deleteSocketId(socketId);
     if (room.hasPeer) {
@@ -165,6 +174,7 @@ export class RoomService {
     } else {
       room.dispose();
       this._roomRepository.deleteRoom(room);
+      result = { type: "roomRemoved", roomId: room.id };
     }
 
     this._waitingRoomRepository.notifyOthers(
@@ -175,6 +185,7 @@ export class RoomService {
 
     await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
     await this._finishRoomIgnitionIfEnded(room);
+    return result;
   };
 
   private _startRoomIgnitionIfPossible = async (room: Room) => {
