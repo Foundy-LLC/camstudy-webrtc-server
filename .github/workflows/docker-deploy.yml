@@ -17,11 +17,28 @@ on:
           - warning
           - debug
 
+env:
+  S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  CODEDEPLOY_NAME: ${{ secrets.AWS_CODEDEPLOY_NAME }}
+  CODEDEPLOY_GROUP: ${{ secrets.AWS_CODEDEPLOY_GROUP }}
+
 jobs:
   docker:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Create .env file to use env variable at deploy.sh
+      - name: Create .env file
+        run: |
+          touch .env
+          echo PORT=${{ secrets.PORT }} >> .env
+          echo RTC_MIN_PORT=${{ secrets.RTC_MIN_PORT }} >> .env
+          echo RTC_MAX_PORT=${{ secrets.RTC_MAX_PORT }} >> .env
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
@@ -37,27 +54,27 @@ jobs:
           tags: jja08111/camstudy-media-server:latest
           build-args: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-            IP_ADDRESS=${{ secrets.AWS_SSH_IP_ADDRESS }}
             PORT=${{ secrets.PORT }}
             RTC_MIN_PORT=${{ secrets.RTC_MIN_PORT }}
             RTC_MAX_PORT=${{ secrets.RTC_MAX_PORT }}
-      - name: Deploy to server
-        uses: appleboy/ssh-action@master
+            ROUTING_SERVER_URL=${{ secrets.ROUTING_SERVER_URL }}
+      - name: Make zip file
+        run: zip -r ./$GITHUB_SHA.zip .
+        shell: bash
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          host: ${{ secrets.AWS_SSH_IP_ADDRESS }}
-          username: ${{ secrets.AWS_SSH_USERNAME }}
-          key: ${{ secrets.AWS_SSH_KEY }}
-          debug: true
-          port: 22
-          script: |
-            cd ~/camstudy-webrtc-server
-            sudo docker login
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
-            sudo docker stop camstudy_media_server
-            sudo docker rm camstudy_media_server
-            sudo docker run -d --name camstudy_media_server \
-              -p ${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }}:${{ secrets.RTC_MIN_PORT }}-${{ secrets.RTC_MAX_PORT }} \
-              -p ${{ secrets.PORT }}:${{ secrets.PORT }} \
-              ${{ secrets.DOCKERHUB_USERNAME }}/camstudy-media-server:latest
-            sudo docker image prune -a -f
-            echo "success";
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3
+        run: aws s3 cp --region ${{ env.AWS_REGION }} ./$GITHUB_SHA.zip s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip
+
+      - name: Code Deploy
+        run: |
+          aws deploy create-deployment --application-name $CODEDEPLOY_NAME \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --deployment-group-name $CODEDEPLOY_GROUP \
+            --s3-location bucket=$S3_BUCKET_NAME,bundleType=zip,key=$GITHUB_SHA.zip
