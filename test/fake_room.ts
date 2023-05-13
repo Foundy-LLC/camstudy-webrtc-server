@@ -3,6 +3,7 @@ import { Router } from "mediasoup/node/lib/Router";
 import { Channel } from "mediasoup/node/lib/Channel";
 import { PayloadChannel } from "mediasoup/node/lib/PayloadChannel";
 import { room } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime";
 
 const fakeSocket = {
   on: () => {
@@ -35,6 +36,7 @@ export const fakeRoomEntity: room = {
   master_id: "123",
   password: "undefined",
   short_break: 5,
+  ranking_score: new Decimal(100),
   thumbnail: "undefined",
   timer: 25,
   title: "444",
