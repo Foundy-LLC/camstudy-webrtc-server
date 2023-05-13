@@ -84,6 +84,7 @@ model room {
   long_break_interval Int
   expired_at          DateTime        @db.Timestamp(6)
   deleted_at          DateTime?       @db.Timestamp(6)
+  ranking_score       Decimal         @default(0.0) @db.Decimal
   block               block[]
   report              report[]
   user_account        user_account    @relation(fields: [master_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_master_id__fk")
@@ -150,12 +151,12 @@ model user_tag {
 }
 
 model room_ignition {
-  id             String    @db.VarChar(100)
-  start_datetime DateTime  @db.Timestamp(6)
-  end_datetime   DateTime? @db.Timestamp(6)
-  room           room      @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  room_id      String @db.VarChar(100)
+  duration_sec Int
+  user_count   Int
+  room         room   @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "room_ignition_id_fkey")
 
-  @@id([id, start_datetime], map: "room_ignition_pk")
+  @@id([user_count, room_id], map: "room_ignition_pk")
 }
 
 model user_ranking {
@@ -164,6 +165,8 @@ model user_ranking {
   total_study_time  BigInt
   weekly_score      BigInt
   total_score       BigInt
+  weekly_ranking    BigInt       @default(0)
+  total_ranking     BigInt       @default(0)
   user_account      user_account @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 

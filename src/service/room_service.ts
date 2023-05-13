@@ -20,9 +20,7 @@ import {
   blockUser,
   createStudyHistory,
   findRoomFromDB,
-  finishRoomIgnition,
   RoomRepository,
-  startRoomIgnition,
   unblockUser,
   updateExitAtOfStudyHistory
 } from "../repository/room_repository.js";
@@ -130,7 +128,6 @@ export class RoomService {
       { id: peer.uid, name: peer.name, profileImage: peer.profileImage } as RoomJoiner
     );
     await createStudyHistory(room.id, peer.uid);
-    await this._startRoomIgnitionIfPossible(room);
     return room;
   };
 
@@ -149,7 +146,6 @@ export class RoomService {
     );
     const room = await this._roomRepository.createAndJoin(socket.id, router, roomId, peer);
     await createStudyHistory(roomId, peer.uid);
-    await this._startRoomIgnitionIfPossible(room);
     return room;
   };
 
@@ -184,20 +180,7 @@ export class RoomService {
     );
 
     await updateExitAtOfStudyHistory(room.id, disposedPeer.uid);
-    await this._finishRoomIgnitionIfEnded(room);
     return result;
-  };
-
-  private _startRoomIgnitionIfPossible = async (room: Room) => {
-    if (room.peerCount == 2) {
-      await startRoomIgnition(room.id);
-    }
-  };
-
-  private _finishRoomIgnitionIfEnded = async (room: Room) => {
-    if (room.peerCount == 1) {
-      await finishRoomIgnition(room.id);
-    }
   };
 
   createTransport = async (
