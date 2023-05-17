@@ -8,8 +8,8 @@ dotenv.config();
 
 // SSL cert for HTTPS access
 export const tlsconfig = {
-    key: process.env.SSL_KEY,
-    cert: process.env.SSL_CERT,
+    key: process.env.SSL_KEY!.replace(/\\n/g, "\n"),
+    cert: process.env.SSL_CERT!.replace(/\\n/g, "\n"),
 };
 
 // This is an Array of RtpCapabilities

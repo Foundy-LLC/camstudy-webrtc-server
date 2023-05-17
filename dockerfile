@@ -13,8 +13,8 @@ ENV DATABASE_URL=$DATABASE_URL \
     RTC_MIN_PORT=$RTC_MIN_PORT \
     RTC_MAX_PORT=$RTC_MAX_PORT \
     ROUTING_SERVER_URL=$ROUTING_SERVER_URL \
-    SSL_KEY='"$SSL_KEY"' \
-    SSL_CERT='"$SSL_CERT"'
+    SSL_KEY=$SSL_KEY \
+    SSL_CERT=$SSL_CERT
 
 RUN apt-get -y update
 RUN apt-get -y install python3
