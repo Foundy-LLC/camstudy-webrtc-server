@@ -2,12 +2,14 @@ import { RtpCodecCapability } from "mediasoup/node/lib/RtpParameters";
 import { MediaServerRegisterRequest } from "../model/MediaServerRegisterRequest.js";
 import * as protocol from "./protocol.js";
 import { MAX_SERVER_ROOM_CAPACITY } from "./room_constant.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // SSL cert for HTTPS access
 export const tlsconfig = {
-    // TODO: HTTPS 설정하기
-    // key: fs.readFileSync("./server/ssl/key.pem", "utf-8"),
-    // cert: fs.readFileSync("./server/ssl/cert.pem", "utf-8"),
+    key: process.env.SSL_KEY,
+    cert: process.env.SSL_CERT,
 };
 
 // This is an Array of RtpCapabilities
