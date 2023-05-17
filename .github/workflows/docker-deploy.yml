@@ -58,8 +58,8 @@ jobs:
             RTC_MIN_PORT=${{ secrets.RTC_MIN_PORT }}
             RTC_MAX_PORT=${{ secrets.RTC_MAX_PORT }}
             ROUTING_SERVER_URL=${{ secrets.ROUTING_SERVER_URL }}
-            SSL_KEY=${{ secrets.SSL_KEY }}
-            SSL_CERT=${{ secrets.SSL_CERT }}
+            "SSL_KEY=${{ secrets.SSL_KEY }}"
+            "SSL_CERT=${{ secrets.SSL_CERT }}"
       - name: Make zip file
         run: zip -r ./$GITHUB_SHA.zip .
         shell: bash
