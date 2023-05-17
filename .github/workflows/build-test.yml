@@ -18,6 +18,8 @@ jobs:
 
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SSL_KEY: ${{ secrets.SSL_KEY }}
+      SSL_CERT: ${{ secrets.SSL_CERT }}
 
     strategy:
       matrix:
