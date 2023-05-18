@@ -8,11 +8,6 @@ import { createRoutingServerSocket } from "./routing_server_socket.js";
 
 const app = express();
 
-app.get("/.well-known/pki-validation/2DB2C79E795823421BDF619A2EDE0511.txt", (req, res) => {
-  const filePath = "./static/ssl-auth.txt"; // Provide the path to your text file
-  res.download(filePath, "auth.txt");
-});
-
 app.get("*", (req, res, next) => {
   const path = "/rooms/";
 
