@@ -425,11 +425,13 @@ export class RoomService {
   broadcastChat = (message: string, socketId: string) => {
     const room = this._roomRepository.findRoomBySocketId(socketId);
     if (room === undefined) {
-      throw Error("There is no room!");
+      console.error(`${Date()} : Cannot find room id by socket id ${socketId}`);
+      return;
     }
     const peer = room.findPeerBySocketId(socketId);
     if (peer === undefined) {
-      throw Error("There is no peer in the room!");
+      console.error(`${Date()} : Cannot find peer in room ${room}`);
+      return;
     }
     const chatMessage: ChatMessage = {
       id: uuid(),
