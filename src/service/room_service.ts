@@ -128,6 +128,11 @@ export class RoomService {
       { id: peer.uid, name: peer.name, profileImage: peer.profileImage } as RoomJoiner
     );
     await createStudyHistory(room.id, peer.uid);
+    await room.broadcastProtocol({
+      protocol: PEER_STATE_CHANGED,
+      args: peer.state,
+      where: (p) => p.uid !== peer.uid
+    });
     return room;
   };
 
